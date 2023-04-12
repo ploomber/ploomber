@@ -17,37 +17,29 @@ def x():
 
 
 def test_python_differ_ignores_docstrings():
-
     differ = CodeDiffer()
-    res, _ = differ.is_different(a=fn_w_docsting,
-                                 b=fn_w_docsting_v2,
-                                 a_params={},
-                                 b_params={},
-                                 extension='py')
+    res, _ = differ.is_different(
+        a=fn_w_docsting, b=fn_w_docsting_v2, a_params={}, b_params={}, extension="py"
+    )
     assert not res
 
 
 def test_python_differ_ignores_comments():
-
-    a = '''
+    a = """
 def x():
     # this is a comment
     # another comment
     var = 100
-'''
+"""
 
-    b = '''
+    b = """
 def x():
     # one comment
     var = 100 # this is a comment
-'''
+"""
 
     differ = CodeDiffer()
-    res, _ = differ.is_different(a=a,
-                                 b=b,
-                                 a_params={},
-                                 b_params={},
-                                 extension='py')
+    res, _ = differ.is_different(a=a, b=b, a_params={}, b_params={}, extension="py")
     assert not res
 
 
@@ -61,19 +53,17 @@ def test_sql_is_normalized():
     FROM table
     """
     differ = CodeDiffer()
-    different, _ = differ.is_different(a=a,
-                                       b=b,
-                                       a_params={},
-                                       b_params={},
-                                       extension='sql')
+    different, _ = differ.is_different(
+        a=a, b=b, a_params={}, b_params={}, extension="sql"
+    )
     assert not different
 
 
-@pytest.mark.parametrize('extension', ['py', 'sql', None])
+@pytest.mark.parametrize("extension", ["py", "sql", None])
 def test_get_diff(extension):
     differ = CodeDiffer()
-    a = 'some code...'
-    b = 'some other code...'
+    a = "some code..."
+    b = "some other code..."
     differ.get_diff(a=a, b=b, extension=extension)
 
 
@@ -119,23 +109,26 @@ def x():
     pass
 """
 
-fn_not_in_python = '''
+fn_not_in_python = """
 #include <iostream>
 using namespace std;
 int main(){
     pass;
 }
-'''
+"""
 
 
 @pytest.mark.parametrize(
-    'code, expected',
-    [[fn, fn_no_doc], [fn_no_doc, fn_no_doc],
-     [fn_decorated, fn_decorated_no_doc],
-     [fn_decorated_no_doc, fn_decorated_no_doc],
-     [fn_double_decorated, fn_double_decorated_no_doc],
-     [fn_double_decorated_no_doc, fn_double_decorated_no_doc],
-     [fn_not_in_python, fn_not_in_python]],
+    "code, expected",
+    [
+        [fn, fn_no_doc],
+        [fn_no_doc, fn_no_doc],
+        [fn_decorated, fn_decorated_no_doc],
+        [fn_decorated_no_doc, fn_decorated_no_doc],
+        [fn_double_decorated, fn_double_decorated_no_doc],
+        [fn_double_decorated_no_doc, fn_double_decorated_no_doc],
+        [fn_not_in_python, fn_not_in_python],
+    ],
 )
 def test_normalize_python(code, expected):
     assert normalize_python(code) == expected
@@ -143,49 +136,45 @@ def test_normalize_python(code, expected):
 
 def test_different_params():
     differ = CodeDiffer()
-    res, _ = differ.is_different(a='some code',
-                                 b='some code',
-                                 a_params={'a': 1},
-                                 b_params={'a': 2},
-                                 extension='py')
+    res, _ = differ.is_different(
+        a="some code",
+        b="some code",
+        a_params={"a": 1},
+        b_params={"a": 2},
+        extension="py",
+    )
     assert res
 
 
-@pytest.mark.parametrize('a_params, b_params, expected', [[
-    {
-        'a': 1,
-        'b': object()
-    },
-    {
-        'a': 1
-    },
-    False,
-], [
-    {
-        'a': 1
-    },
-    {
-        'a': 1,
-        'b': object()
-    },
-    False,
-], [
-    {
-        'a': 2,
-        'b': object()
-    },
-    {
-        'a': 1
-    },
-    True,
-]])
+@pytest.mark.parametrize(
+    "a_params, b_params, expected",
+    [
+        [
+            {"a": 1, "b": object()},
+            {"a": 1},
+            False,
+        ],
+        [
+            {"a": 1},
+            {"a": 1, "b": object()},
+            False,
+        ],
+        [
+            {"a": 2, "b": object()},
+            {"a": 1},
+            True,
+        ],
+    ],
+)
 def test_different_with_unserializable_params(a_params, b_params, expected):
     differ = CodeDiffer()
 
-    res, _ = differ.is_different(a='some code',
-                                 b='some code',
-                                 a_params=a_params,
-                                 b_params=b_params,
-                                 extension='py')
+    res, _ = differ.is_different(
+        a="some code",
+        b="some code",
+        a_params=a_params,
+        b_params=b_params,
+        extension="py",
+    )
 
     assert res is expected

@@ -8,11 +8,12 @@ class EntryPoint:
     Handles common operations on the 4 types of entry points. Exposes a
     pathlib.Path-like interface
     """
-    Directory = 'directory'
-    Pattern = 'pattern'
-    File = 'file'
-    DottedPath = 'dotted-path'
-    ModulePath = 'module-path'
+
+    Directory = "directory"
+    Pattern = "pattern"
+    File = "file"
+    DottedPath = "dotted-path"
+    ModulePath = "module-path"
 
     def __init__(self, value):
         self.value = value
@@ -31,8 +32,11 @@ class EntryPoint:
 
     @property
     def suffix(self):
-        return None if self.type not in {self.File, self.ModulePath} else Path(
-            self.value).suffix
+        return (
+            None
+            if self.type not in {self.File, self.ModulePath}
+            else Path(self.value).suffix
+        )
 
     def __repr__(self):
         return repr(self.value)
@@ -62,33 +66,33 @@ def find_entry_point_type(entry_point):
     if type_:
         return type_
     else:
-        if Path(entry_point).suffix in {'.yaml', '.yml'}:
+        if Path(entry_point).suffix in {".yaml", ".yml"}:
             raise ValueError(
-                'Could not determine the entry point type from value: '
-                f'{entry_point!r}. The file does not exist.')
+                "Could not determine the entry point type from value: "
+                f"{entry_point!r}. The file does not exist."
+            )
         else:
             raise ValueError(
-                'Could not determine the entry point type from value: '
-                f'{entry_point!r}. Expected '
-                'an existing file with extension .yaml or .yml, '
-                'existing directory, glob-like pattern '
-                '(i.e., *.py) or dotted path '
-                '(i.e., module.sub_module.factory_function).')
+                "Could not determine the entry point type from value: "
+                f"{entry_point!r}. Expected "
+                "an existing file with extension .yaml or .yml, "
+                "existing directory, glob-like pattern "
+                "(i.e., *.py) or dotted path "
+                "(i.e., module.sub_module.factory_function)."
+            )
 
 
 def try_to_find_entry_point_type(entry_point):
     if entry_point is None:
         return None
-    elif '*' in entry_point:
+    elif "*" in entry_point:
         return EntryPoint.Pattern
-    elif '::' in entry_point:
+    elif "::" in entry_point:
         return EntryPoint.ModulePath
     elif Path(entry_point).exists():
         if Path(entry_point).is_dir():
             return EntryPoint.Directory
         else:
             return EntryPoint.File
-    elif '.' in entry_point and Path(entry_point).suffix not in {
-            '.yaml', '.yml'
-    }:
+    elif "." in entry_point and Path(entry_point).suffix not in {".yaml", ".yml"}:
         return EntryPoint.DottedPath

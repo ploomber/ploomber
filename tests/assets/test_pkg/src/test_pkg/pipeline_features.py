@@ -1,3 +1,3 @@
 def features(upstream):
-    df = upstream['root']
+    df = upstream["root"]
     return df + 1

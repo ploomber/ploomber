@@ -3,9 +3,7 @@ Utlity functions to run Ploomber tests. This is not a public module
 """
 
 
-def assert_no_extra_attributes_in_class(abstract_class,
-                                        concrete_class,
-                                        allowed=None):
+def assert_no_extra_attributes_in_class(abstract_class, concrete_class, allowed=None):
     """
     Ploomber makes heavy use of abstract classes to provide a uniform API for
     tasks, products, metadata, etc. When defining abstract classes, the
@@ -46,8 +44,8 @@ def assert_no_extra_attributes_in_class(abstract_class,
 
     # allow "private" methods
     preffixes = [
-        '_{}__'.format(class_.__name__) for class_ in concrete_class.__bases__
-    ] + ['__', '_', '_{}__'.format(concrete_class.__name__)]
+        "_{}__".format(class_.__name__) for class_ in concrete_class.__bases__
+    ] + ["__", "_", "_{}__".format(concrete_class.__name__)]
 
     extra_attrs = {
         attr
@@ -56,7 +54,9 @@ def assert_no_extra_attributes_in_class(abstract_class,
     } - allowed
 
     if extra_attrs:
-        raise ValueError('The following methods/attributes in {} '
-                         'are not part of the {} interface: {}'.format(
-                             concrete_class.__name__, abstract_class.__name__,
-                             extra_attrs))
+        raise ValueError(
+            "The following methods/attributes in {} "
+            "are not part of the {} interface: {}".format(
+                concrete_class.__name__, abstract_class.__name__, extra_attrs
+            )
+        )

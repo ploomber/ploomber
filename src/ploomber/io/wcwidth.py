@@ -15,8 +15,12 @@ def wcwidth(c: str) -> int:
         return 1
 
     # Some Cf/Zp/Zl characters which should be zero-width.
-    if (o == 0x0000 or 0x200B <= o <= 0x200F or 0x2028 <= o <= 0x202E
-            or 0x2060 <= o <= 0x2063):
+    if (
+        o == 0x0000
+        or 0x200B <= o <= 0x200F
+        or 0x2028 <= o <= 0x202E
+        or 0x2060 <= o <= 0x2063
+    ):
         return 0
 
     category = unicodedata.category(c)

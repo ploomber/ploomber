@@ -37,12 +37,10 @@ class Product(abc.ABC):
         self._identifier = self._init_identifier(identifier)
 
         if self._identifier is None:
-            raise TypeError('_init_identifier must return a value, returned '
-                            'None')
+            raise TypeError("_init_identifier must return a value, returned " "None")
 
         self.task = None
-        self.logger = logging.getLogger('{}.{}'.format(__name__,
-                                                       type(self).__name__))
+        self.logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
@@ -57,7 +55,7 @@ class Product(abc.ABC):
     @property
     def task(self):
         if self._task is None:
-            raise ValueError('This product has not been assigned to any Task')
+            raise ValueError("This product has not been assigned to any Task")
 
         return self._task
 
@@ -92,8 +90,7 @@ class Product(abc.ABC):
             self._reset_cached_outdated_status()
 
         if self._is_outdated_status is None:
-            self._is_outdated_status = self._check_is_outdated(
-                outdated_by_code)
+            self._is_outdated_status = self._check_is_outdated(outdated_by_code)
 
         return self._is_outdated_status
 
@@ -113,26 +110,25 @@ class Product(abc.ABC):
 
         # check dependencies only if the product exists
         if p_exists:
-
             oudated_data = self._outdated_data_dependencies()
-            outdated_code = (outdated_by_code
-                             and self._outdated_code_dependency())
+            outdated_code = outdated_by_code and self._outdated_code_dependency()
             run = oudated_data or outdated_code
 
             if run:
                 self.logger.info(
-                    'Task "%s" is outdated, it will be executed...',
-                    self.task.name)
+                    'Task "%s" is outdated, it will be executed...', self.task.name
+                )
             else:
                 self.logger.info(
-                    'Task "%s" is up-to-date, it will be skipped...',
-                    self.task.name)
+                    'Task "%s" is up-to-date, it will be skipped...', self.task.name
+                )
 
             return run
         else:
             self.logger.info(
                 'Product of task "%s" does not exist, it will be executed...',
-                self.task.name)
+                self.task.name,
+            )
             return True
 
     def _outdated_data_dependencies(self):
@@ -141,21 +137,25 @@ class Product(abc.ABC):
         """
 
         if self._outdated_data_dependencies_status is not None:
-            self.logger.debug(('Returning cached data dependencies status. '
-                               'Outdated? %s'),
-                              self._outdated_data_dependencies_status)
+            self.logger.debug(
+                ("Returning cached data dependencies status. " "Outdated? %s"),
+                self._outdated_data_dependencies_status,
+            )
             return self._outdated_data_dependencies_status
 
-        outdated = any([
-            self._is_outdated_due_to_upstream(up.product)
-            for up in self.task.upstream.values()
-        ])
+        outdated = any(
+            [
+                self._is_outdated_due_to_upstream(up.product)
+                for up in self.task.upstream.values()
+            ]
+        )
 
         self._outdated_data_dependencies_status = outdated
 
-        self.logger.debug(('Finished checking data dependencies status. '
-                           'Outdated? %s'),
-                          self._outdated_data_dependencies_status)
+        self.logger.debug(
+            ("Finished checking data dependencies status. " "Outdated? %s"),
+            self._outdated_data_dependencies_status,
+        )
 
         return self._outdated_data_dependencies_status
 
@@ -164,8 +164,7 @@ class Product(abc.ABC):
         A task becomes data outdated if an upstream product has a higher
         timestamp or if an upstream product is outdated
         """
-        if (self.metadata.timestamp is None
-                or up_prod.metadata.timestamp is None):
+        if self.metadata.timestamp is None or up_prod.metadata.timestamp is None:
             return True
         else:
             return (
@@ -174,7 +173,8 @@ class Product(abc.ABC):
                 # from indirect upstream dependencies. e.g., a -> b -> c
                 # user runs in order but then it only runs a. Since a is
                 # outdated, so should c
-                or up_prod._is_outdated())
+                or up_prod._is_outdated()
+            )
 
     def _outdated_code_dependency(self):
         """
@@ -182,9 +182,10 @@ class Product(abc.ABC):
         it generated it
         """
         if self._outdated_code_dependency_status is not None:
-            self.logger.debug(('Returning cached code dependencies status. '
-                               'Outdated? %s'),
-                              self._outdated_code_dependency_status)
+            self.logger.debug(
+                ("Returning cached code dependencies status. " "Outdated? %s"),
+                self._outdated_code_dependency_status,
+            )
             return self._outdated_code_dependency_status
 
         outdated, diff = self.task.dag.differ.is_different(
@@ -194,18 +195,23 @@ class Product(abc.ABC):
             # process resource params to compare the file hash instead of
             # the path to the file
             b_params=process_resources(
-                self.task.params.to_json_serializable(params_only=True)),
-            extension=self.task.source.extension)
+                self.task.params.to_json_serializable(params_only=True)
+            ),
+            extension=self.task.source.extension,
+        )
 
         self._outdated_code_dependency_status = outdated
 
-        self.logger.debug(('Finished checking code status for task "%s" '
-                           'Outdated? %s'), self.task.name,
-                          self._outdated_code_dependency_status)
+        self.logger.debug(
+            ('Finished checking code status for task "%s" ' "Outdated? %s"),
+            self.task.name,
+            self._outdated_code_dependency_status,
+        )
 
         if outdated:
-            self.logger.info('Task "%s" has outdated code. Diff:\n%s',
-                             self.task.name, diff)
+            self.logger.info(
+                'Task "%s" has outdated code. Diff:\n%s', self.task.name, diff
+            )
 
         return self._outdated_code_dependency_status
 
@@ -220,24 +226,23 @@ class Product(abc.ABC):
     def __repr__(self):
         # NOTE: this assumes ._identifier has a best_repr property,
         # should we refactor it?
-        return '{}({})'.format(
-            type(self).__name__, self._identifier.best_repr(shorten=True))
+        return "{}({})".format(
+            type(self).__name__, self._identifier.best_repr(shorten=True)
+        )
 
     def __getstate__(self):
         state = self.__dict__.copy()
         # logger is not pickable, so we remove them and build
         # them again in __setstate__
-        del state['logger']
+        del state["logger"]
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self.logger = logging.getLogger('{}.{}'.format(__name__,
-                                                       type(self).__name__))
+        self.logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
     def to_json_serializable(self):
-        """Returns a JSON serializable version of this product
-        """
+        """Returns a JSON serializable version of this product"""
         # NOTE: this is used in tasks where only JSON serializable parameters
         # are supported such as NotebookRunner that depends on papermill
         return str(self)
@@ -271,8 +276,7 @@ class Product(abc.ABC):
 
     @abc.abstractmethod
     def delete(self, force=False):
-        """Deletes the product
-        """
+        """Deletes the product"""
         pass  # pragma: no cover
 
     # NOTE: currently optional but there is a conflict with this. metadata
@@ -280,8 +284,8 @@ class Product(abc.ABC):
     # but not all products implement this
     def _delete_metadata(self):
         raise NotImplementedError(
-            '_delete_metadata not implemented in {}'.format(
-                type(self).__name__))
+            "_delete_metadata not implemented in {}".format(type(self).__name__)
+        )
 
     # download and upload are only relevant for File but we add them to keep
     # the API consistent

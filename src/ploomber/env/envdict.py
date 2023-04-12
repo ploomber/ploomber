@@ -19,23 +19,25 @@ from ploomber_core.exceptions import BaseException
 
 
 def _get_import_from(raw_data, path_to_here):
-    meta = raw_data.get('meta', {})
+    meta = raw_data.get("meta", {})
 
     if not isinstance(meta, Mapping):
         raise ValidationError(
             "Expected 'meta' to contain a "
-            f"dictionary, but got: {meta} ({type(meta).__name__})")
+            f"dictionary, but got: {meta} ({type(meta).__name__})"
+        )
 
-    validate_keys(valid={'import_from'}, passed=set(meta), name='meta')
+    validate_keys(valid={"import_from"}, passed=set(meta), name="meta")
 
-    if 'import_from' in meta:
-        import_from = meta['import_from']
+    if "import_from" in meta:
+        import_from = meta["import_from"]
 
         if not isinstance(import_from, str):
             raise ValidationError(
                 "Expected 'import_from' to contain a "
                 "string, but "
-                f"got: {import_from} ({type(import_from).__name__})")
+                f"got: {import_from} ({type(import_from).__name__})"
+            )
 
         path = Path(path_to_here, import_from)
 
@@ -43,7 +45,8 @@ def _get_import_from(raw_data, path_to_here):
             raise ValidationError(
                 "Expected import_from "
                 f"value {import_from!r} to be a path to a file, "
-                "but such file does not exist")
+                "but such file does not exist"
+            )
 
         return EnvDict(path)._data
 
@@ -88,13 +91,13 @@ class EnvDict(Mapping):
         # passes this modified object to DAGSpec
         if isinstance(source, EnvDict):
             for attr in (
-                    '_path_to_env',
-                    '_preprocessed',
-                    '_expander',
-                    '_data',
-                    '_repr',
-                    '_default_keys',
-                    '_tags_in_raw_data',
+                "_path_to_env",
+                "_preprocessed",
+                "_expander",
+                "_data",
+                "_repr",
+                "_default_keys",
+                "_tags_in_raw_data",
             ):
                 original = getattr(source, attr)
                 setattr(self, attr, deepcopy(original))
@@ -103,7 +106,8 @@ class EnvDict(Mapping):
                 # load data
                 raw_data,
                 # this will be None if source is a dict
-                self._path_to_env) = load_from_source(source)
+                self._path_to_env,
+            ) = load_from_source(source)
 
             # placeholders in user's env content
             self._tags_in_raw_data = find_tags_in_dict(raw_data)
@@ -116,8 +120,11 @@ class EnvDict(Mapping):
             # resolves to its parent
             if path_to_here is None:
                 # if no pat_to_here, use path_to_end
-                path_to_here = (None if self._path_to_env is None else Path(
-                    self._path_to_env).parent)
+                path_to_here = (
+                    None
+                    if self._path_to_env is None
+                    else Path(self._path_to_env).parent
+                )
             else:
                 path_to_here = Path(path_to_here).resolve()
 
@@ -139,13 +146,15 @@ class EnvDict(Mapping):
             # expand _module special key, return its expanded value
             self._preprocessed = raw_preprocess(raw_data, self._path_to_env)
 
-            self._expander = EnvironmentExpander(self._preprocessed,
-                                                 path_to_here=path_to_here,
-                                                 path_to_env=self._path_to_env)
+            self._expander = EnvironmentExpander(
+                self._preprocessed,
+                path_to_here=path_to_here,
+                path_to_env=self._path_to_env,
+            )
             # now expand all values
             data = self._expander.expand_raw_dictionary(raw_data)
             # this section is for config and should not be visible
-            data.pop('meta', None)
+            data.pop("meta", None)
             self._data = data
 
             self._repr = Repr()
@@ -160,9 +169,11 @@ class EnvDict(Mapping):
             source_found, _ = default.find_file_recursively(source)
 
             if source_found is None:
-                raise FileNotFoundError('Could not find file "{}" in the '
-                                        'current working directory nor '
-                                        '6 levels up'.format(source))
+                raise FileNotFoundError(
+                    'Could not find file "{}" in the '
+                    "current working directory nor "
+                    "6 levels up".format(source)
+                )
             else:
                 source = source_found
 
@@ -177,22 +188,21 @@ class EnvDict(Mapping):
 
     @staticmethod
     def _default_dict(path_to_here):
-
         placeholders = {
-            'user': '{{user}}',
-            'cwd': '{{cwd}}',
-            'now': '{{now}}',
+            "user": "{{user}}",
+            "cwd": "{{cwd}}",
+            "now": "{{now}}",
         }
 
         if default.try_to_find_root_recursively(path_to_here) is not None:
-            placeholders['root'] = '{{root}}'
+            placeholders["root"] = "{{root}}"
 
         if path_to_here is not None:
-            placeholders['here'] = '{{here}}'
+            placeholders["here"] = "{{here}}"
 
         if path_to_here is not None and repo.is_repo(path_to_here):
-            placeholders['git'] = '{{git}}'
-            placeholders['git_hash'] = '{{git_hash}}'
+            placeholders["git"] = "{{git}}"
+            placeholders["git_hash"] = "{{git_hash}}"
 
         return placeholders
 
@@ -201,17 +211,19 @@ class EnvDict(Mapping):
         return self._path_to_env
 
     def __getattr__(self, key):
-        error = AttributeError("'{}' object has no attribute '{}'".format(
-            type(self).__name__, key))
+        error = AttributeError(
+            "'{}' object has no attribute '{}'".format(type(self).__name__, key)
+        )
         # do not look up special atttributes this way!
-        if key.startswith('__') and key.endswith('__'):
+        if key.startswith("__") and key.endswith("__"):
             raise error
 
         if key in self:
             return self[key]
         else:
-            raise AttributeError("{} object has no atttribute '{}'".format(
-                repr(self), key))
+            raise AttributeError(
+                "{} object has no atttribute '{}'".format(repr(self), key)
+            )
 
     def __getitem__(self, key):
         try:
@@ -220,7 +232,7 @@ class EnvDict(Mapping):
             # custom error will be displayed around quotes, but it's fine.
             # this is due to the KeyError.__str__ implementation
             msg = "{} object has no key '{}'".format(repr(self), key)
-            e.args = (msg, )
+            e.args = (msg,)
             raise
 
     def _getitem(self, key):
@@ -244,7 +256,7 @@ class EnvDict(Mapping):
 
     def __repr__(self):
         content = self._repr.repr_dict(self._data, level=2)
-        return f'{type(self).__name__}({content})'
+        return f"{type(self).__name__}({content})"
 
     def _replace_value(self, value, keys_all):
         """
@@ -263,12 +275,13 @@ class EnvDict(Mapping):
             dict_to_edit = dict_to_edit[e]
 
         if key_to_edit not in dict_to_edit:
-            dotted_path = '.'.join(keys_all)
-            raise KeyError('Trying to replace key "{}" in env, '
-                           'but it does not exist'.format(dotted_path))
+            dotted_path = ".".join(keys_all)
+            raise KeyError(
+                'Trying to replace key "{}" in env, '
+                "but it does not exist".format(dotted_path)
+            )
 
-        dict_to_edit[key_to_edit] = (self._expander.expand_raw_value(
-            value, keys_all))
+        dict_to_edit[key_to_edit] = self._expander.expand_raw_value(value, keys_all)
 
     def _inplace_replace_flatten_key(self, value, key_flatten):
         """
@@ -284,10 +297,10 @@ class EnvDict(Mapping):
         Returns a copy
         """
         # convert env__a__b__c -> ['a', 'b', 'c']
-        parts = key_flatten.split('__')
+        parts = key_flatten.split("__")
 
-        if parts[0] != 'env':
-            raise ValueError('keys_flatten must start with env__')
+        if parts[0] != "env":
+            raise ValueError("keys_flatten must start with env__")
 
         keys_all = parts[1:]
         self._replace_value(value, keys_all)
@@ -311,8 +324,9 @@ class EnvDict(Mapping):
         return obj
 
     def _render(self, raw_value):
-        placeholders = util.get_tags_in_str(raw_value,
-                                            require_runtime_placeholders=False)
+        placeholders = util.get_tags_in_str(
+            raw_value, require_runtime_placeholders=False
+        )
 
         if not placeholders:
             return raw_value, placeholders
@@ -322,12 +336,11 @@ class EnvDict(Mapping):
         if undefined:
             msg = _error_message_for_undefined_list(undefined)
             raise BaseException(
-                f'Error replacing placeholders:\n{msg}\n\nLoaded env: '
-                f'{self!r}')
+                f"Error replacing placeholders:\n{msg}\n\nLoaded env: " f"{self!r}"
+            )
 
         # render using self._data since self contains FrozenJSON objects
-        value = Template(raw_value,
-                         undefined=StrictUndefined).render(**self._data)
+        value = Template(raw_value, undefined=StrictUndefined).render(**self._data)
 
         return value, placeholders
 
@@ -340,24 +353,23 @@ class EnvDict(Mapping):
 
 
 def _error_message_for_undefined_list(undefined):
-    return '\n'.join(_error_message_for_undefined(u) for u in undefined)
+    return "\n".join(_error_message_for_undefined(u) for u in undefined)
 
 
 def _error_message_for_undefined(u):
-    git_ = 'Ensure git is installed and git repository exists'
+    git_ = "Ensure git is installed and git repository exists"
     reasons = {
-        'git':
-        git_,
-        'git_hash':
-        git_,
-        'here':
-        'Ensure the spec was initialized from a file',
-        'root': ('Ensure a pipeline.yaml or setup.py exist in the '
-                 'current directory or a parent directory')
+        "git": git_,
+        "git_hash": git_,
+        "here": "Ensure the spec was initialized from a file",
+        "root": (
+            "Ensure a pipeline.yaml or setup.py exist in the "
+            "current directory or a parent directory"
+        ),
     }
-    howto = reasons.get(u, 'Ensure the placeholder is defined in the env')
+    howto = reasons.get(u, "Ensure the placeholder is defined in the env")
 
-    return '  * {{' + u + '}}: ' + howto
+    return "  * {{" + u + "}}: " + howto
 
 
 def load_from_source(source):
@@ -383,18 +395,20 @@ def load_from_source(source):
         try:
             raw = yaml.load(f, Loader=yaml.SafeLoader)
         except Exception as e:
-            raise type(e)('yaml.load failed to parse your YAML file '
-                          'fix syntax errors and try again') from e
+            raise type(e)(
+                "yaml.load failed to parse your YAML file "
+                "fix syntax errors and try again"
+            ) from e
         finally:
             # yaml.load returns None for empty files and str if file just
             # contains a string - those aren't valid for our use case, raise
             # an error
             if not isinstance(raw, Mapping):
-                raise ValueError("Expected object loaded from '{}' to be "
-                                 "a dict but got '{}' instead, "
-                                 "verify the content".format(
-                                     source,
-                                     type(raw).__name__))
+                raise ValueError(
+                    "Expected object loaded from '{}' to be "
+                    "a dict but got '{}' instead, "
+                    "verify the content".format(source, type(raw).__name__)
+                )
 
     path = Path(source).resolve()
 
@@ -423,18 +437,17 @@ def raw_preprocess(raw, path_to_raw):
     path_to_raw : str
         Path to file where dict was read from, it read from a dict, pass None
     """
-    module = raw.get('_module')
+    module = raw.get("_module")
     preprocessed = {}
 
     if module:
-
-        if raw['_module'] == '{{here}}':
-
+        if raw["_module"] == "{{here}}":
             if path_to_raw is not None:
-                preprocessed['_module'] = path_to_raw.parent
+                preprocessed["_module"] = path_to_raw.parent
             else:
-                raise ValueError('_module cannot be {{here}} if '
-                                 'not loaded from a file')
+                raise ValueError(
+                    "_module cannot be {{here}} if " "not loaded from a file"
+                )
         else:
             # check if it's a filesystem path
             as_path = Path(module)
@@ -443,8 +456,9 @@ def raw_preprocess(raw, path_to_raw):
                 if as_path.is_file():
                     raise ValueError(
                         'Could not resolve _module "{}", '
-                        'expected a module or a directory but got a '
-                        'file'.format(module))
+                        "expected a module or a directory but got a "
+                        "file".format(module)
+                    )
                 else:
                     path_to_module = as_path
 
@@ -454,13 +468,15 @@ def raw_preprocess(raw, path_to_raw):
 
                 # package does not exist
                 if module_spec is None:
-                    raise ValueError('Could not resolve _module "{}", '
-                                     'it is not a valid module '
-                                     'nor a directory'.format(module))
+                    raise ValueError(
+                        'Could not resolve _module "{}", '
+                        "it is not a valid module "
+                        "nor a directory".format(module)
+                    )
                 else:
                     path_to_module = Path(module_spec.origin).parent
 
-            preprocessed['_module'] = path_to_module
+            preprocessed["_module"] = path_to_module
 
     return preprocessed
 

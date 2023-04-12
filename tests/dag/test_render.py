@@ -43,11 +43,11 @@ def touch(upstream, product):
 
 
 def on_render_1():
-    warnings.warn('This is a warning', WarningA)
+    warnings.warn("This is a warning", WarningA)
 
 
 def on_render_2():
-    warnings.warn('This is another warning', WarningA)
+    warnings.warn("This is another warning", WarningA)
 
 
 def on_render_failed():
@@ -58,15 +58,21 @@ def on_render_failed():
 def dag():
     dag = DAG()
 
-    t1 = ShellScript('echo a > {{product}} ', File('1.txt'), dag, 't1')
+    t1 = ShellScript("echo a > {{product}} ", File("1.txt"), dag, "t1")
 
-    t2 = ShellScript(('cat {{upstream["t1"]}} > {{product}}'
-                      '&& echo b >> {{product}} '),
-                     File(('2_{{upstream["t1"]}}')), dag, 't2')
+    t2 = ShellScript(
+        ('cat {{upstream["t1"]}} > {{product}}' "&& echo b >> {{product}} "),
+        File(('2_{{upstream["t1"]}}')),
+        dag,
+        "t2",
+    )
 
-    t3 = ShellScript(('cat {{upstream["t2"]}} > {{product}} '
-                      '&& echo c >> {{product}}'),
-                     File(('3_{{upstream["t2"]}}')), dag, 't3')
+    t3 = ShellScript(
+        ('cat {{upstream["t2"]}} > {{product}} ' "&& echo c >> {{product}}"),
+        File(('3_{{upstream["t2"]}}')),
+        dag,
+        "t3",
+    )
 
     t1 >> t2 >> t3
 
@@ -76,18 +82,17 @@ def dag():
 def test_dag_render_step_by_step():
     dag = DAG()
 
-    t1 = PythonCallable(touch_root, File('t1.txt'), dag, name='t1')
-    t21 = PythonCallable(touch, File('t21.txt'), dag, name='t21')
-    t22 = PythonCallable(touch, File('t22.txt'), dag, name='t22')
-    t3 = PythonCallable(touch, File('t3.txt'), dag, name='t3')
+    t1 = PythonCallable(touch_root, File("t1.txt"), dag, name="t1")
+    t21 = PythonCallable(touch, File("t21.txt"), dag, name="t21")
+    t22 = PythonCallable(touch, File("t22.txt"), dag, name="t22")
+    t3 = PythonCallable(touch, File("t3.txt"), dag, name="t3")
 
     t1 >> t21
     t1 >> t22
 
     (t21 + t22) >> t3
 
-    assert (set(t.exec_status
-                for t in dag.values()) == {TaskStatus.WaitingRender})
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.WaitingRender}
 
     t1.render()
 
@@ -121,18 +126,17 @@ def test_dag_render_step_by_step():
 def test_dag_render_step_by_step_w_skipped(tmp_directory):
     dag = DAG()
 
-    t1 = PythonCallable(touch_root, File('t1.txt'), dag, name='t1')
-    t21 = PythonCallable(touch, File('t21.txt'), dag, name='t21')
-    t22 = PythonCallable(touch, File('t22.txt'), dag, name='t22')
-    t3 = PythonCallable(touch, File('t3.txt'), dag, name='t3')
+    t1 = PythonCallable(touch_root, File("t1.txt"), dag, name="t1")
+    t21 = PythonCallable(touch, File("t21.txt"), dag, name="t21")
+    t22 = PythonCallable(touch, File("t22.txt"), dag, name="t22")
+    t3 = PythonCallable(touch, File("t3.txt"), dag, name="t3")
 
     t1 >> t21
     t1 >> t22
 
     (t21 + t22) >> t3
 
-    assert (set(t.exec_status
-                for t in dag.values()) == {TaskStatus.WaitingRender})
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.WaitingRender}
 
     dag.render()
     t1.build()
@@ -172,23 +176,22 @@ def test_dag_render_step_by_step_w_skipped(tmp_directory):
 def test_can_access_product_without_rendering_if_literal():
     dag = DAG()
 
-    ShellScript('echo a > {{product}}', File('1.txt'), dag, 't1')
+    ShellScript("echo a > {{product}}", File("1.txt"), dag, "t1")
 
     # no rendering!
 
     # check str works even though we did not run dag.render()
-    assert str(dag['t1'].product) == '1.txt'
+    assert str(dag["t1"].product) == "1.txt"
 
 
 def test_can_render_templates_in_products(dag, tmp_directory):
-
-    t2 = dag['t2']
-    t3 = dag['t3']
+    t2 = dag["t2"]
+    t3 = dag["t3"]
 
     dag.render()
 
-    assert str(t3.product) == '3_2_1.txt'
-    assert str(t2.product) == '2_1.txt'
+    assert str(t3.product) == "3_2_1.txt"
+    assert str(t2.product) == "2_1.txt"
 
 
 def test_can_render_with_postgres_products(dag, tmp_directory):
@@ -204,15 +207,15 @@ def test_can_build_dag_with_templates(dag, tmp_directory):
 
 
 def test_rendering_dag_also_renders_upstream_outside_dag(tmp_directory):
-    sub_dag = DAG('sub_dag')
+    sub_dag = DAG("sub_dag")
 
-    ta = PythonCallable(touch_root, File('a.txt'), sub_dag, 'ta')
-    tb = PythonCallable(touch, File('b.txt'), sub_dag, 'tb')
+    ta = PythonCallable(touch_root, File("a.txt"), sub_dag, "ta")
+    tb = PythonCallable(touch, File("b.txt"), sub_dag, "tb")
 
-    dag = DAG('dag')
+    dag = DAG("dag")
 
-    tc = PythonCallable(touch, File('c.txt'), dag, 'tc')
-    td = PythonCallable(touch, File('d.txt'), dag, 'td')
+    tc = PythonCallable(touch, File("c.txt"), dag, "tc")
+    td = PythonCallable(touch, File("d.txt"), dag, "td")
 
     ta >> tb >> tc >> td
 
@@ -230,8 +233,8 @@ def test_rendering_dag_also_renders_upstream_outside_dag(tmp_directory):
 
 def test_warnings_are_shown(tmp_directory):
     dag = DAG()
-    t1 = PythonCallable(touch_root, File('file.txt'), dag)
-    t2 = PythonCallable(touch, File('file2.txt'), dag)
+    t1 = PythonCallable(touch_root, File("file.txt"), dag)
+    t2 = PythonCallable(touch, File("file2.txt"), dag)
     t1.on_render = on_render_1
     t2.on_render = on_render_2
     t1 >> t2
@@ -240,14 +243,14 @@ def test_warnings_are_shown(tmp_directory):
         dag.render()
 
     assert len(record) == 1
-    assert 'This is a warning' in str(record[0].message)
-    assert 'This is another warning' in str(record[0].message)
+    assert "This is a warning" in str(record[0].message)
+    assert "This is another warning" in str(record[0].message)
 
 
 def test_recover_from_failed_render(tmp_directory):
     dag = DAG()
-    t1 = PythonCallable(touch_root, File('file.txt'), dag)
-    t2 = PythonCallable(touch, File('file2.txt'), dag)
+    t1 = PythonCallable(touch_root, File("file.txt"), dag)
+    t2 = PythonCallable(touch, File("file2.txt"), dag)
     t1.on_render = on_render_failed
     t2.on_render = on_render_2
     t1 >> t2
@@ -274,8 +277,8 @@ def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
 
     def _make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
-        t1 = PythonCallable(touch_root, File('one.txt'), dag, name='one')
-        t2 = PythonCallable(touch, File('two.txt'), dag, name='two')
+        t1 = PythonCallable(touch_root, File("one.txt"), dag, name="one")
+        t2 = PythonCallable(touch, File("two.txt"), dag, name="two")
         t1 >> t2
         return dag
 
@@ -283,13 +286,15 @@ def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
 
     dag = _make_dag()
 
-    t1 = dag['one']
-    t2 = dag['two']
+    t1 = dag["one"]
+    t2 = dag["two"]
 
-    monkeypatch.setattr(t1.product, '_check_is_outdated',
-                        Mock(wraps=t1.product._check_is_outdated))
-    monkeypatch.setattr(t2.product, '_check_is_outdated',
-                        Mock(wraps=t2.product._check_is_outdated))
+    monkeypatch.setattr(
+        t1.product, "_check_is_outdated", Mock(wraps=t1.product._check_is_outdated)
+    )
+    monkeypatch.setattr(
+        t2.product, "_check_is_outdated", Mock(wraps=t2.product._check_is_outdated)
+    )
 
     # after building for the first time
     dag.render()
@@ -301,10 +306,10 @@ def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
 def make_dag_with_client():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
+    dag.clients[File] = LocalStorageClient("remote", path_to_project_root=".")
 
-    root = PythonCallable(touch_root, File('out/root'), dag=dag, name='root')
-    task = PythonCallable(touch, File('out/file'), dag=dag, name='task')
+    root = PythonCallable(touch_root, File("out/root"), dag=dag, name="root")
+    task = PythonCallable(touch, File("out/file"), dag=dag, name="task")
     root >> task
     return dag
 
@@ -312,14 +317,11 @@ def make_dag_with_client():
 def make_larger_dag_with_client():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
+    dag.clients[File] = LocalStorageClient("remote", path_to_project_root=".")
 
-    root = PythonCallable(touch_root, File('out/root'), dag=dag, name='root')
-    task = PythonCallable(touch, File('out/file'), dag=dag, name='task')
-    another = PythonCallable(touch,
-                             File('out/another'),
-                             dag=dag,
-                             name='another')
+    root = PythonCallable(touch_root, File("out/root"), dag=dag, name="root")
+    task = PythonCallable(touch, File("out/file"), dag=dag, name="task")
+    another = PythonCallable(touch, File("out/another"), dag=dag, name="another")
     root >> task >> another
     return dag
 
@@ -327,15 +329,15 @@ def make_larger_dag_with_client():
 def make_dag_with_client_and_metaproduct():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
+    dag.clients[File] = LocalStorageClient("remote", path_to_project_root=".")
 
-    root = PythonCallable(touch_root_with_metaproduct, {
-        'root': File('out/root'),
-        'another': File('out/another')
-    },
-                          dag=dag,
-                          name='root')
-    task = PythonCallable(touch, File('file'), dag=dag, name='task')
+    root = PythonCallable(
+        touch_root_with_metaproduct,
+        {"root": File("out/root"), "another": File("out/another")},
+        dag=dag,
+        name="root",
+    )
+    task = PythonCallable(touch, File("file"), dag=dag, name="task")
     root >> task
     return dag
 
@@ -343,34 +345,37 @@ def make_dag_with_client_and_metaproduct():
 def make_dag_with_client_and_metaproduct_2():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
+    dag.clients[File] = LocalStorageClient("remote", path_to_project_root=".")
 
-    root = PythonCallable(touch_root_with_metaproduct, {
-        'root': File('out/root'),
-        'another': File('out/another')
-    },
-                          dag=dag,
-                          name='root')
-    task = PythonCallable(touch_with_metaproduct, {
-        'file': File('out/file'),
-        'another_file': File('out/another_file')
-    },
-                          dag=dag,
-                          name='task')
-    last = PythonCallable(touch, File('last'), dag=dag, name='last')
+    root = PythonCallable(
+        touch_root_with_metaproduct,
+        {"root": File("out/root"), "another": File("out/another")},
+        dag=dag,
+        name="root",
+    )
+    task = PythonCallable(
+        touch_with_metaproduct,
+        {"file": File("out/file"), "another_file": File("out/another_file")},
+        dag=dag,
+        name="task",
+    )
+    last = PythonCallable(touch, File("last"), dag=dag, name="last")
     root >> task >> last
     return dag
 
 
-@pytest.mark.parametrize('factory', [
-    make_dag_with_client,
-    make_dag_with_client_and_metaproduct,
-    make_dag_with_client_and_metaproduct_2,
-    make_larger_dag_with_client,
-])
+@pytest.mark.parametrize(
+    "factory",
+    [
+        make_dag_with_client,
+        make_dag_with_client_and_metaproduct,
+        make_dag_with_client_and_metaproduct_2,
+        make_larger_dag_with_client,
+    ],
+)
 def test_render_remote(factory, tmp_directory):
     factory().build()
-    shutil.rmtree('out')
+    shutil.rmtree("out")
 
     dag = factory()
     dag.render(remote=True)
@@ -381,31 +386,33 @@ def test_render_remote(factory, tmp_directory):
 def test_render_remote_checks_remote_timestamp(tmp_directory):
     make_dag_with_client().build()
 
-    Path('remote', 'out', 'root').unlink()
+    Path("remote", "out", "root").unlink()
 
     dag = make_dag_with_client()
     dag.render(remote=True)
 
     status = {n: t.exec_status for n, t in dag.items()}
 
-    assert status['root'] == TaskStatus.WaitingExecution
-    assert status['task'] == TaskStatus.WaitingUpstream
+    assert status["root"] == TaskStatus.WaitingExecution
+    assert status["task"] == TaskStatus.WaitingUpstream
 
 
 def test_render_remote_with_non_file_products(tmp_directory):
-    client = SQLAlchemyClient('sqlite:///my.db')
+    client = SQLAlchemyClient("sqlite:///my.db")
 
-    pd.DataFrame({'x': range(3)}).to_sql('data', client.engine)
+    pd.DataFrame({"x": range(3)}).to_sql("data", client.engine)
 
     def make(client):
         dag = DAG()
         dag.clients[SQLScript] = client
         dag.clients[SQLiteRelation] = client
 
-        SQLScript('CREATE TABLE {{product}} AS SELECT * FROM data',
-                  SQLiteRelation(['data2', 'table']),
-                  dag=dag,
-                  name='task')
+        SQLScript(
+            "CREATE TABLE {{product}} AS SELECT * FROM data",
+            SQLiteRelation(["data2", "table"]),
+            dag=dag,
+            name="task",
+        )
 
         return dag
 

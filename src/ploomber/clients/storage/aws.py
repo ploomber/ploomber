@@ -160,15 +160,17 @@ class S3Client(AbstractStorageClient):
     If a notebook (or script) task fails, the partially executed ``.ipynb``
     file will be uploaded using this client.
     """
-    @requires(['boto3', 'botocore'], name='S3Client')
-    def __init__(self,
-                 bucket_name,
-                 parent,
-                 json_credentials_path=None,
-                 path_to_project_root=None,
-                 credentials_relative_to_project_root=True,
-                 **kwargs):
 
+    @requires(["boto3", "botocore"], name="S3Client")
+    def __init__(
+        self,
+        bucket_name,
+        parent,
+        json_credentials_path=None,
+        path_to_project_root=None,
+        credentials_relative_to_project_root=True,
+        **kwargs,
+    ):
         if path_to_project_root:
             project_root = path_to_project_root
         else:
@@ -176,16 +178,21 @@ class S3Client(AbstractStorageClient):
                 project_root = find_root_recursively()
             except Exception as e:
                 raise DAGSpecInvalidError(
-                    f'Cannot initialize {type(self).__name__} because there '
-                    'is not project root. Set one or explicitly pass '
-                    'a value in the path_to_project_root argument') from e
+                    f"Cannot initialize {type(self).__name__} because there "
+                    "is not project root. Set one or explicitly pass "
+                    "a value in the path_to_project_root argument"
+                ) from e
 
         self._path_to_project_root = Path(project_root).resolve()
 
-        if (credentials_relative_to_project_root and json_credentials_path
-                and not Path(json_credentials_path).is_absolute()):
-            json_credentials_path = Path(self._path_to_project_root,
-                                         json_credentials_path)
+        if (
+            credentials_relative_to_project_root
+            and json_credentials_path
+            and not Path(json_credentials_path).is_absolute()
+        ):
+            json_credentials_path = Path(
+                self._path_to_project_root, json_credentials_path
+            )
 
         self._client_kwargs = kwargs
 
@@ -193,9 +200,9 @@ class S3Client(AbstractStorageClient):
             c = json.loads(Path(json_credentials_path).read_text())
 
             self._client_kwargs = {
-                'aws_access_key_id': c['aws_access_key_id'],
-                'aws_secret_access_key': c['aws_secret_access_key'],
-                **kwargs
+                "aws_access_key_id": c["aws_access_key_id"],
+                "aws_secret_access_key": c["aws_secret_access_key"],
+                **kwargs,
             }
 
         self._client = self._init_client()
@@ -203,7 +210,7 @@ class S3Client(AbstractStorageClient):
         self._bucket_name = bucket_name
 
     def _init_client(self):
-        return boto3.client('s3', **self._client_kwargs)
+        return boto3.client("s3", **self._client_kwargs)
 
     def download(self, local, destination=None):
         remote = self._remote_path(local)
@@ -214,17 +221,18 @@ class S3Client(AbstractStorageClient):
         if self._is_file(remote):
             self._download(destination, remote)
         else:
-            paginator = self._client.get_paginator('list_objects_v2')
+            paginator = self._client.get_paginator("list_objects_v2")
 
-            for page in paginator.paginate(Bucket=self._bucket_name,
-                                           Prefix=remote):
-                if 'Contents' not in page:
-                    raise RemoteFileNotFound('Could not download '
-                                             f'{local!r} using client {self}: '
-                                             'No such file or directory')
+            for page in paginator.paginate(Bucket=self._bucket_name, Prefix=remote):
+                if "Contents" not in page:
+                    raise RemoteFileNotFound(
+                        "Could not download "
+                        f"{local!r} using client {self}: "
+                        "No such file or directory"
+                    )
 
-                for remote_file in page['Contents']:
-                    remote_path = remote_file['Key']
+                for remote_file in page["Contents"]:
+                    remote_path = remote_file["Key"]
                     rel = PurePosixPath(remote_path).relative_to(remote)
                     destination_file = Path(destination, *rel.parts)
                     destination_file.parent.mkdir(exist_ok=True, parents=True)
@@ -239,12 +247,12 @@ class S3Client(AbstractStorageClient):
         self._client.download_file(self._bucket_name, remote, str(local))
 
     def _is_file(self, remote):
-        resource = boto3.resource('s3', **self._client_kwargs)
+        resource = boto3.resource("s3", **self._client_kwargs)
 
         try:
             resource.Object(self._bucket_name, remote).load()
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == '404':
+            if e.response["Error"]["Code"] == "404":
                 return False
             else:
                 raise
@@ -252,13 +260,12 @@ class S3Client(AbstractStorageClient):
             return True
 
     def _is_dir(self, remote):
-        bucket = boto3.resource('s3', **self._client_kwargs).Bucket(
-            self._bucket_name)
+        bucket = boto3.resource("s3", **self._client_kwargs).Bucket(self._bucket_name)
         return any(bucket.objects.filter(Prefix=remote))
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state['_client']
+        del state["_client"]
         return state
 
     def __setstate__(self, state):
@@ -266,9 +273,11 @@ class S3Client(AbstractStorageClient):
         self._client = self._init_client()
 
     def __repr__(self):
-        return (f'{type(self).__name__}(bucket_name={self._bucket_name!r}, '
-                f'parent={self._parent!r}, '
-                f'path_to_project_root={str(self._path_to_project_root)!r})')
+        return (
+            f"{type(self).__name__}(bucket_name={self._bucket_name!r}, "
+            f"parent={self._parent!r}, "
+            f"path_to_project_root={str(self._path_to_project_root)!r})"
+        )
 
     @property
     def parent(self):

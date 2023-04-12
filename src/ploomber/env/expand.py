@@ -23,7 +23,7 @@ def expand_raw_dictionary_and_extract_tags(raw, mapping):
 
     placeholders_all = []
 
-    for (d, current_key, current_val, _) in iterate_nested_dict(data):
+    for d, current_key, current_val, _ in iterate_nested_dict(data):
         d[current_key], placeholders = expand_if_needed(current_val, mapping)
         placeholders_all.extend(placeholders)
 
@@ -43,10 +43,13 @@ def expand_raw_dictionaries_and_extract_tags(raw, mapping):
     Expands a list of dictionaries
     """
     expanded, tags = list(
-        zip(*[
-            expand_raw_dictionary_and_extract_tags(element, mapping)
-            for element in raw
-        ]))
+        zip(
+            *[
+                expand_raw_dictionary_and_extract_tags(element, mapping)
+                for element in raw
+            ]
+        )
+    )
 
     tags_unique = set(reduce(lambda x, y: x | y, tags))
 
@@ -66,11 +69,11 @@ def cast_if_possible(value):
     if isinstance(value, str):
         value_lower = value.lower()
 
-        if value_lower == 'false':
+        if value_lower == "false":
             return False
-        elif value_lower == 'true':
+        elif value_lower == "true":
             return True
-        elif value_lower in {'none', 'null'}:
+        elif value_lower in {"none", "null"}:
             return None
 
         try:
@@ -104,17 +107,20 @@ class EnvironmentExpander:
         file to fix if there are errors.
     """
 
-    def __init__(self,
-                 preprocessed,
-                 path_to_here=None,
-                 version_requires_import=False,
-                 path_to_env=None):
+    def __init__(
+        self,
+        preprocessed,
+        path_to_here=None,
+        version_requires_import=False,
+        path_to_env=None,
+    ):
         self._preprocessed = preprocessed
         self._path_to_env = path_to_env
 
         # {{here}} resolves to this value
-        self._path_to_here = (None if path_to_here is None else str(
-            Path(path_to_here).resolve()))
+        self._path_to_here = (
+            None if path_to_here is None else str(Path(path_to_here).resolve())
+        )
         # we compute every placeholder's value so we only do it once
         self._placeholders = {}
 
@@ -123,8 +129,7 @@ class EnvironmentExpander:
     def expand_raw_dictionary(self, raw):
         data = deepcopy(raw)
 
-        for (d, current_key, current_val,
-             parent_keys) in iterate_nested_dict(data):
+        for d, current_key, current_val, parent_keys in iterate_nested_dict(data):
             d[current_key] = self.expand_raw_value(current_val, parent_keys)
 
         return data
@@ -152,31 +157,34 @@ class EnvironmentExpander:
         if not placeholders:
             value = raw_value
         else:
-            if 'git' in placeholders:
-                if not shutil.which('git'):
-                    raise BaseException('Found placeholder {{git}}, but '
-                                        'git is not installed. Please install '
-                                        'it and try again.')
+            if "git" in placeholders:
+                if not shutil.which("git"):
+                    raise BaseException(
+                        "Found placeholder {{git}}, but "
+                        "git is not installed. Please install "
+                        "it and try again."
+                    )
 
                 if not repo.is_repo(
-                        self._preprocessed.get('_module', self._path_to_here)):
+                    self._preprocessed.get("_module", self._path_to_here)
+                ):
                     raise BaseException(
-                        'Found placeholder {{git}}, but could not '
-                        'locate a git repository. Create a repository '
-                        'or remove the {{git}} placeholder.')
+                        "Found placeholder {{git}}, but could not "
+                        "locate a git repository. Create a repository "
+                        "or remove the {{git}} placeholder."
+                    )
 
             # get all required placeholders
             params = {k: self.load_placeholder(k) for k in placeholders}
             value = Template(raw_value).render(**params)
 
         if parents:
-            if parents[0] == 'path':
-
+            if parents[0] == "path":
                 # value is a str (since it was loaded from a yaml file),
                 # if it has an explicit trailing slash, interpret it as
                 # a directory and create it, we have to do it at this point,
                 # because once we cast to Path, we lose the trailing slash
-                if str(value).endswith('/'):
+                if str(value).endswith("/"):
                     self._try_create_dir(value)
 
                 value = Path(value).expanduser()
@@ -199,34 +207,38 @@ class EnvironmentExpander:
 
     def load_placeholder(self, key):
         if key not in self._placeholders:
-            if hasattr(self, 'get_' + key):
+            if hasattr(self, "get_" + key):
                 try:
-                    value = getattr(self, 'get_' + key)()
+                    value = getattr(self, "get_" + key)()
                 except Exception as e:
-                    raise BaseException('An error happened while '
-                                        'expanding placeholder {{' + key +
-                                        '}}') from e
+                    raise BaseException(
+                        "An error happened while "
+                        "expanding placeholder {{" + key + "}}"
+                    ) from e
 
                 self._placeholders[key] = value
             else:
                 if self._path_to_env:
-                    msg = ('Error resolving env '
-                           f'at {str(self._path_to_env)!r}: '
-                           f'Undeclared value for placeholder {key!r}')
+                    msg = (
+                        "Error resolving env "
+                        f"at {str(self._path_to_env)!r}: "
+                        f"Undeclared value for placeholder {key!r}"
+                    )
                 else:
-                    msg = ('Error resolving env: Undeclared '
-                           f'value for placeholder {key!r}')
+                    msg = (
+                        "Error resolving env: Undeclared "
+                        f"value for placeholder {key!r}"
+                    )
 
                 raise BaseException(msg)
 
         return self._placeholders[key]
 
     def _get_version_importing(self):
-        module_path = self._preprocessed.get('_module')
+        module_path = self._preprocessed.get("_module")
 
         if not module_path:
-            raise KeyError('_module key is required to use version '
-                           'placeholder')
+            raise KeyError("_module key is required to use version " "placeholder")
 
         # is this ok to do? /path/to/{module_name}
         module_name = str(Path(module_path).name)
@@ -234,22 +246,23 @@ class EnvironmentExpander:
 
         if module is None:
             raise ImportError(
-                'Unabe to import module with name "{}"'.format(module_name))
+                'Unabe to import module with name "{}"'.format(module_name)
+            )
 
-        if hasattr(module, '__version__'):
+        if hasattr(module, "__version__"):
             return module.__version__
         else:
-            raise RuntimeError('Module "{}" does not have a __version__ '
-                               'attribute '.format(module))
+            raise RuntimeError(
+                'Module "{}" does not have a __version__ ' "attribute ".format(module)
+            )
 
     def _get_version_without_importing(self):
-        if '_module' not in self._preprocessed:
-            raise KeyError('_module key is required to use version '
-                           'placeholder')
+        if "_module" not in self._preprocessed:
+            raise KeyError("_module key is required to use version " "placeholder")
 
-        content = (self._preprocessed['_module'] / '__init__.py').read_text()
+        content = (self._preprocessed["_module"] / "__init__.py").read_text()
 
-        version_re = re.compile(r'__version__\s+=\s+(.*)')
+        version_re = re.compile(r"__version__\s+=\s+(.*)")
 
         version = str(ast.literal_eval(version_re.search(content).group(1)))
         return version
@@ -270,12 +283,13 @@ class EnvironmentExpander:
         return str(Path(os.getcwd()).resolve())
 
     def get_root(self):
-        root = default.try_to_find_root_recursively(
-            starting_dir=self._path_to_here)
+        root = default.try_to_find_root_recursively(starting_dir=self._path_to_here)
 
         if root is None:
-            raise ValueError('Failed to expand {{root}}, could not '
-                             'find a setup.py in a parent folder')
+            raise ValueError(
+                "Failed to expand {{root}}, could not "
+                "find a setup.py in a parent folder"
+            )
 
         return root
 
@@ -283,36 +297,36 @@ class EnvironmentExpander:
         if self._path_to_here:
             return self._path_to_here
         else:
-            raise RuntimeError('here placeholder is only available '
-                               'when env was initialized from a file or '
-                               'when directly passing path to use')
+            raise RuntimeError(
+                "here placeholder is only available "
+                "when env was initialized from a file or "
+                "when directly passing path to use"
+            )
 
     def get_git(self):
-        module_path = self._preprocessed.get('_module')
+        module_path = self._preprocessed.get("_module")
 
         if self._path_to_here:
             module_path = self._path_to_here
 
         if not module_path:
-            raise KeyError('_module key is required to use git placeholder')
+            raise KeyError("_module key is required to use git placeholder")
 
         return repo.git_location(module_path)
 
     def get_git_hash(self):
-        module_path = self._preprocessed.get('_module')
+        module_path = self._preprocessed.get("_module")
 
         if self._path_to_here:
             module_path = self._path_to_here
 
         if not module_path:
-            raise KeyError(
-                '_module key is required to use git_hash placeholder')
+            raise KeyError("_module key is required to use git_hash placeholder")
 
         return repo.git_hash(module_path)
 
     def get_now(self):
-        """Returns current timestamp in ISO 8601 format
-        """
+        """Returns current timestamp in ISO 8601 format"""
         return datetime.datetime.now().isoformat()
 
 

@@ -5,7 +5,7 @@ from ploomber.tasks._upstream import Upstream
 def test_can_get_first():
     p = Upstream()
 
-    p['a'] = 0
+    p["a"] = 0
 
     assert p.first == 0
 
@@ -13,9 +13,9 @@ def test_can_get_first():
 def test_shows_warning_if_unused_parameters():
     p = Upstream()
 
-    p['a'] = 0
-    p['b'] = 1
+    p["a"] = 0
+    p["b"] = 1
 
     with pytest.warns(UserWarning):
         with p:
-            p['a']
+            p["a"]

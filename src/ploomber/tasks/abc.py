@@ -56,8 +56,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from ploomber.products import Product, MetaProduct, EmptyProduct, File
-from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
-                                 CallbackCheckAborted)
+from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop, CallbackCheckAborted
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks._upstream import Upstream
@@ -118,12 +117,12 @@ class Task(abc.ABC):
     All subclasses must implement the same constuctor to keep the API
     consistent, optional parameters after "params" are ok
     """
+
     PRODUCT_CLASSES_ALLOWED = None
 
     @abc.abstractmethod
     def run(self):
-        """This is the only required method Task subclasses must implement
-        """
+        """This is the only required method Task subclasses must implement"""
         pass  # pragma: no cover
 
     @abc.abstractmethod
@@ -138,60 +137,64 @@ class Task(abc.ABC):
             self._name = self._source.name
 
             if self._name is None:
-                raise AttributeError('Task name can only be None if it '
-                                     'can be inferred from the source object. '
-                                     'For example, when the task receives a '
-                                     'pathlib.Path, when using SourceLoader '
-                                     'or in PythonCallable. Pass a value '
-                                     'explicitly')
+                raise AttributeError(
+                    "Task name can only be None if it "
+                    "can be inferred from the source object. "
+                    "For example, when the task receives a "
+                    "pathlib.Path, when using SourceLoader "
+                    "or in PythonCallable. Pass a value "
+                    "explicitly"
+                )
         else:
             self._name = name
 
         if not isinstance(dag, AbstractDAG):
-            raise TypeError(
-                f"'dag' must be an instance of DAG, got {type(dag)!r}")
+            raise TypeError(f"'dag' must be an instance of DAG, got {type(dag)!r}")
 
         # NOTE: we should get rid of this, maybe just add hooks that are
         # called back on the dag object to avoid having a reference here
         self.dag = dag
         dag._add_task(self)
 
-        if not hasattr(self, '_source'):
+        if not hasattr(self, "_source"):
             raise RuntimeError(
-                'self._source must be initialized before calling '
-                '__init__ in Task')
+                "self._source must be initialized before calling " "__init__ in Task"
+            )
 
         if self._source is None:
-            raise TypeError(
-                '_init_source must return a source object, got None')
+            raise TypeError("_init_source must return a source object, got None")
 
         if isinstance(product, Product):
             self._product = product
 
             if self.PRODUCT_CLASSES_ALLOWED is not None:
                 if not isinstance(self._product, self.PRODUCT_CLASSES_ALLOWED):
-                    raise TypeError('{} only supports the following product '
-                                    'classes: {}, got {}'.format(
-                                        type(self).__name__,
-                                        self.PRODUCT_CLASSES_ALLOWED,
-                                        type(self._product).__name__))
+                    raise TypeError(
+                        "{} only supports the following product "
+                        "classes: {}, got {}".format(
+                            type(self).__name__,
+                            self.PRODUCT_CLASSES_ALLOWED,
+                            type(self._product).__name__,
+                        )
+                    )
         else:
             # if assigned a tuple/list of products, create a MetaProduct
             self._product = MetaProduct(product)
 
             if self.PRODUCT_CLASSES_ALLOWED is not None:
                 if not all(
-                        isinstance(p, self.PRODUCT_CLASSES_ALLOWED)
-                        for p in self._product):
-                    raise TypeError('{} only supports the following product '
-                                    'classes: {}, got {}'.format(
-                                        type(self).__name__,
-                                        self.PRODUCT_CLASSES_ALLOWED,
-                                        type(self._product).__name__))
+                    isinstance(p, self.PRODUCT_CLASSES_ALLOWED) for p in self._product
+                ):
+                    raise TypeError(
+                        "{} only supports the following product "
+                        "classes: {}, got {}".format(
+                            type(self).__name__,
+                            self.PRODUCT_CLASSES_ALLOWED,
+                            type(self._product).__name__,
+                        )
+                    )
 
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
         self.product.task = self
         self._client = None
@@ -207,10 +210,10 @@ class Task(abc.ABC):
         # make it a property so we always get the latest value for self.client
         # given that could be None during init
         return {
-            'task': self,
-            'client': self.client,
-            'product': self.product,
-            'params': self.params
+            "task": self,
+            "client": self.client,
+            "product": self.product,
+            "params": self.params,
         }
 
     @property
@@ -239,8 +242,7 @@ class Task(abc.ABC):
 
     @property
     def product(self):
-        """The product this task will create upon execution
-        """
+        """The product this task will create upon execution"""
         return self._product
 
     @property
@@ -270,8 +272,8 @@ class Task(abc.ABC):
         for up_name, up_task in self.upstream.items():
             data = self.dag._G.get_edge_data(up_name, self.name)
 
-            if data and 'group_name' in data:
-                group_name = data['group_name']
+            if data and "group_name" in data:
+                group_name = data["group_name"]
                 grouped[group_name][up_name] = up_task.product
             else:
                 grouped[up_name] = up_task.product
@@ -301,9 +303,7 @@ class Task(abc.ABC):
         else:
             # retrieve lineage: upstream tasks + lineage from upstream tasks
             up = list(self.upstream.keys())
-            lineage_up = [
-                up._lineage for up in self.upstream.values() if up._lineage
-            ]
+            lineage_up = [up._lineage for up in self.upstream.values() if up._lineage]
             lineage = up + [task for lineage in lineage_up for task in lineage]
             return set(lineage)
 
@@ -327,11 +327,9 @@ class Task(abc.ABC):
         self._on_finish = value
 
     def _run_on_finish(self):
-        """Call on_finish hook
-        """
+        """Call on_finish hook"""
         if self.on_finish:
-            kwargs = callback_check(self.on_finish,
-                                    self._available_callback_kwargs)
+            kwargs = callback_check(self.on_finish, self._available_callback_kwargs)
             self.on_finish(**kwargs)
 
     def _post_run_actions(self):
@@ -356,7 +354,8 @@ class Task(abc.ABC):
         else:
             self.product.metadata.update(
                 source_code=str(self.source),
-                params=self.params.to_json_serializable(params_only=True))
+                params=self.params.to_json_serializable(params_only=True),
+            )
 
         # For most Products, it's ok to do this check before
         # saving metadata, but not for GenericProduct, since the way
@@ -367,16 +366,19 @@ class Task(abc.ABC):
 
             if missing:
                 raise TaskBuildError(
-                    f'Error building task {self.name!r}: '
-                    'the task ran successfully but the following '
-                    'products are '
-                    f'missing: {pretty_print.iterable(missing, repr_=True)}')
+                    f"Error building task {self.name!r}: "
+                    "the task ran successfully but the following "
+                    "products are "
+                    f"missing: {pretty_print.iterable(missing, repr_=True)}"
+                )
 
         elif not self.product.exists():
-            raise TaskBuildError(f'Error building task {self.name!r}: '
-                                 'the task ran successfully but the '
-                                 f'product {self.product!r} is missing. '
-                                 'Ensure your code is generating it.')
+            raise TaskBuildError(
+                f"Error building task {self.name!r}: "
+                "the task ran successfully but the "
+                f"product {self.product!r} is missing. "
+                "Ensure your code is generating it."
+            )
 
         if self.exec_status != TaskStatus.WaitingDownload:
             self.product.upload()
@@ -401,8 +403,7 @@ class Task(abc.ABC):
 
     def _run_on_failure(self):
         if self.on_failure:
-            kwargs = callback_check(self.on_failure,
-                                    self._available_callback_kwargs)
+            kwargs = callback_check(self.on_failure, self._available_callback_kwargs)
             self.on_failure(**kwargs)
 
     @property
@@ -421,15 +422,13 @@ class Task(abc.ABC):
 
     def _run_on_render(self):
         if self.on_render:
-            self._logger.debug('Calling on_render hook on task %s', self.name)
+            self._logger.debug("Calling on_render hook on task %s", self.name)
 
-            kwargs = callback_check(self.on_render,
-                                    self._available_callback_kwargs)
+            kwargs = callback_check(self.on_render, self._available_callback_kwargs)
             try:
                 self.on_render(**kwargs)
             except Exception as e:
-                msg = ('Exception when running on_render '
-                       f'for task {self.name!r}')
+                msg = "Exception when running on_render " f"for task {self.name!r}"
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.ErroredRender
                 raise type(e)(msg) from e
@@ -445,8 +444,8 @@ class Task(abc.ABC):
         # internally
         if value not in list(TaskStatus):
             raise ValueError(
-                'Setting task.exec_status to an unknown '
-                'value: %s', value)
+                "Setting task.exec_status to an unknown " "value: %s", value
+            )
 
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
@@ -488,35 +487,41 @@ class Task(abc.ABC):
 
         upstream_exec_status = [t.exec_status for t in self.upstream.values()]
 
-        if any(exec_status == TaskStatus.WaitingRender
-               for exec_status in upstream_exec_status):
-            raise TaskBuildError('Cannot directly build task "{}" as it '
-                                 'has upstream dependencies, call '
-                                 'dag.render() first'.format(self.name))
+        if any(
+            exec_status == TaskStatus.WaitingRender
+            for exec_status in upstream_exec_status
+        ):
+            raise TaskBuildError(
+                'Cannot directly build task "{}" as it '
+                "has upstream dependencies, call "
+                "dag.render() first".format(self.name)
+            )
 
         # we can execute an individual tasks if missing up-to-date upstream
         # dependencies exist in remote storage
         if self.exec_status == TaskStatus.WaitingUpstream:
             ok = {
                 t
-                for t in self.upstream.values() if t.exec_status in
-                {TaskStatus.Skipped, TaskStatus.WaitingDownload}
+                for t in self.upstream.values()
+                if t.exec_status in {TaskStatus.Skipped, TaskStatus.WaitingDownload}
             }
 
             not_ok = set(self.upstream.values()) - ok
 
             if not_ok:
                 raise TaskBuildError(
-                    f'Cannot build task {self.name!r} because '
-                    'the following upstream dependencies are '
-                    f'missing: {[t.name for t in not_ok]!r}. Execute upstream '
-                    'tasks first. If upstream tasks generate File(s) and you '
-                    'configured a File.client, you may also upload '
-                    'up-to-date copies to remote storage and they will be '
-                    'automatically downloaded')
+                    f"Cannot build task {self.name!r} because "
+                    "the following upstream dependencies are "
+                    f"missing: {[t.name for t in not_ok]!r}. Execute upstream "
+                    "tasks first. If upstream tasks generate File(s) and you "
+                    "configured a File.client, you may also upload "
+                    "up-to-date copies to remote storage and they will be "
+                    "automatically downloaded"
+                )
 
             download_products_in_parallel(
-                t for t in ok if t.exec_status == TaskStatus.WaitingDownload)
+                t for t in ok if t.exec_status == TaskStatus.WaitingDownload
+            )
 
         # at this point the task must be WaitingDownload or WaitingExecution
         res, _ = self._build(catch_exceptions=catch_exceptions)
@@ -561,8 +566,8 @@ class Task(abc.ABC):
                 if self.on_failure is None:
                     if isinstance(e, DAGBuildEarlyStop):
                         raise DAGBuildEarlyStop(
-                            'Stopping task {} gracefully'.format(
-                                self.name)) from e
+                            "Stopping task {} gracefully".format(self.name)
+                        ) from e
                     else:
                         # FIXME: this makes the traceback longer, consider
                         # removing it. The only information this nested
@@ -583,14 +588,13 @@ class Task(abc.ABC):
                     self._post_run_actions()
                 except Exception as e:
                     self.exec_status = TaskStatus.Errored
-                    msg = ('Exception when running on_finish '
-                           f'for task {self.name!r}')
+                    msg = "Exception when running on_finish " f"for task {self.name!r}"
                     self._logger.exception(msg)
 
                     if isinstance(e, DAGBuildEarlyStop):
                         raise DAGBuildEarlyStop(
-                            'Stopping task {} gracefully'.format(
-                                self.name)) from e
+                            "Stopping task {} gracefully".format(self.name)
+                        ) from e
                     else:
                         raise TaskBuildError(msg) from e
                 else:
@@ -604,15 +608,14 @@ class Task(abc.ABC):
                 try:
                     self._run_on_failure()
                 except Exception as e:
-                    msg = ('Exception when running on_failure '
-                           f'for task {self.name!r}')
+                    msg = "Exception when running on_failure " f"for task {self.name!r}"
                     self._logger.exception(msg)
                     raise TaskBuildError(msg) from e
 
                 if isinstance(build_exception, DAGBuildEarlyStop):
                     raise DAGBuildEarlyStop(
-                        'Stopping task {} gracefully'.format(
-                            self.name)) from build_exception
+                        "Stopping task {} gracefully".format(self.name)
+                    ) from build_exception
                 else:
                     msg = 'Error building task "{}"'.format(self.name)
                     raise TaskBuildError(msg) from build_exception
@@ -625,24 +628,28 @@ class Task(abc.ABC):
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
-            raise TaskBuildError('Error building task "{}". '
-                                 'Cannot build task that has not been '
-                                 'rendered, call DAG.render() first'.format(
-                                     self.name))
+            raise TaskBuildError(
+                'Error building task "{}". '
+                "Cannot build task that has not been "
+                "rendered, call DAG.render() first".format(self.name)
+            )
 
         elif self.exec_status == TaskStatus.Aborted:
-            raise TaskBuildError('Attempted to run task "{}", whose '
-                                 'status is TaskStatus.Aborted'.format(
-                                     self.name))
+            raise TaskBuildError(
+                'Attempted to run task "{}", whose '
+                "status is TaskStatus.Aborted".format(self.name)
+            )
         elif self.exec_status == TaskStatus.Skipped:
-            raise TaskBuildError('Attempted to run task "{}", whose '
-                                 'status TaskStatus.Skipped. Render again and '
-                                 'set force=True if you want to force '
-                                 'execution'.format(self.name))
+            raise TaskBuildError(
+                'Attempted to run task "{}", whose '
+                "status TaskStatus.Skipped. Render again and "
+                "set force=True if you want to force "
+                "execution".format(self.name)
+            )
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
-        self._logger.info('Starting execution: %s', repr(self))
+        self._logger.info("Starting execution: %s", repr(self))
 
         then = datetime.now()
 
@@ -653,9 +660,10 @@ class Task(abc.ABC):
                 self.product.download()
             except Exception as e:
                 raise TaskBuildError(
-                    f'Error downloading Product {self.product!r} '
-                    f'from task {self!r}. Check the full traceback above for '
-                    'details') from e
+                    f"Error downloading Product {self.product!r} "
+                    f"from task {self!r}. Check the full traceback above for "
+                    "details"
+                ) from e
 
         # NOTE: should we validate status here?
         # (i.e., check it's WaitingExecution)
@@ -665,8 +673,7 @@ class Task(abc.ABC):
         now = datetime.now()
 
         elapsed = (now - then).total_seconds()
-        self._logger.info(
-            'Done. Operation took {:.1f} seconds'.format(elapsed))
+        self._logger.info("Done. Operation took {:.1f} seconds".format(elapsed))
 
         # TODO: also check that the Products were updated:
         # if they did not exist, they must exist now, if they alredy
@@ -708,21 +715,22 @@ class Task(abc.ABC):
         altogether, this can be useful when we only want to quickly get
         a rendered DAG object to interact with it
         """
-        self._logger.debug('Calling render on task %s', self.name)
+        self._logger.debug("Calling render on task %s", self.name)
 
         try:
             self._render_product()
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
-            raise type(e)('Error rendering product from Task "{}", '
-                          ' check the full traceback above for details. '
-                          'Task params: {}'.format(repr(self),
-                                                   self.params)) from e
+            raise type(e)(
+                'Error rendering product from Task "{}", '
+                " check the full traceback above for details. "
+                "Task params: {}".format(repr(self), self.params)
+            ) from e
 
         # product does not becomes part of the task parameters when passing
         # an EmptyProduct - this special kind of task is used by InMemoryDAG.
         if not isinstance(self.product, EmptyProduct):
-            self.params._setitem('product', self.product)
+            self.params._setitem("product", self.product)
 
         try:
             self.source.render(self.params)
@@ -733,9 +741,7 @@ class Task(abc.ABC):
         # we use outdated status several time, this caches the result
         # for performance reasons. TODO: move this to Product and make it
         # a property
-        is_outdated = ProductEvaluator(self.product,
-                                       outdated_by_code,
-                                       remote=remote)
+        is_outdated = ProductEvaluator(self.product, outdated_by_code, remote=remote)
 
         # task with no dependencies
         if not self.upstream:
@@ -743,8 +749,8 @@ class Task(abc.ABC):
             if force:
                 self._exec_status = TaskStatus.WaitingExecution
                 self._logger.debug(
-                    'Forcing status "%s", outdated conditions'
-                    ' ignored...', self.name)
+                    'Forcing status "%s", outdated conditions' " ignored...", self.name
+                )
 
             # task is outdated, check if we need to execute or download
             elif is_outdated.check():
@@ -760,11 +766,11 @@ class Task(abc.ABC):
 
         # tasks with dependencies
         else:
-            upstream_exec_status = set(t.exec_status
-                                       for t in self.upstream.values())
+            upstream_exec_status = set(t.exec_status for t in self.upstream.values())
 
             all_upstream_ready = upstream_exec_status <= {
-                TaskStatus.Executed, TaskStatus.Skipped
+                TaskStatus.Executed,
+                TaskStatus.Skipped,
             }
 
             # some upstream tasks need execution (or download)
@@ -800,35 +806,39 @@ class Task(abc.ABC):
             "oudated", "product", "doc", "location"
         """
         sections = sections or [
-            'name', 'last_run', 'outdated', 'product', 'doc', 'location'
+            "name",
+            "last_run",
+            "outdated",
+            "product",
+            "doc",
+            "location",
         ]
 
         p = self.product
 
         data = {}
 
-        if 'name' in sections:
-            data['name'] = self.name
+        if "name" in sections:
+            data["name"] = self.name
 
-        if 'type' in sections:
-            data['type'] = type(self).__name__
+        if "type" in sections:
+            data["type"] = type(self).__name__
 
-        if 'status' in sections:
-            data['status'] = self.exec_status.name
+        if "status" in sections:
+            data["status"] = self.exec_status.name
 
-        if 'client' in sections:
+        if "client" in sections:
             # FIXME: all tasks should have a client property
-            data['client'] = (repr(self.client)
-                              if hasattr(self, 'client') else None)
+            data["client"] = repr(self.client) if hasattr(self, "client") else None
 
-        if 'last_run' in sections:
+        if "last_run" in sections:
             if p.metadata.timestamp is not None:
                 dt = datetime.fromtimestamp(p.metadata.timestamp)
-                date_h = dt.strftime('%b %d, %Y at %H:%M')
+                date_h = dt.strftime("%b %d, %Y at %H:%M")
                 time_h = humanize.naturaltime(dt)
-                data['Last run'] = '{} ({})'.format(time_h, date_h)
+                data["Last run"] = "{} ({})".format(time_h, date_h)
             else:
-                data['Last run'] = 'Has not been run'
+                data["Last run"] = "Has not been run"
 
         outd_data = p._outdated_data_dependencies()
         outd_code = p._outdated_code_dependency()
@@ -836,63 +846,63 @@ class Task(abc.ABC):
         outd = False
 
         if outd_code:
-            outd = 'Source code'
+            outd = "Source code"
 
         if outd_data:
             if not outd:
-                outd = 'Upstream'
+                outd = "Upstream"
             else:
-                outd += ' & Upstream'
+                outd += " & Upstream"
 
-        if 'outdated' in sections:
-            data['Outdated?'] = outd
+        if "outdated" in sections:
+            data["Outdated?"] = outd
 
-        if 'outdated_dependencies' in sections:
-            data['Outdated dependencies'] = outd_data
+        if "outdated_dependencies" in sections:
+            data["Outdated dependencies"] = outd_data
 
-        if 'outdated_code' in sections:
-            data['Outdated code'] = outd_code
+        if "outdated_code" in sections:
+            data["Outdated code"] = outd_code
 
         if outd_code and return_code_diff:
-            data['Code diff'] = (self.dag.differ.get_diff(
+            data["Code diff"] = self.dag.differ.get_diff(
                 p.metadata.stored_source_code,
                 str(self.source),
-                extension=self.source.extension))
+                extension=self.source.extension,
+            )
         else:
-            outd_code = ''
+            outd_code = ""
 
-        if 'product_type' in sections:
-            data['Product type'] = type(self.product).__name__
+        if "product_type" in sections:
+            data["Product type"] = type(self.product).__name__
 
-        if 'product' in sections:
-            data['Product'] = repr(self.product)
+        if "product" in sections:
+            data["Product"] = repr(self.product)
 
-        if 'product_client' in sections:
+        if "product_client" in sections:
             # FIXME: all products should have a client property
-            data['Product client'] = (repr(self.product.client) if hasattr(
-                self.product, 'client') else None)
+            data["Product client"] = (
+                repr(self.product.client) if hasattr(self.product, "client") else None
+            )
 
-        if 'doc' in sections:
-            data['Doc (short)'] = _doc_short(self.source.doc)
+        if "doc" in sections:
+            data["Doc (short)"] = _doc_short(self.source.doc)
 
-        if 'location' in sections:
-            data['Location'] = self.source.loc
+        if "location" in sections:
+            data["Location"] = self.source.loc
 
         return Row(data)
 
     def debug(self):
-        """Debug task, only implemented in certain tasks
-        """
+        """Debug task, only implemented in certain tasks"""
         raise NotImplementedError(
-            '"debug" is not implemented in "{}" tasks'.format(
-                type(self).__name__))
+            '"debug" is not implemented in "{}" tasks'.format(type(self).__name__)
+        )
 
     def load(self):
-        """Load task as pandas.DataFrame. Only implemented in certain tasks
-        """
+        """Load task as pandas.DataFrame. Only implemented in certain tasks"""
         raise NotImplementedError(
-            '"load" is not implemented in "{}" tasks'.format(
-                type(self).__name__))
+            '"load" is not implemented in "{}" tasks'.format(type(self).__name__)
+        )
 
     def _render_product(self):
         params_names = list(self.params)
@@ -903,20 +913,20 @@ class Task(abc.ABC):
         # TODO: process wilcards such as fit-*
         if self.upstream:
             self.params._setitem(
-                'upstream',
-                Upstream(self._upstream_product_grouped, name=self.name))
+                "upstream", Upstream(self._upstream_product_grouped, name=self.name)
+            )
 
         # render the current product
         try:
             # using the upstream products to define the current product
             # is optional, using the parameters passed in params is also
             # optional
-            self.product.render(self.params,
-                                optional=set(params_names + ['upstream']))
+            self.product.render(self.params, optional=set(params_names + ["upstream"]))
         except Exception as e:
-            raise type(e)('Error rendering Product from Task "{}", '
-                          ' check the full traceback above for details'.format(
-                              repr(self))) from e
+            raise type(e)(
+                'Error rendering Product from Task "{}", '
+                " check the full traceback above for details".format(repr(self))
+            ) from e
 
     def _get_downstream(self):
         # make the _get_downstream more efficient by
@@ -933,51 +943,55 @@ class Task(abc.ABC):
         # this change
         # TODO: move to DAG
         def update_status(task):
-            any_upstream_errored_or_aborted = any([
-                t.exec_status in (TaskStatus.Errored, TaskStatus.Aborted)
-                for t in task.upstream.values()
-            ])
-            all_upstream_ready = all([
-                t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
-                for t in task.upstream.values()
-            ])
+            any_upstream_errored_or_aborted = any(
+                [
+                    t.exec_status in (TaskStatus.Errored, TaskStatus.Aborted)
+                    for t in task.upstream.values()
+                ]
+            )
+            all_upstream_ready = all(
+                [
+                    t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
+                    for t in task.upstream.values()
+                ]
+            )
 
             if any_upstream_errored_or_aborted:
                 task.exec_status = TaskStatus.Aborted
-            elif any([
+            elif any(
+                [
                     t.exec_status
                     in (TaskStatus.ErroredRender, TaskStatus.AbortedRender)
                     for t in task.upstream.values()
-            ]):
+                ]
+            ):
                 task.exec_status = TaskStatus.AbortedRender
             # mark as waiting execution if moving from waiting upstream
             # the second situation if when task is waitingdownload, in which
             # case we don't do anything
-            elif all_upstream_ready and (task.exec_status
-                                         == TaskStatus.WaitingUpstream):
+            elif all_upstream_ready and (
+                task.exec_status == TaskStatus.WaitingUpstream
+            ):
                 task.exec_status = TaskStatus.WaitingExecution
 
         for t in self._get_downstream():
             update_status(t)
 
     def __rshift__(self, other):
-        """ a >> b is the same as b.set_upstream(a)
-        """
+        """a >> b is the same as b.set_upstream(a)"""
         other.set_upstream(self)
         # return other so a >> b >> c works
         return other
 
     def __add__(self, other):
-        """ a + b means TaskGroup([a, b])
-        """
+        """a + b means TaskGroup([a, b])"""
         if isiterable(other) and not isinstance(other, AbstractDAG):
             return TaskGroup([self] + list(other))
         else:
             return TaskGroup((self, other))
 
     def __repr__(self):
-        return ('{}: {} -> {}'.format(
-            type(self).__name__, self.name, repr(self.product)))
+        return "{}: {} -> {}".format(type(self).__name__, self.name, repr(self.product))
 
     def __str__(self):
         return str(self.product)
@@ -986,19 +1000,17 @@ class Task(abc.ABC):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build
         # them again in __setstate__
-        del state['_logger']
+        del state["_logger"]
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
 
 def _doc_short(doc):
     if doc is not None:
-        return doc.split('\n')[0]
+        return doc.split("\n")[0]
     else:
         return None
 
@@ -1017,11 +1029,13 @@ class ProductEvaluator:
 
     def check(self):
         if self._is_outdated is None:
-            callable_ = (self.product._is_remote_outdated
-                         if self._remote else self.product._is_outdated)
+            callable_ = (
+                self.product._is_remote_outdated
+                if self._remote
+                else self.product._is_outdated
+            )
 
-            self._is_outdated = (callable_(
-                outdated_by_code=self.outdated_by_code))
+            self._is_outdated = callable_(outdated_by_code=self.outdated_by_code)
 
         return self._is_outdated
 

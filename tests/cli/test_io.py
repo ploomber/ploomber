@@ -3,7 +3,6 @@ import pytest
 
 
 def test_command_endpoint_shows_full_traceback(capsys):
-
     @command_endpoint
     def non_subclass_exception():
         try:

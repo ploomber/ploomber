@@ -44,11 +44,9 @@ class DottedPath:
         will raise an error)
     """
 
-    def __init__(self,
-                 dotted_path,
-                 lazy_load=False,
-                 allow_return_none=True,
-                 strict=False):
+    def __init__(
+        self, dotted_path, lazy_load=False, allow_return_none=True, strict=False
+    ):
         self._spec = DottedPathSpecModel.from_spec(dotted_path, strict=strict)
         self._callable = None
         self._allow_return_none = allow_return_none
@@ -63,7 +61,7 @@ class DottedPath:
 
     def _load_callable(self):
         if self._strict:
-            dp = self._spec.dotted_path.replace('::', '.')
+            dp = self._spec.dotted_path.replace("::", ".")
         else:
             dp = self._spec.dotted_path
 
@@ -78,9 +76,11 @@ class DottedPath:
 
         if overlap:
             overlap_pretty = ", ".join(f"'{w}'" for w in overlap)
-            warnings.warn('Got duplicated arguments '
-                          f'({overlap_pretty}) when calling dotted path '
-                          f'{self._spec.dotted_path!r}. Overriding values...')
+            warnings.warn(
+                "Got duplicated arguments "
+                f"({overlap_pretty}) when calling dotted path "
+                f"{self._spec.dotted_path!r}. Overriding values..."
+            )
 
         kwargs_final = {**spec_kwargs, **kwargs}
 
@@ -90,34 +90,38 @@ class DottedPath:
         out = self._callable(*args, **kwargs_final)
 
         if out is None and not self._allow_return_none:
-            raise TypeError('Error calling dotted '
-                            f'path {self._spec.dotted_path!r}. '
-                            'Expected a value but got None')
+            raise TypeError(
+                "Error calling dotted "
+                f"path {self._spec.dotted_path!r}. "
+                "Expected a value but got None"
+            )
 
         return out
 
     def __repr__(self):
-        repr_ = f'{type(self).__name__}({self._spec.dotted_path!r})'
+        repr_ = f"{type(self).__name__}({self._spec.dotted_path!r})"
 
         if self._callable is not None:
-            repr_ += f' (loaded: {self._callable})'
+            repr_ += f" (loaded: {self._callable})"
 
         return repr_
 
 
 def _validate_dotted_path(dotted_path, raise_=True):
-    parts = dotted_path.split('.')
+    parts = dotted_path.split(".")
 
     if len(parts) < 2 or not all(parts):
         if raise_:
-            raise ValueError(f'Invalid dotted path {dotted_path!r}. '
-                             'Value must be a dot separated '
-                             'string, with at least two parts: '
-                             '[module_name].[function_name]')
+            raise ValueError(
+                f"Invalid dotted path {dotted_path!r}. "
+                "Value must be a dot separated "
+                "string, with at least two parts: "
+                "[module_name].[function_name]"
+            )
         else:
             return False
 
-    return '.'.join(parts[:-1]), parts[-1]
+    return ".".join(parts[:-1]), parts[-1]
 
 
 def load_dotted_path(dotted_path, raise_=True, reload=False):
@@ -139,19 +143,20 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
 
     if parsed:
         mod, name = parsed
-        main_mod = str(mod.split('.')[0])
+        main_mod = str(mod.split(".")[0])
         try:
             module = importlib.import_module(mod)
         except ModuleNotFoundError as e:
             if raise_:
                 spec = importlib.util.find_spec(main_mod)
 
-                msg = ('An error occured when trying to import dotted '
-                       f'path {dotted_path!r}: {e}')
+                msg = (
+                    "An error occured when trying to import dotted "
+                    f"path {dotted_path!r}: {e}"
+                )
 
                 if spec is not None:
-                    msg = (msg +
-                           f' (loaded {main_mod!r} from {spec.origin!r})')
+                    msg = msg + f" (loaded {main_mod!r} from {spec.origin!r})"
 
                 e.msg = msg
 
@@ -165,32 +170,39 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
                 obj = getattr(module, name)
             except AttributeError as e:
                 if raise_:
-                    e.args = ((f'Could not get {name!r} from module {mod!r} '
-                               f'(loaded {mod!r} from {module.__file__!r}). '
-                               'Ensure it is defined in such module'), )
+                    e.args = (
+                        (
+                            f"Could not get {name!r} from module {mod!r} "
+                            f"(loaded {mod!r} from {module.__file__!r}). "
+                            "Ensure it is defined in such module"
+                        ),
+                    )
                     raise
         return obj
     else:
         if raise_:
             raise ValueError(
                 'Invalid dotted path value "{}", must be a dot separated '
-                'string, with at least '
-                '[module_name].[function_name]'.format(dotted_path))
+                "string, with at least "
+                "[module_name].[function_name]".format(dotted_path)
+            )
 
 
 def load_callable_dotted_path(dotted_path, raise_=True, reload=False):
     """
     Like load_dotted_path but verifies the loaded object is a callable
     """
-    loaded_object = load_dotted_path(dotted_path=dotted_path,
-                                     raise_=raise_,
-                                     reload=reload)
+    loaded_object = load_dotted_path(
+        dotted_path=dotted_path, raise_=raise_, reload=reload
+    )
 
     if not callable(loaded_object):
-        raise TypeError(f'Error loading dotted path {dotted_path!r}. '
-                        'Expected a callable object (i.e., some kind '
-                        f'of function). Got {loaded_object!r} '
-                        f'(an object of type: {type(loaded_object).__name__})')
+        raise TypeError(
+            f"Error loading dotted path {dotted_path!r}. "
+            "Expected a callable object (i.e., some kind "
+            f"of function). Got {loaded_object!r} "
+            f"(an object of type: {type(loaded_object).__name__})"
+        )
 
     return loaded_object
 
@@ -207,9 +219,9 @@ def call_dotted_path(dotted_path, raise_=True, reload=False, kwargs=None):
     kwargs : dict, default=None
         Keyword arguments to call the dotted path
     """
-    callable_ = load_callable_dotted_path(dotted_path=dotted_path,
-                                          raise_=raise_,
-                                          reload=reload)
+    callable_ = load_callable_dotted_path(
+        dotted_path=dotted_path, raise_=raise_, reload=reload
+    )
 
     kwargs = kwargs or dict()
 
@@ -217,13 +229,15 @@ def call_dotted_path(dotted_path, raise_=True, reload=False, kwargs=None):
         out = callable_(**kwargs)
     except Exception as e:
         origin = locate_dotted_path(dotted_path).origin
-        msg = str(e) + f' (Loaded from: {origin})'
-        e.args = (msg, )
+        msg = str(e) + f" (Loaded from: {origin})"
+        e.args = (msg,)
         raise
 
     if out is None:
-        raise TypeError(f'Error calling dotted path {dotted_path!r}. '
-                        'Expected a value but got None')
+        raise TypeError(
+            f"Error calling dotted path {dotted_path!r}. "
+            "Expected a value but got None"
+        )
 
     return out
 
@@ -235,15 +249,15 @@ def locate_dotted_path(dotted_path):
     Locates a dotted path, returns the spec for the module where the attribute
     is defined
     """
-    tokens = dotted_path.split('.')
-    module = '.'.join(tokens[:-1])
+    tokens = dotted_path.split(".")
+    module = ".".join(tokens[:-1])
     # NOTE: if importing a sub-module (e.g., something.another), this will
     # import some modules (rather than just locating them) - I think we
     # should remove them to pervent import clashes
     spec = importlib.util.find_spec(module)
 
     if spec is None:
-        raise ModuleNotFoundError(f'Module {module!r} does not exist')
+        raise ModuleNotFoundError(f"Module {module!r} does not exist")
 
     return spec
 
@@ -253,29 +267,34 @@ def locate_dotted_path_root(dotted_path):
     Returns the module spec for a given dotted path.
     e.g. module.sub.another, checks that module exists
     """
-    tokens = dotted_path.split('.')
+    tokens = dotted_path.split(".")
     spec = importlib.util.find_spec(tokens[0])
 
     if spec is None:
-        raise ModuleNotFoundError(f'Module {tokens[0]!r} does not exist')
+        raise ModuleNotFoundError(f"Module {tokens[0]!r} does not exist")
 
     return spec
 
 
 def _process_children(ch):
-    if hasattr(ch, 'name'):
+    if hasattr(ch, "name"):
         return [(ch.name.value, ch.type, ch.get_code())]
     else:
-        nested = ((c.get_defined_names(), c.type, c.get_code().strip())
-                  for c in ch.children if hasattr(c, 'get_defined_names'))
-        return ((name.value, type_, code) for names, type_, code in nested
-                for name in names)
+        nested = (
+            (c.get_defined_names(), c.type, c.get_code().strip())
+            for c in ch.children
+            if hasattr(c, "get_defined_names")
+        )
+        return (
+            (name.value, type_, code) for names, type_, code in nested for name in names
+        )
 
 
 def _check_last_definition_is_function(module, name, dotted_path):
     children = [
-        ch for ch in module.children[::-1]
-        if hasattr(ch, 'name') or hasattr(ch, 'children')
+        ch
+        for ch in module.children[::-1]
+        if hasattr(ch, "name") or hasattr(ch, "children")
     ]
 
     gen = chain(*(_process_children(ch) for ch in children))
@@ -289,10 +308,12 @@ def _check_last_definition_is_function(module, name, dotted_path):
             last_code = code
             break
 
-    if last_type and last_type != 'funcdef':
-        raise TypeError(f'Failed to load dotted path {dotted_path!r}. '
-                        f'Expected last defined {name!r} to be a function. '
-                        f'Got:\n{last_code!r}')
+    if last_type and last_type != "funcdef":
+        raise TypeError(
+            f"Failed to load dotted path {dotted_path!r}. "
+            f"Expected last defined {name!r} to be a function. "
+            f"Got:\n{last_code!r}"
+        )
 
 
 def _check_defines_function_with_name(path, name, dotted_path):
@@ -304,7 +325,8 @@ def _check_defines_function_with_name(path, name, dotted_path):
     if not fns:
         # check if there are import statements defining the attribute
         imports = [
-            imp for imp in module.iter_imports()
+            imp
+            for imp in module.iter_imports()
             if name in [n.value for n in imp.get_defined_names()]
         ]
 
@@ -314,26 +336,27 @@ def _check_defines_function_with_name(path, name, dotted_path):
             import_ = imports[0].get_code()
 
             raise NotImplementedError(
-                'Failed to locate dotted path '
-                f'{dotted_path!r}, definitions from import statements are not '
-                f'supported. Move the defitinion of function {name!r} '
-                f'to {str(path)!r} and delete the import statement {import_!r}'
+                "Failed to locate dotted path "
+                f"{dotted_path!r}, definitions from import statements are not "
+                f"supported. Move the defitinion of function {name!r} "
+                f"to {str(path)!r} and delete the import statement {import_!r}"
             )
 
         raise AttributeError(
-            f'Failed to locate dotted path {dotted_path!r}. '
-            f'Expected {str(path)!r} to define a function named {name!r}')
+            f"Failed to locate dotted path {dotted_path!r}. "
+            f"Expected {str(path)!r} to define a function named {name!r}"
+        )
 
     # return the last definition to be consistent with inspect.getsourcefile
     fn_found = fns[-1]
 
     # if function is decorated, include decorators in the returned source code
-    if fn_found.parent.type == 'decorated':
+    if fn_found.parent.type == "decorated":
         fn_found = fn_found.parent
 
     _check_last_definition_is_function(module, name, dotted_path)
 
-    return f'{path}:{fn_found.start_pos[0]}', fn_found.get_code().lstrip()
+    return f"{path}:{fn_found.start_pos[0]}", fn_found.get_code().lstrip()
 
 
 def lazily_locate_dotted_path(dotted_path):
@@ -342,23 +365,27 @@ def lazily_locate_dotted_path(dotted_path):
     import submodules
     """
     _validate_dotted_path(dotted_path)
-    parts = dotted_path.split('.')
+    parts = dotted_path.split(".")
 
-    module_name = '.'.join(parts[:-1])
+    module_name = ".".join(parts[:-1])
     first, middle, mod, symbol = parts[0], parts[1:-2], parts[-2], parts[-1]
 
     spec = importlib.util.find_spec(first)
 
     if spec is None:
-        raise ModuleNotFoundError('Error processing dotted '
-                                  f'path {dotted_path!r}, '
-                                  f'no module named {first!r}')
+        raise ModuleNotFoundError(
+            "Error processing dotted "
+            f"path {dotted_path!r}, "
+            f"no module named {first!r}"
+        )
 
     if spec.origin is None:
-        raise ModuleNotFoundError('Error processing dotted '
-                                  f'path {dotted_path!r}: '
-                                  f'{first!r} appears to be a namespace '
-                                  'package, which are not supported')
+        raise ModuleNotFoundError(
+            "Error processing dotted "
+            f"path {dotted_path!r}: "
+            f"{first!r} appears to be a namespace "
+            "package, which are not supported"
+        )
 
     origin = Path(spec.origin)
     location = origin.parent
@@ -374,17 +401,19 @@ def lazily_locate_dotted_path(dotted_path):
 
     location = reduce(lambda x, y: x / y, [location] + middle)
 
-    init = (location / mod / '__init__.py')
-    file_ = (location / f'{mod}.py')
+    init = location / mod / "__init__.py"
+    file_ = location / f"{mod}.py"
 
     if init.exists():
         return _check_defines_function_with_name(init, symbol, dotted_path)
     elif file_.exists():
         return _check_defines_function_with_name(file_, symbol, dotted_path)
     else:
-        raise ModuleNotFoundError(f'No module named {module_name!r}. '
-                                  f'Expected to find one of {str(init)!r} or '
-                                  f'{str(file_)!r}, but none of those exist')
+        raise ModuleNotFoundError(
+            f"No module named {module_name!r}. "
+            f"Expected to find one of {str(init)!r} or "
+            f"{str(file_)!r}, but none of those exist"
+        )
 
 
 def dotted_path_exists(dotted_path):
@@ -395,8 +424,7 @@ def dotted_path_exists(dotted_path):
 
 
 class BaseModel(pydantic.BaseModel):
-    """Base model for specs
-    """
+    """Base model for specs"""
 
     def __init__(self, **kwargs):
         # customize ValidationError message
@@ -408,29 +436,29 @@ class BaseModel(pydantic.BaseModel):
             ex = None
 
         if ex:
-            raise SpecValidationError(errors=ex.errors(),
-                                      model=type(self),
-                                      kwargs=kwargs)
+            raise SpecValidationError(
+                errors=ex.errors(), model=type(self), kwargs=kwargs
+            )
 
 
 def _validate_strict_dotted_path(dotted_path):
-    split = dotted_path.split('::')
-    if (not re.match(r'[\w\.]+::\w+', dotted_path) or len(split) > 2
-            or '.' in split[1]):
-        raise ValueError('Expected a dot-separated string whose last '
-                         'element is separated '
-                         'by "::" (e.g. a.b::c)')
+    split = dotted_path.split("::")
+    if not re.match(r"[\w\.]+::\w+", dotted_path) or len(split) > 2 or "." in split[1]:
+        raise ValueError(
+            "Expected a dot-separated string whose last "
+            "element is separated "
+            'by "::" (e.g. a.b::c)'
+        )
 
 
 class DottedPathSpecModel(BaseModel):
     dotted_path: str
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
 
     @classmethod
     def from_spec(cls, dotted_path_spec, strict=False):
-
         if isinstance(dotted_path_spec, str):
             if strict:
                 _validate_strict_dotted_path(dotted_path_spec)
@@ -438,16 +466,17 @@ class DottedPathSpecModel(BaseModel):
             return cls(dotted_path=dotted_path_spec)
         elif isinstance(dotted_path_spec, Mapping):
             if strict:
-                _validate_strict_dotted_path(dotted_path_spec['dotted_path'])
+                _validate_strict_dotted_path(dotted_path_spec["dotted_path"])
             return cls(**dotted_path_spec)
         else:
             raise TypeError(
-                'Expected dotted path spec to be a str or Mapping, '
-                f'got {dotted_path_spec!r} '
-                f'(type: {type(dotted_path_spec).__name__})')
+                "Expected dotted path spec to be a str or Mapping, "
+                f"got {dotted_path_spec!r} "
+                f"(type: {type(dotted_path_spec).__name__})"
+            )
 
     def get_kwargs(self):
-        return self.dict(exclude={'dotted_path'})
+        return self.dict(exclude={"dotted_path"})
 
 
 def create_intermediate_modules(module_parts):
@@ -466,7 +495,7 @@ def create_intermediate_modules(module_parts):
     ValueError
         If the module already exists
     """
-    dotted_path_to_module = '.'.join(module_parts)
+    dotted_path_to_module = ".".join(module_parts)
     *inner, last = module_parts
 
     # check if it already exists
@@ -476,7 +505,7 @@ def create_intermediate_modules(module_parts):
         fn_check = importlib.util.find_spec
 
     if fn_check(dotted_path_to_module):
-        raise ValueError(f'Module {dotted_path_to_module!r} already exists')
+        raise ValueError(f"Module {dotted_path_to_module!r} already exists")
 
     # if the root module already exists, we should create the missing files
     # in the existing location
@@ -490,7 +519,7 @@ def create_intermediate_modules(module_parts):
     parent.mkdir(parents=True, exist_ok=True)
 
     for idx in range(len(inner)):
-        init_file = Path(*inner[:idx + 1], "__init__.py")
+        init_file = Path(*inner[: idx + 1], "__init__.py")
 
         if not init_file.exists():
             init_file.touch()

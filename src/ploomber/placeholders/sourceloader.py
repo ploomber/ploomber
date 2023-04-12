@@ -41,18 +41,20 @@ class SourceLoader:
     >>> loader['load_customers.sql'] # doctest: +SKIP
     >>> loader.get_template('load_customers.sql') # doctest: +SKIP
     """
-    def __init__(self, path=None, module=None):
 
+    def __init__(self, path=None, module=None):
         if path is None and module is None:
-            raise TypeError('Path cannot be None if module is None')
+            raise TypeError("Path cannot be None if module is None")
 
         # validate path
         if isiterable_not_str(path):
             if _is_iterable_w_types(path, (str, Path)):
                 types_found = set(type(element) for element in path)
-                raise TypeError('If passing an iterable, path must consist '
-                                'of str and pathlib.Path objects only, got '
-                                '{}'.format(types_found))
+                raise TypeError(
+                    "If passing an iterable, path must consist "
+                    "of str and pathlib.Path objects only, got "
+                    "{}".format(types_found)
+                )
 
             path = [str(element) for element in path]
         elif isinstance(path, Path):
@@ -67,20 +69,21 @@ class SourceLoader:
             module = module_obj
 
         # for module objects
-        if hasattr(module, '__file__'):
+        if hasattr(module, "__file__"):
             module_path = str(Path(module.__file__).parent.resolve())
 
         elif module is None:
-            module_path = ''
+            module_path = ""
         else:
-            raise ValueError('Could not find module path, pass a string or a '
-                             'module object')
+            raise ValueError(
+                "Could not find module path, pass a string or a " "module object"
+            )
 
         if isiterable_not_str(path):
             self.path_full = [str(Path(module_path, e)) for e in path]
         else:
             # if path is None, do not append anything
-            self.path_full = str(Path(module_path, path or ''))
+            self.path_full = str(Path(module_path, path or ""))
 
         self.env = self.__init_env()
 
@@ -92,22 +95,21 @@ class SourceLoader:
             # this will cause jinja2 to raise an exception if a variable
             # declared in the template is not passed in the render parameters
             undefined=StrictUndefined,
-            extensions=(extensions.RaiseExtension, ))
+            extensions=(extensions.RaiseExtension,),
+        )
 
     def __getitem__(self, key):
         return self.get_template(key)
 
     def get(self, key):
-        """Load template, returns None if it doesn' exist
-        """
+        """Load template, returns None if it doesn' exist"""
         try:
             return self[key]
         except exceptions.TemplateNotFound:
             return None
 
     def path_to(self, key):
-        """Return the path to a template, even if it doesn't exist
-        """
+        """Return the path to a template, even if it doesn't exist"""
         try:
             return self[key].path
         except exceptions.TemplateNotFound:
@@ -139,16 +141,18 @@ class SourceLoader:
             # configured to load from a different place
             if Path(name).exists():
                 raise exceptions.TemplateNotFound(
-                    f'{str(name)!r} template does not exist. '
-                    'However such a file exists in the current working '
-                    'directory, if you want to load it as a template, move it '
-                    f'to {self.path_full!r} or remove the source_loader')
+                    f"{str(name)!r} template does not exist. "
+                    "However such a file exists in the current working "
+                    "directory, if you want to load it as a template, move it "
+                    f"to {self.path_full!r} or remove the source_loader"
+                )
             # no template and the file does not exist, raise a generic message
             else:
                 raise exceptions.TemplateNotFound(
-                    f'{str(name)!r} template does not exist. '
-                    'Based on your configuration, if should be located '
-                    f'at: {expected_path!r}')
+                    f"{str(name)!r} template does not exist. "
+                    "Based on your configuration, if should be located "
+                    f"at: {expected_path!r}"
+                )
 
         return Placeholder(template)
 
@@ -157,7 +161,7 @@ class SourceLoader:
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state['env']
+        del state["env"]
         return state
 
     def __setstate__(self, state):

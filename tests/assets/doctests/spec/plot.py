@@ -1,7 +1,7 @@
 # %% tags=["parameters"]
-upstream = ['get']
+upstream = ["get"]
 product = None
 
 # %%
-path = upstream['get']
+path = upstream["get"]
 1 + 1

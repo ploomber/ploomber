@@ -4,8 +4,8 @@ contents manager does not inject a cell here since this is not part of
 the pipeline.yaml
 """
 # + tags=["parameters"]
-upstream = {'clean': None}
-product = 'output/dummy.ipynb'
+upstream = {"clean": None}
+product = "output/dummy.ipynb"
 
 # +
 1 + 1

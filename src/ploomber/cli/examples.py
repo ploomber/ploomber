@@ -22,18 +22,17 @@ from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
 from difflib import get_close_matches
 
-_URL = 'https://github.com/ploomber/projects'
-_DEFAULT_BRANCH = 'master'
-_home = Path('~', '.ploomber')
+_URL = "https://github.com/ploomber/projects"
+_DEFAULT_BRANCH = "master"
+_home = Path("~", ".ploomber")
 
 _lexer = MarkdownLexer()
 _formatter = TerminalFormatter(bg="dark")
 
 
 def _find_header(md):
-    """Find header markers
-    """
-    mark = '<!-- end header -->'
+    """Find header markers"""
+    mark = "<!-- end header -->"
     lines = md.splitlines()
 
     for n, line in enumerate(lines):
@@ -48,7 +47,7 @@ def _skip_header(md):
 
     if line:
         lines = md.splitlines()
-        return '\n'.join(lines[line + 1:])
+        return "\n".join(lines[line + 1 :])
     else:
         return md
 
@@ -57,8 +56,8 @@ def _delete_git_repo(path):
     """
     If on windows, we need to change permissionsto delete the repo
     """
-    path_to_repo = Path(path, '.git')
-    if os.name == 'nt' and path_to_repo.exists():
+    path_to_repo = Path(path, ".git")
+    if os.name == "nt" and path_to_repo.exists():
         for root, dirs, files in os.walk(path_to_repo):
             for dir_ in dirs:
                 os.chmod(Path(root, dir_), stat.S_IRWXU)
@@ -67,12 +66,12 @@ def _delete_git_repo(path):
 
 
 def _delete(source, sub):
-    return source.replace(sub, '')
+    return source.replace(sub, "")
 
 
 def _cleanup_markdown(source):
-    source = _delete(source, '<!-- start description -->\n')
-    source = _delete(source, '<!-- end description -->\n')
+    source = _delete(source, "<!-- start description -->\n")
+    source = _delete(source, "<!-- end description -->\n")
     source = _skip_header(source)
     return source
 
@@ -84,12 +83,12 @@ def _display_markdown(tw, path):
 
     lines = source.splitlines()
 
-    top_lines = '\n'.join(lines[:LINES])
+    top_lines = "\n".join(lines[:LINES])
 
     tw.write(highlight(top_lines, _lexer, _formatter))
 
     if len(lines) > LINES:
-        tw.write(f'\n[...{str(path)} continues]\n', yellow=True)
+        tw.write(f"\n[...{str(path)} continues]\n", yellow=True)
 
 
 class _ExamplesManager:
@@ -113,8 +112,8 @@ class _ExamplesManager:
 
     def __init__(self, home=None, branch=None, force=False, verbose=True):
         self._home = Path(home or _home).expanduser()
-        self._path_to_metadata = self._home / '.metadata'
-        self._examples = self._home / 'projects'
+        self._path_to_metadata = self._home / ".metadata"
+        self._examples = self._home / "projects"
         self._branch = branch or _DEFAULT_BRANCH
         self._explicit_branch = branch is not None
         self._tw = TerminalWriter()
@@ -122,26 +121,24 @@ class _ExamplesManager:
 
         if not self.examples.exists() or self.outdated() or force:
             if self._verbose and not self.examples.exists():
-                click.echo('Local copy does not exist...')
+                click.echo("Local copy does not exist...")
             elif self._verbose and force:
-                click.echo('Forcing download...')
+                click.echo("Forcing download...")
 
             self.clone()
 
-        with open(self.examples / '_index.csv',
-                  newline='',
-                  encoding='utf-8-sig') as f:
+        with open(self.examples / "_index.csv", newline="", encoding="utf-8-sig") as f:
             rows = list(csv.DictReader(f))
         self._examples_by_category = defaultdict(lambda: [])
         for row in rows:
-            category = row.pop('category')
-            del row['idx']
+            category = row.pop("category")
+            del row["idx"]
             self._examples_by_category[category].append(row)
-        self._example_names = [example["name"]
-                               for _, examples
-                               in self._examples_by_category.items()
-                               for example
-                               in examples]
+        self._example_names = [
+            example["name"]
+            for _, examples in self._examples_by_category.items()
+            for example in examples
+        ]
 
     @property
     def home(self):
@@ -168,7 +165,7 @@ class _ExamplesManager:
         try:
             return json.loads(self.path_to_metadata.read_text())
         except Exception as e:
-            click.echo(f'Error loading metadata: {e}')
+            click.echo(f"Error loading metadata: {e}")
             return None
 
     def clone(self):
@@ -180,17 +177,19 @@ class _ExamplesManager:
             shutil.rmtree(self.examples)
 
         try:
-            subprocess.run([
-                'git',
-                'clone',
-                '--depth',
-                '1',
-                '--branch',
-                self.branch,
-                _URL,
-                str(self.examples),
-            ],
-                           check=True)
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--depth",
+                    "1",
+                    "--branch",
+                    self.branch,
+                    _URL,
+                    str(self.examples),
+                ],
+                check=True,
+            )
         except Exception as e:
             exception = e
         else:
@@ -198,9 +197,10 @@ class _ExamplesManager:
 
         if exception:
             raise RuntimeError(
-                'An error occurred when downloading examples. '
-                'Verify git is installed and your internet '
-                f'connection. (Error message: {str(exception)!r})')
+                "An error occurred when downloading examples. "
+                "Verify git is installed and your internet "
+                f"connection. (Error message: {str(exception)!r})"
+            )
 
         self.save_metadata(branch=self.branch)
 
@@ -208,31 +208,32 @@ class _ExamplesManager:
         metadata = self.load_metadata()
 
         if metadata:
-            timestamp = metadata['timestamp']
+            timestamp = metadata["timestamp"]
             then = datetime.fromtimestamp(timestamp)
             now = datetime.now()
             elapsed = (now - then).days
             is_more_than_one_day_old = elapsed >= 1
 
-            is_different_branch = metadata.get('branch') != self.branch
+            is_different_branch = metadata.get("branch") != self.branch
 
             if is_more_than_one_day_old:
-                click.echo('Examples copy is more than 1 day old...')
+                click.echo("Examples copy is more than 1 day old...")
 
             if is_different_branch and self._explicit_branch:
-                click.echo('Different branch requested...')
+                click.echo("Different branch requested...")
 
-            return is_more_than_one_day_old or (is_different_branch
-                                                and self._explicit_branch)
+            return is_more_than_one_day_old or (
+                is_different_branch and self._explicit_branch
+            )
         else:
-            click.echo('Cloning...')
+            click.echo("Cloning...")
             return True
 
     def path_to(self, name):
         return self.examples / name
 
     def path_to_readme(self):
-        return self.examples / 'README.md'
+        return self.examples / "README.md"
 
     def _suggest_example(self, name: str, options: list):
         if not name or name in options:
@@ -245,13 +246,12 @@ class _ExamplesManager:
             return None
 
     def list(self):
-
-        categories = json.loads((self.examples / '_category.json').read_text())
+        categories = json.loads((self.examples / "_category.json").read_text())
 
         tw = TerminalWriter()
 
-        click.echo(f'Branch: {self.branch}')
-        tw.sep('=', 'Ploomber examples', blue=True)
+        click.echo(f"Branch: {self.branch}")
+        tw.sep("=", "Ploomber examples", blue=True)
         click.echo()
 
         for category in sorted(self._examples_by_category):
@@ -259,21 +259,25 @@ class _ExamplesManager:
             description = categories.get(category)
 
             if description:
-                title = f'{title} ({description})'
+                title = f"{title} ({description})"
 
-            tw.sep(' ', title, green=True)
+            tw.sep(" ", title, green=True)
             click.echo()
             click.echo(
-                Table.from_dicts(self._examples_by_category[category])
-                     .to_format('simple'))
+                Table.from_dicts(self._examples_by_category[category]).to_format(
+                    "simple"
+                )
+            )
             click.echo()
 
-        tw.sep('=', blue=True)
+        tw.sep("=", blue=True)
 
-        tw.write('\nTo run these examples in free, hosted '
-                 f'environment, see instructions at: {_URL}')
-        tw.write('\nTo download: ploomber examples -n name -o path\n')
-        tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
+        tw.write(
+            "\nTo run these examples in free, hosted "
+            f"environment, see instructions at: {_URL}"
+        )
+        tw.write("\nTo download: ploomber examples -n name -o path\n")
+        tw.write("Example: ploomber examples -n templates/ml-basic -o ml\n\n")
 
     def download(self, name, output):
         selected = self.path_to(name)
@@ -283,57 +287,55 @@ class _ExamplesManager:
             # when suggested command returns None, disable did you mean feature
             if closest_match is not None:
                 raise BaseException(
-                    f'There is no example named {name!r}. '
+                    f"There is no example named {name!r}. "
                     f'Did you mean "{closest_match}"?',
-                    type_='no-example-with-name')
+                    type_="no-example-with-name",
+                )
             else:
                 print()
                 raise BaseException(
-                    f'There is no example named {name!r}. \n'
-                    'List examples: ploomber examples\n'
-                    'Update local copy: ploomber examples -f\n'
-                    'Get ML example: ploomber examples -n '
-                    'templates/ml-basic -o ml-example',
-                    type_='no-example-with-name')
+                    f"There is no example named {name!r}. \n"
+                    "List examples: ploomber examples\n"
+                    "Update local copy: ploomber examples -f\n"
+                    "Get ML example: ploomber examples -n "
+                    "templates/ml-basic -o ml-example",
+                    type_="no-example-with-name",
+                )
         else:
             output = output or name
 
             if self._verbose:
-                self._tw.sep('=',
-                             f'Copying example {name} to {output}/',
-                             blue=True)
+                self._tw.sep("=", f"Copying example {name} to {output}/", blue=True)
 
             if Path(output).exists():
                 raise BaseException(
                     f"{output!r} already exists in the current working "
                     "directory, please rename it or move it "
                     "to another location and try again.",
-                    type_='directory-exists')
+                    type_="directory-exists",
+                )
 
             shutil.copytree(selected, output)
 
-            path_to_readme = Path(output, 'README.md')
-            out_dir = output + ('\\'
-                                if platform.system() == 'Windows' else '/')
+            path_to_readme = Path(output, "README.md")
+            out_dir = output + ("\\" if platform.system() == "Windows" else "/")
 
             if self._verbose:
-                self._tw.write('Next steps:\n\n'
-                               f'$ cd {out_dir}'
-                               f'\n$ ploomber install')
                 self._tw.write(
-                    f'\n\nOpen {str(path_to_readme)} for details.\n',
-                    blue=True)
+                    "Next steps:\n\n" f"$ cd {out_dir}" f"\n$ ploomber install"
+                )
+                self._tw.write(
+                    f"\n\nOpen {str(path_to_readme)} for details.\n", blue=True
+                )
 
 
 @command_endpoint
-@telemetry.log_call('examples')
+@telemetry.log_call("examples")
 def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples
     """
-    examples_manager = _ExamplesManager(branch=branch,
-                                        force=force,
-                                        verbose=True)
+    examples_manager = _ExamplesManager(branch=branch, force=force, verbose=True)
     if not name:
         examples_manager.list()
     else:

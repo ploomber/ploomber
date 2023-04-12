@@ -15,6 +15,7 @@ class AbstractPlaceholder(abc.ABC):
     also used to give Products placeholding features (e.g.
     by directly using Placeholder or SQLRelationPlaceholder)
     """
+
     @abc.abstractmethod
     def __str__(self):
         pass  # pragma: no cover

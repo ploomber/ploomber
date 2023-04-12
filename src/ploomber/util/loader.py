@@ -15,16 +15,17 @@ def lazily_load_entry_point(starting_dir=None, reload=False):
     Lazily loads entry point by recursively looking in starting_dir directory
     and parent directories.
     """
-    generator = _lazily_load_entry_point_generator(starting_dir=starting_dir,
-                                                   reload=reload)
+    generator = _lazily_load_entry_point_generator(
+        starting_dir=starting_dir, reload=reload
+    )
     _ = next(generator)
     return next(generator)
 
 
 def _lazily_load_entry_point_generator(starting_dir=None, reload=False):
-    starting_dir = starting_dir or '.'
+    starting_dir = starting_dir or "."
 
-    entry_point = os.environ.get('ENTRY_POINT')
+    entry_point = os.environ.get("ENTRY_POINT")
 
     type_ = try_to_find_entry_point_type(entry_point)
 
@@ -39,13 +40,14 @@ def _lazily_load_entry_point_generator(starting_dir=None, reload=False):
         yield path
         entry = load_callable_dotted_path(str(entry_point), raise_=True)
         dag = entry()
-        spec = dict(meta=dict(jupyter_hot_reload=False,
-                              jupyter_functions_as_notebooks=False))
+        spec = dict(
+            meta=dict(jupyter_hot_reload=False, jupyter_functions_as_notebooks=False)
+        )
         yield spec, dag, path, None
     else:
-        generator = _default_spec_load_generator(starting_dir=starting_dir,
-                                                 reload=reload,
-                                                 lazy_import=True)
+        generator = _default_spec_load_generator(
+            starting_dir=starting_dir, reload=reload, lazy_import=True
+        )
 
         yield next(generator)
 
@@ -65,16 +67,16 @@ def _lazily_load_entry_point_generator(starting_dir=None, reload=False):
         task = dag[name]
         task._on_render = None
 
-        if hasattr(task, 'static_analysis'):
+        if hasattr(task, "static_analysis"):
             task.static_analysis = False
 
     yield spec, dag, path, path_to_spec
 
 
 def _default_spec_load(starting_dir=None, lazy_import=False, reload=False):
-    generator = _default_spec_load_generator(starting_dir=starting_dir,
-                                             lazy_import=lazy_import,
-                                             reload=reload)
+    generator = _default_spec_load_generator(
+        starting_dir=starting_dir, lazy_import=lazy_import, reload=reload
+    )
     """
     NOTE: this is a private API. Use DAGSpec.find() instead
 
@@ -95,9 +97,7 @@ def _default_spec_load(starting_dir=None, lazy_import=False, reload=False):
     return next(generator)
 
 
-def _default_spec_load_generator(starting_dir=None,
-                                 lazy_import=False,
-                                 reload=False):
+def _default_spec_load_generator(starting_dir=None, lazy_import=False, reload=False):
     """
     Similar to _default_spec_load but this one returns a generator. The
     first element is the path to the entry point and the second one
@@ -108,15 +108,15 @@ def _default_spec_load_generator(starting_dir=None,
     yield path_to_entry_point
 
     try:
-        spec = DAGSpec(path_to_entry_point,
-                       env=None,
-                       lazy_import=lazy_import,
-                       reload=reload)
+        spec = DAGSpec(
+            path_to_entry_point, env=None, lazy_import=lazy_import, reload=reload
+        )
 
         path_to_spec = Path(path_to_entry_point)
         yield spec, path_to_spec.parent, path_to_spec
 
     except Exception as e:
-        exc = DAGSpecInitializationError('Error initializing DAG from '
-                                         f'{path_to_entry_point!s}')
+        exc = DAGSpecInitializationError(
+            "Error initializing DAG from " f"{path_to_entry_point!s}"
+        )
         raise exc from e

@@ -7,4 +7,4 @@ def _resolve(path):
     this makes it work
     """
     path = Path(path)
-    return path if path.is_absolute() else Path('.').resolve() / path
+    return path if path.is_absolute() else Path(".").resolve() / path

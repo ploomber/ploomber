@@ -9,29 +9,33 @@ from ploomber.env.envdict import EnvDict
 
 def _get_function_name_w_module(fn):
     mod_name = inspect.getmodule(fn).__name__
-    return '.'.join((mod_name, fn.__name__))
+    return ".".join((mod_name, fn.__name__))
 
 
 def _validate_and_modify_signature(fn):
     sig = inspect.signature(fn)
 
     if not len(sig.parameters):
-        raise RuntimeError('Function "{}" does not take arguments, '
-                           '@with_env decorated functions should '
-                           'have env as their first artgument'.format(
-                               fn.__name__))
+        raise RuntimeError(
+            'Function "{}" does not take arguments, '
+            "@with_env decorated functions should "
+            "have env as their first artgument".format(fn.__name__)
+        )
 
-    if list(sig.parameters.keys())[0] != 'env':
-        raise RuntimeError('Function "{}" does not "env" as its first '
-                           'argument, which is required to use the '
-                           '@with_env decorator'.format(fn.__name__))
+    if list(sig.parameters.keys())[0] != "env":
+        raise RuntimeError(
+            'Function "{}" does not "env" as its first '
+            "argument, which is required to use the "
+            "@with_env decorator".format(fn.__name__)
+        )
 
     for arg in list(sig.parameters.keys())[1:]:
-        if arg.lower().startswith('env'):
-            raise RuntimeError('Function "{}" has arguments '
-                               'starting with "env". Only the '
-                               'first one should start with "env"'.format(
-                                   fn.__name__))
+        if arg.lower().startswith("env"):
+            raise RuntimeError(
+                'Function "{}" has arguments '
+                'starting with "env". Only the '
+                'first one should start with "env"'.format(fn.__name__)
+            )
 
     # https://www.python.org/dev/peps/pep-0362/#examples
     new_sig = sig.replace(parameters=tuple(sig.parameters.values())[1:])
@@ -78,6 +82,7 @@ def with_env(source):
     .. literalinclude:: ../../examples/short/with_env.py
 
     """
+
     def decorator(fn):
         _validate_and_modify_signature(fn)
 
@@ -89,22 +94,21 @@ def with_env(source):
             else:
                 # when the decorator is called without args, look for
                 # 'env.yaml'
-                env_dict = EnvDict.find(source or 'env.yaml')
+                env_dict = EnvDict.find(source or "env.yaml")
         except Exception as e:
-            raise RuntimeError('Failed to resolve environment using '
-                               '@with_env decorator in function "{}". '
-                               'Tried to call Env with argument: {}'.format(
-                                   _get_function_name_w_module(fn),
-                                   source)) from e
+            raise RuntimeError(
+                "Failed to resolve environment using "
+                '@with_env decorator in function "{}". '
+                "Tried to call Env with argument: {}".format(
+                    _get_function_name_w_module(fn), source
+                )
+            ) from e
 
         fn._env_dict = env_dict
 
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            to_replace = {
-                k: v
-                for k, v in kwargs.items() if k.startswith('env__')
-            }
+            to_replace = {k: v for k, v in kwargs.items() if k.startswith("env__")}
 
             for key in to_replace.keys():
                 kwargs.pop(key)
@@ -112,15 +116,16 @@ def with_env(source):
             env_dict_new = env_dict._replace_flatten_keys(to_replace)
 
             try:
-                Env._init_from_decorator(env_dict_new,
-                                         _get_function_name_w_module(fn))
+                Env._init_from_decorator(env_dict_new, _get_function_name_w_module(fn))
             except Exception as e:
                 current = Env.load()
-                raise RuntimeError('Failed to initialize environment using '
-                                   '@with_env decorator in function "{}". '
-                                   'Current environment: {}'.format(
-                                       _get_function_name_w_module(fn),
-                                       repr(current))) from e
+                raise RuntimeError(
+                    "Failed to initialize environment using "
+                    '@with_env decorator in function "{}". '
+                    "Current environment: {}".format(
+                        _get_function_name_w_module(fn), repr(current)
+                    )
+                ) from e
 
             Env._ref = _get_function_name_w_module(fn)
 

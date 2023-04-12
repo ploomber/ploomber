@@ -20,8 +20,8 @@ def touch(product, upstream):
 def test_link_is_up_to_date_before_build(tmp_directory):
     dag = DAG()
 
-    Path('some_file.txt').touch()
-    t1 = Link(File('some_file.txt'), dag, name='some_file')
+    Path("some_file.txt").touch()
+    t1 = Link(File("some_file.txt"), dag, name="some_file")
 
     assert not t1.product._is_outdated()
 
@@ -31,9 +31,9 @@ def test_downstream_from_link_is_up_to_date_after_build(tmp_directory):
     # from upstream dependencies in t2 should not mark it as outdated
     dag = DAG()
 
-    Path('some_file.txt').touch()
-    t1 = Link(File('some_file.txt'), dag, name='some_file')
-    t2 = PythonCallable(touch, File('another_file'), dag)
+    Path("some_file.txt").touch()
+    t1 = Link(File("some_file.txt"), dag, name="some_file")
+    t2 = PythonCallable(touch, File("another_file"), dag)
     t1 >> t2
 
     dag.build()
@@ -44,14 +44,14 @@ def test_downstream_from_link_is_up_to_date_after_build(tmp_directory):
 def test_error_raised_if_link_has_upstream_dependencies(tmp_directory):
     dag = DAG()
 
-    t0 = PythonCallable(touch_root, File('another_file'), dag)
-    Path('some_file.txt').touch()
-    t1 = Link(File('some_file.txt'), dag, name='some_file')
+    t0 = PythonCallable(touch_root, File("another_file"), dag)
+    Path("some_file.txt").touch()
+    t1 = Link(File("some_file.txt"), dag, name="some_file")
 
     with pytest.raises(RuntimeError) as excinfo:
         t0 >> t1
 
-    msg = 'Link tasks should not have upstream dependencies'
+    msg = "Link tasks should not have upstream dependencies"
     assert msg in str(excinfo.getrepr())
 
 
@@ -59,8 +59,10 @@ def test_error_raised_if_link_product_does_not_exist(tmp_directory):
     dag = DAG()
 
     with pytest.raises(RuntimeError) as excinfo:
-        Link(File('some_file.txt'), dag, name='some_file')
+        Link(File("some_file.txt"), dag, name="some_file")
 
-    msg = ('Link tasks should point to Products that already exist. '
-           '"some_file" task product "some_file.txt" does not exist')
+    msg = (
+        "Link tasks should point to Products that already exist. "
+        '"some_file" task product "some_file.txt" does not exist'
+    )
     assert msg in str(excinfo.getrepr())

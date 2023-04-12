@@ -12,15 +12,13 @@ from ploomber.tasks import tasks
 
 def test_init_client_automatically(monkeypatch):
     m = Mock()
-    monkeypatch.setattr(tasks, 'ShellClient', lambda: m)
+    monkeypatch.setattr(tasks, "ShellClient", lambda: m)
 
     dag = DAG()
     # if client is None
-    task = ShellScript('touch {{product}}',
-                       File('file.txt'),
-                       dag,
-                       name='touch',
-                       client=None)
+    task = ShellScript(
+        "touch {{product}}", File("file.txt"), dag, name="touch", client=None
+    )
 
     # must initialize one using ShelClient()
     assert task.client is m
@@ -28,29 +26,25 @@ def test_init_client_automatically(monkeypatch):
 
 def test_build_task(tmp_directory, monkeypatch):
     dag = DAG()
-    task = ShellScript('touch {{product}}',
-                       File('file.txt'),
-                       dag,
-                       name='touch')
+    task = ShellScript("touch {{product}}", File("file.txt"), dag, name="touch")
 
     # need this to because dag.build verifies products exist after execution
     def side_effect(code):
-        Path('file.txt').touch()
+        Path("file.txt").touch()
 
     # mock the actual execution to make this test work on windows
     mock_execute = Mock(side_effect=side_effect)
-    monkeypatch.setattr(task.client, 'execute', mock_execute)
+    monkeypatch.setattr(task.client, "execute", mock_execute)
 
     dag.build()
 
-    mock_execute.assert_called_once_with('touch file.txt')
+    mock_execute.assert_called_once_with("touch file.txt")
 
 
 def test_error_if_missing_product(tmp_directory):
     dag = DAG()
 
     with pytest.raises(SourceInitializationError) as excinfo:
-        ShellScript('touch file.txt', File('file.txt'), dag, name='touch')
+        ShellScript("touch file.txt", File("file.txt"), dag, name="touch")
 
-    assert ('ShellScript must include {{product}} in its source'
-            in str(excinfo.value))
+    assert "ShellScript must include {{product}} in its source" in str(excinfo.value)

@@ -1,6 +1,9 @@
 on:
   pull_request:
   push:
+    branches:
+      - master
+      - 'dev/**'
   schedule:
     - cron: '0 0 * * *'
   repository_dispatch:
@@ -35,9 +38,9 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
-        # make the build fail quickly on flake8 errors
-        pip install flake8
-        flake8
+        # make the build fail quickly on linting errors
+        pip install pkgmt
+        pkgmt lint
 
         # there's a bug in jupyter, we need to install this first
         conda install pywin32
@@ -122,9 +125,9 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
-        # make the build fail quickly on flake8 errors
-        pip install flake8
-        flake8
+        # make the build fail quickly on linting errors
+        pip install pkgmt
+        pkgmt lint
 
         # there's a bug in jupyter, we need to install this first
         conda install pywin32

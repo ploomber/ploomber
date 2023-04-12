@@ -9,6 +9,7 @@ class DAGLogger:
     is not intended to be used directly.
 
     """
+
     def __init__(self, handler, logger=None):
         self.handler = handler
 

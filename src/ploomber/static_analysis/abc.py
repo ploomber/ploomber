@@ -22,5 +22,6 @@ class NotebookExtractor(Extractor):
         self.parameters_cell = parameters_cell
 
         if self.parameters_cell is None:
-            raise ValueError('Notebook does not have a cell with the tag '
-                             '"parameters"')
+            raise ValueError(
+                "Notebook does not have a cell with the tag " '"parameters"'
+            )

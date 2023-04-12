@@ -19,13 +19,12 @@ class AbstractMetadata(abc.ABC):
     If product does not exist, initialize empty metadata, otherwise use
     ``product.fetch_metadata`` to load it
     """
+
     def __init__(self, product):
         self.__data = None
         self._product = product
 
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
     @property
     @abc.abstractmethod
@@ -38,40 +37,34 @@ class AbstractMetadata(abc.ABC):
     @property
     @abc.abstractmethod
     def timestamp(self):
-        """When the product was originally created
-        """
+        """When the product was originally created"""
         pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def stored_source_code(self):
-        """Source code that generated the product
-        """
+        """Source code that generated the product"""
         pass  # pragma: no cover
 
     @property
     @abc.abstractclassmethod
     def params(self):
-        """Task params
-        """
+        """Task params"""
         pass
 
     @abc.abstractmethod
     def update(self, source_code, params):
-        """
-        """
+        """ """
         pass  # pragma: no cover
 
     @abc.abstractmethod
     def delete(self):
-        """Delete metadata
-        """
+        """Delete metadata"""
         pass  # pragma: no cover
 
     @abc.abstractmethod
     def _get(self):
-        """Load metadata
-        """
+        """Load metadata"""
         pass  # pragma: no cover
 
     @abc.abstractmethod
@@ -93,8 +86,7 @@ class AbstractMetadata(abc.ABC):
         pass  # pragma: no cover
 
     def to_dict(self):
-        """Returns a dict copy of ._data
-        """
+        """Returns a dict copy of ._data"""
         return deepcopy(self._data)
 
     def __eq__(self, other):
@@ -110,20 +102,17 @@ class AbstractMetadata(abc.ABC):
     def __getstate__(self):
         state = self.__dict__.copy()
 
-        if '_logger' in state:
-            del state['_logger']
+        if "_logger" in state:
+            del state["_logger"]
 
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
     def _fetch(self):
-        """Fetches metadata if needed. If already fetched, does nothing
-        """
+        """Fetches metadata if needed. If already fetched, does nothing"""
         if not self._did_fetch:
             self._get()
 
@@ -151,6 +140,7 @@ class Metadata(AbstractMetadata):
     stored_source_code
         Last updates product source code
     """
+
     def _default_metadata(self):
         return dict(timestamp=None, stored_source_code=None, params=None)
 
@@ -158,22 +148,20 @@ class Metadata(AbstractMetadata):
         self.__data = None
         self._product = product
 
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
         self._did_fetch = False
 
     @property
     def params(self):
-        return self._data.get('params')
+        return self._data.get("params")
 
     @property
     def timestamp(self):
-        return self._data.get('timestamp')
+        return self._data.get("timestamp")
 
     @property
     def stored_source_code(self):
-        return self._data.get('stored_source_code')
+        return self._data.get("stored_source_code")
 
     @property
     def _data(self):
@@ -214,8 +202,8 @@ class Metadata(AbstractMetadata):
 
             if metadata_fetched is None:
                 self._logger.debug(
-                    'fetch_metadata for product %s returned '
-                    'None', self._product)
+                    "fetch_metadata for product %s returned " "None", self._product
+                )
                 metadata = self._default_metadata()
             else:
                 # FIXME: we need to further validate this, need to check
@@ -250,13 +238,13 @@ class Metadata(AbstractMetadata):
             stored_source_code=source_code,
             # process params to store hashes in case they're
             # declared as resources
-            params=process_resources(params))
+            params=process_resources(params),
+        )
 
-        kwargs = callback_check(self._product.prepare_metadata,
-                                available={
-                                    'metadata': new_data,
-                                    'product': self._product
-                                })
+        kwargs = callback_check(
+            self._product.prepare_metadata,
+            available={"metadata": new_data, "product": self._product},
+        )
 
         data = self._product.prepare_metadata(**kwargs)
 
@@ -266,16 +254,14 @@ class Metadata(AbstractMetadata):
         self.update_locally(new_data)
 
     def update_locally(self, data):
-        """Updates the in-memory copy, does not update persistent copy
-        """
+        """Updates the in-memory copy, does not update persistent copy"""
         # could be the case that we haven't fetched metadata yet. since this
         # overwrites existing metadata. we no longer have to fetch
         self._did_fetch = True
         self._data = deepcopy(data)
 
     def delete(self):
-        """Calls ._product._delete_metadata()
-        """
+        """Calls ._product._delete_metadata()"""
         self._product._delete_metadata()
         self._data = self._default_metadata()
 
@@ -292,12 +278,11 @@ class Metadata(AbstractMetadata):
         self._data = self._default_metadata()
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._data!r})'
+        return f"{type(self).__name__}({self._data!r})"
 
 
 class MetadataCollection(AbstractMetadata):
-    """Metadata class used for MetaProduct
-    """
+    """Metadata class used for MetaProduct"""
 
     # FIXME: this can be optimized. instead of keeping separate copies for each
     # the metadata objects can share the underlying dictionary, since they
@@ -308,7 +293,8 @@ class MetadataCollection(AbstractMetadata):
     @property
     def timestamp(self):
         timestamps = [
-            p.metadata.timestamp for p in self._products
+            p.metadata.timestamp
+            for p in self._products
             if p.metadata.timestamp is not None
         ]
 
@@ -321,9 +307,11 @@ class MetadataCollection(AbstractMetadata):
         if any_none or not timestamps:
             # warn on corrupted data
             if any_none and timestamps:
-                warnings.warn(f'Corrupted product metadata ({self!r}): '
-                              'at least one product had a null timestamp, '
-                              'but others had non-null timestamp')
+                warnings.warn(
+                    f"Corrupted product metadata ({self!r}): "
+                    "at least one product had a null timestamp, "
+                    "but others had non-null timestamp"
+                )
 
             return None
         else:
@@ -336,16 +324,16 @@ class MetadataCollection(AbstractMetadata):
 
     @property
     def stored_source_code(self):
-        stored_source_code = [
-            p.metadata.stored_source_code for p in self._products
-        ]
+        stored_source_code = [p.metadata.stored_source_code for p in self._products]
         # if source code differs (i.e. more than one element)
         if len(set(stored_source_code)) > 1:
             warnings.warn(
-                'Stored source codes for products {} '
-                'are different, but they are part of the same '
-                'MetaProduct, returning stored_source_code as None'.format(
-                    self._products))
+                "Stored source codes for products {} "
+                "are different, but they are part of the same "
+                "MetaProduct, returning stored_source_code as None".format(
+                    self._products
+                )
+            )
             return None
         else:
             return stored_source_code[0]
@@ -377,16 +365,17 @@ class MetadataCollection(AbstractMetadata):
     def to_dict(self):
         products = list(self._products)
         source = set(p.metadata.stored_source_code for p in products)
-        large_diff = large_timestamp_difference(p.metadata.timestamp
-                                                for p in products)
+        large_diff = large_timestamp_difference(p.metadata.timestamp for p in products)
 
         # warn if metadata does not match, give a little tolerance (5 seconds)
         # for timestamps since they are expected to have slight differences
         if len(source) > 1 or large_diff:
-            warnings.warn(f'Metadata acros products ({self!r}) differs, '
-                          'this could be due to metadata corruption or '
-                          'slow metadata storage backend, returning the '
-                          'metadata from the first product')
+            warnings.warn(
+                f"Metadata acros products ({self!r}) differs, "
+                "this could be due to metadata corruption or "
+                "slow metadata storage backend, returning the "
+                "metadata from the first product"
+            )
 
         return products[0].metadata.to_dict()
 
@@ -394,23 +383,23 @@ class MetadataCollection(AbstractMetadata):
     def _data(self):
         products = list(self._products)
         source = set(p.metadata.stored_source_code for p in products)
-        large_diff = large_timestamp_difference(p.metadata.timestamp
-                                                for p in products)
+        large_diff = large_timestamp_difference(p.metadata.timestamp for p in products)
 
         # warn if metadata does not match, give a little tolerance (5 seconds)
         # for timestamps since they are expected to have slight differences
         if len(source) > 1 or large_diff:
-            warnings.warn(f'Metadata acros products ({self!r}) differs, '
-                          'this could be due to metadata corruption or '
-                          'slow metadata storage backend, returning the '
-                          'metadata from the first product')
+            warnings.warn(
+                f"Metadata acros products ({self!r}) differs, "
+                "this could be due to metadata corruption or "
+                "slow metadata storage backend, returning the "
+                "metadata from the first product"
+            )
 
         return products[0].metadata._data
 
 
 def large_timestamp_difference(timestamps):
-    """Returns True if there is at least one timestamp difference > 5 seconds
-    """
+    """Returns True if there is at least one timestamp difference > 5 seconds"""
     dts = [datetime.fromtimestamp(ts) for ts in timestamps]
 
     for i in range(len(dts)):
@@ -428,6 +417,7 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
     """
     Metadata for Link tasks (always up-to-date)
     """
+
     def __init__(self):
         pass
 
@@ -454,7 +444,7 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
 
     @property
     def _data(self):
-        return {'timestamp': 0, 'stored_source_code': None, 'params': {}}
+        return {"timestamp": 0, "stored_source_code": None, "params": {}}
 
     def delete(self):
         pass  # pragma: no cover

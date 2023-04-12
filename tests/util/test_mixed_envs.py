@@ -4,7 +4,6 @@ from ploomber.util import util
 
 
 def test_mixed_envs():
-
     # Set a pip dep string
     reqs = """pyflakes==2.4.0\nPygments==2.11.2\n
     pygraphviz @ file:///Users/runner/miniforge3/pygraphviz_1644545996627\n

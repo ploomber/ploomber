@@ -4,7 +4,6 @@ from io import StringIO
 
 
 class Message:
-
     def __init__(self, task, message, obj=None):
         self._task = task
         self._message = message
@@ -48,11 +47,7 @@ class MessageCollector(abc.ABC):
     def __str__(self):
         pass
 
-    def _to_str(self,
-                name=None,
-                file=None,
-                writer_kwargs=None,
-                show_summary=True):
+    def _to_str(self, name=None, file=None, writer_kwargs=None, show_summary=True):
         """
         Return the string representation of the collected messages
 
@@ -72,39 +67,39 @@ class MessageCollector(abc.ABC):
         else:
             sio = file
 
-        sio.write('\n')
+        sio.write("\n")
 
         self.tw = TerminalWriter(file=sio)
 
         if name:
-            self.tw.sep('=', title=name, **writer_kwargs)
+            self.tw.sep("=", title=name, **writer_kwargs)
         else:
-            self.tw.sep('=', **writer_kwargs)
+            self.tw.sep("=", **writer_kwargs)
 
         for msg in self.messages:
-            self.tw.sep('-', title=msg.header, **writer_kwargs)
+            self.tw.sep("-", title=msg.header, **writer_kwargs)
 
             sub_header = msg.sub_header
 
             if sub_header:
-                self.tw.sep('-', title=sub_header, **writer_kwargs)
+                self.tw.sep("-", title=sub_header, **writer_kwargs)
 
-            self.tw._write_source(msg.message.splitlines(), lexer='pytb')
+            self.tw._write_source(msg.message.splitlines(), lexer="pytb")
 
         if show_summary:
             n = len(self)
-            t = 'task' if n == 1 else 'tasks'
-            self.tw.sep('=', title=f'Summary ({n} {t})', **writer_kwargs)
+            t = "task" if n == 1 else "tasks"
+            self.tw.sep("=", title=f"Summary ({n} {t})", **writer_kwargs)
 
             for msg in self.messages:
                 # TODO: include original exception type and error message in
                 # summary
-                self.tw.write(f'{msg.header}\n')
+                self.tw.write(f"{msg.header}\n")
 
         if name:
-            self.tw.sep('=', title=name, **writer_kwargs)
+            self.tw.sep("=", title=name, **writer_kwargs)
         else:
-            self.tw.sep('=', **writer_kwargs)
+            self.tw.sep("=", **writer_kwargs)
 
         sio.seek(0)
         out = sio.read()
@@ -129,12 +124,13 @@ class MessageCollector(abc.ABC):
 def task_build_exception(task, message, exception):
     # use this just to get a single task collected from the abstract class
     class TaskBuildExceptionsCollector(MessageCollector):
-
         def __str__(self):
-            return self._to_str(name='Task build failed',
-                                file=None,
-                                writer_kwargs=dict(red=True),
-                                show_summary=False)
+            return self._to_str(
+                name="Task build failed",
+                file=None,
+                writer_kwargs=dict(red=True),
+                show_summary=False,
+            )
 
     tbec = TaskBuildExceptionsCollector()
     tbec.append(task=task, message=message, obj=exception)
@@ -142,32 +138,28 @@ def task_build_exception(task, message, exception):
 
 
 class BuildExceptionsCollector(MessageCollector):
-
     def __str__(self):
-        return self._to_str(name='DAG build failed',
-                            file=None,
-                            writer_kwargs=dict(red=True))
+        return self._to_str(
+            name="DAG build failed", file=None, writer_kwargs=dict(red=True)
+        )
 
 
 class RenderExceptionsCollector(MessageCollector):
-
     def __str__(self):
-        return self._to_str(name='DAG render failed',
-                            file=None,
-                            writer_kwargs=dict(red=True))
+        return self._to_str(
+            name="DAG render failed", file=None, writer_kwargs=dict(red=True)
+        )
 
 
 class BuildWarningsCollector(MessageCollector):
-
     def __str__(self):
-        return self._to_str(name='DAG build with warnings',
-                            file=None,
-                            writer_kwargs=dict(yellow=True))
+        return self._to_str(
+            name="DAG build with warnings", file=None, writer_kwargs=dict(yellow=True)
+        )
 
 
 class RenderWarningsCollector(MessageCollector):
-
     def __str__(self):
-        return self._to_str(name='DAG render with warnings',
-                            file=None,
-                            writer_kwargs=dict(yellow=True))
+        return self._to_str(
+            name="DAG render with warnings", file=None, writer_kwargs=dict(yellow=True)
+        )

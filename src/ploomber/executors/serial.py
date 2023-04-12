@@ -6,8 +6,7 @@ from tqdm.auto import tqdm
 from ploomber.executors.abc import Executor
 from ploomber.executors import _format
 from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
-from ploomber.messagecollector import (BuildExceptionsCollector,
-                                       BuildWarningsCollector)
+from ploomber.messagecollector import BuildExceptionsCollector, BuildWarningsCollector
 from ploomber.constants import TaskStatus
 
 
@@ -101,20 +100,21 @@ class Serial(Executor):
         Parallel executor
     """
 
-    def __init__(self,
-                 build_in_subprocess=True,
-                 catch_exceptions=True,
-                 catch_warnings=True):
+    def __init__(
+        self, build_in_subprocess=True, catch_exceptions=True, catch_warnings=True
+    ):
         self._logger = logging.getLogger(__name__)
         self._build_in_subprocess = build_in_subprocess
         self._catch_exceptions = catch_exceptions
         self._catch_warnings = catch_warnings
 
     def __repr__(self):
-        return ('Serial(build_in_subprocess={}, '
-                'catch_exceptions={}, catch_warnings={})'.format(
-                    self._build_in_subprocess, self._catch_exceptions,
-                    self._catch_warnings))
+        return (
+            "Serial(build_in_subprocess={}, "
+            "catch_exceptions={}, catch_warnings={})".format(
+                self._build_in_subprocess, self._catch_exceptions, self._catch_warnings
+            )
+        )
 
     def __call__(self, dag, show_progress):
         super().__call__(dag)
@@ -123,11 +123,9 @@ class Serial(Executor):
         warnings_all = BuildWarningsCollector()
         task_reports = []
 
-        task_kwargs = {'catch_exceptions': self._catch_exceptions}
+        task_kwargs = {"catch_exceptions": self._catch_exceptions}
 
-        scheduled = [
-            dag[t] for t in dag if dag[t].exec_status != TaskStatus.Skipped
-        ]
+        scheduled = [dag[t] for t in dag if dag[t].exec_status != TaskStatus.Skipped]
 
         if show_progress:
             scheduled = tqdm(scheduled, total=len(scheduled))
@@ -137,46 +135,50 @@ class Serial(Executor):
                 continue
 
             if show_progress:
-                label = ('Building task'
-                         if t.exec_status == TaskStatus.WaitingExecution else
-                         'Downloading product')
-                scheduled.set_description(f'{label} {t.name!r}')
+                label = (
+                    "Building task"
+                    if t.exec_status == TaskStatus.WaitingExecution
+                    else "Downloading product"
+                )
+                scheduled.set_description(f"{label} {t.name!r}")
 
             if self._build_in_subprocess:
                 fn = LazyFunction(
-                    build_in_subprocess, {
-                        'task': t,
-                        'build_kwargs': task_kwargs,
-                        'reports_all': task_reports
-                    }, t)
+                    build_in_subprocess,
+                    {
+                        "task": t,
+                        "build_kwargs": task_kwargs,
+                        "reports_all": task_reports,
+                    },
+                    t,
+                )
             else:
                 fn = LazyFunction(
-                    build_in_current_process, {
-                        'task': t,
-                        'build_kwargs': task_kwargs,
-                        'reports_all': task_reports
-                    }, t)
+                    build_in_current_process,
+                    {
+                        "task": t,
+                        "build_kwargs": task_kwargs,
+                        "reports_all": task_reports,
+                    },
+                    t,
+                )
 
             if self._catch_warnings:
-                fn = LazyFunction(fn=catch_warnings,
-                                  kwargs={
-                                      'fn': fn,
-                                      'warnings_all': warnings_all
-                                  },
-                                  task=t)
+                fn = LazyFunction(
+                    fn=catch_warnings,
+                    kwargs={"fn": fn, "warnings_all": warnings_all},
+                    task=t,
+                )
             else:
                 # NOTE: this isn't doing anything
-                fn = LazyFunction(fn=pass_exceptions,
-                                  kwargs={'fn': fn},
-                                  task=t)
+                fn = LazyFunction(fn=pass_exceptions, kwargs={"fn": fn}, task=t)
 
             if self._catch_exceptions:
-                fn = LazyFunction(fn=catch_exceptions,
-                                  kwargs={
-                                      'fn': fn,
-                                      'exceptions_all': exceptions_all
-                                  },
-                                  task=t)
+                fn = LazyFunction(
+                    fn=catch_exceptions,
+                    kwargs={"fn": fn, "exceptions_all": exceptions_all},
+                    task=t,
+                )
 
             fn()
 
@@ -188,13 +190,15 @@ class Serial(Executor):
 
         if exceptions_all and self._catch_exceptions:
             early_stop = any(
-                [isinstance(m.obj, DAGBuildEarlyStop) for m in exceptions_all])
+                [isinstance(m.obj, DAGBuildEarlyStop) for m in exceptions_all]
+            )
             if early_stop:
-                raise DAGBuildEarlyStop('Ealy stopping DAG execution, '
-                                        'at least one of the tasks that '
-                                        'failed raised a DAGBuildEarlyStop '
-                                        'exception:\n{}'.format(
-                                            str(exceptions_all)))
+                raise DAGBuildEarlyStop(
+                    "Ealy stopping DAG execution, "
+                    "at least one of the tasks that "
+                    "failed raised a DAGBuildEarlyStop "
+                    "exception:\n{}".format(str(exceptions_all))
+                )
             else:
                 raise DAGBuildError(str(exceptions_all))
 
@@ -202,7 +206,7 @@ class Serial(Executor):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state['_logger']
+        del state["_logger"]
         return state
 
     def __setstate__(self, state):
@@ -211,7 +215,6 @@ class Serial(Executor):
 
 
 class LazyFunction:
-
     def __init__(self, fn, kwargs, task):
         self.fn = fn
         self.kwargs = kwargs
@@ -244,7 +247,7 @@ def catch_warnings(fn, warnings_all):
 
     if warnings_current:
         w = [str(a_warning.message) for a_warning in warnings_current]
-        warnings_all.append(task=fn.task, message='\n'.join(w))
+        warnings_all.append(task=fn.task, message="\n".join(w))
 
     return result
 
@@ -340,16 +343,17 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         Collects the build report when executing the current DAG.
     """
     if callable(task.source.primitive):
-
         try:
             p = Pool(processes=1)
         except RuntimeError as e:
-            if 'An attempt has been made to start a new process' in str(e):
+            if "An attempt has been made to start a new process" in str(e):
                 # this is most likely due to child processes created with
                 # spawn (mac/windows) outside if __name__ == '__main__'
-                raise RuntimeError('Press ctrl + c to exit. '
-                                   'For help solving this, go to: '
-                                   'https://ploomber.io/s/mp') from e
+                raise RuntimeError(
+                    "Press ctrl + c to exit. "
+                    "For help solving this, go to: "
+                    "https://ploomber.io/s/mp"
+                ) from e
             else:
                 raise
 

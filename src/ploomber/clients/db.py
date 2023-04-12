@@ -13,8 +13,8 @@ from ploomber.clients.client import Client
 from ploomber.util import requires
 
 
-def code_split(code, token=';'):
-    only_whitespace = re.compile(r'^\s*$')
+def code_split(code, token=";"):
+    only_whitespace = re.compile(r"^\s*$")
 
     for part in code.split(token):
         if not re.match(only_whitespace, part):
@@ -27,9 +27,11 @@ def _get_url_obj(uri):
     elif isinstance(uri, sqlalchemy.engine.url.URL):
         return uri
     else:
-        raise TypeError('SQLAlchemyClient must be initialized with a '
-                        'string or a sqlalchemy.engine.url.URL object, got '
-                        f'{type(uri).__name__}')
+        raise TypeError(
+            "SQLAlchemyClient must be initialized with a "
+            "string or a sqlalchemy.engine.url.URL object, got "
+            f"{type(uri).__name__}"
+        )
 
 
 class DBAPIClient(Client):
@@ -155,6 +157,7 @@ class DBAPIClient(Client):
         A client to connect to a database using sqlalchemy as backend
 
     """
+
     def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()
         self.connect_fn = connect_fn
@@ -166,8 +169,7 @@ class DBAPIClient(Client):
 
     @property
     def connection(self):
-        """Return a connection, open one if there isn't any
-        """
+        """Return a connection, open one if there isn't any"""
         # if there isn't an open connection, open one...
         if self._connection is None:
             self._connection = self.connect_fn(**self.connect_kwargs)
@@ -178,8 +180,7 @@ class DBAPIClient(Client):
         return self.connection.cursor()
 
     def execute(self, code):
-        """Execute code with the existing connection
-        """
+        """Execute code with the existing connection"""
         cur = self.connection.cursor()
 
         if self.split_source:
@@ -192,14 +193,13 @@ class DBAPIClient(Client):
         cur.close()
 
     def close(self):
-        """Close connection if there is an active one
-        """
+        """Close connection if there is an active one"""
         if self._connection is not None:
             self._connection.close()
 
     def __getstate__(self):
         state = super().__getstate__()
-        state['_connection'] = None
+        state["_connection"] = None
         return state
 
 
@@ -339,10 +339,11 @@ class SQLAlchemyClient(Client):
     ploomber.clients.DBAPIClient :
         A client to connect to a database
     """
-    split_source_mapping = {'sqlite': ';'}
 
-    @requires(['sqlalchemy'], 'SQLAlchemyClient')
-    def __init__(self, uri, split_source='default', create_engine_kwargs=None):
+    split_source_mapping = {"sqlite": ";"}
+
+    @requires(["sqlalchemy"], "SQLAlchemyClient")
+    def __init__(self, uri, split_source="default", create_engine_kwargs=None):
         super().__init__()
         self._uri = uri
 
@@ -362,8 +363,7 @@ class SQLAlchemyClient(Client):
 
     @property
     def connection(self):
-        """Return a connection from the pool
-        """
+        """Return a connection from the pool"""
         # we have to keep this reference here,
         # if we just return self.engine.raw_connection(),
         # any cursor from that connection will fail
@@ -386,8 +386,7 @@ class SQLAlchemyClient(Client):
 
         # if split_source is default, and there's a default token defined,
         # use it
-        if (self.split_source == 'default'
-                and self.flavor in self.split_source_mapping):
+        if self.split_source == "default" and self.flavor in self.split_source_mapping:
             token = self.split_source_mapping[self.flavor]
             for command in code_split(code, token=token):
                 cur.execute(command)
@@ -403,8 +402,7 @@ class SQLAlchemyClient(Client):
         cur.close()
 
     def close(self):
-        """Closes all connections
-        """
+        """Closes all connections"""
         if self._engine is not None:
             self._engine.dispose()
             self._engine = None
@@ -414,22 +412,22 @@ class SQLAlchemyClient(Client):
 
     @property
     def engine(self):
-        """Returns a SQLAlchemy engine
-        """
+        """Returns a SQLAlchemy engine"""
         if self._engine is None:
             self._engine = sqlalchemy.create_engine(
-                self._uri, **self._create_engine_kwargs)
+                self._uri, **self._create_engine_kwargs
+            )
 
         return self._engine
 
     def __getstate__(self):
         state = super().__getstate__()
-        state['_engine'] = None
-        state['_connection'] = None
+        state["_engine"] = None
+        state["_connection"] = None
         return state
 
     def __str__(self):
         return self._uri_safe
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, self._uri_safe)
+        return "{}({})".format(type(self).__name__, self._uri_safe)

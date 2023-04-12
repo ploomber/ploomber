@@ -10,6 +10,7 @@ class FrozenJSON(object):
     A facade for navigating a JSON-like object using attribute notation.
     Based on FrozenJSON from 'Fluent Python'
     """
+
     @classmethod
     def from_yaml(cls, path_to_file, *args, **kwargs):
         # load config file
@@ -25,7 +26,7 @@ class FrozenJSON(object):
         obj._path_to_file = path_to_file
 
         logger = logging.getLogger(__name__)
-        logger.debug('Loaded from file: {}'.format(obj._path_to_file))
+        logger.debug("Loaded from file: {}".format(obj._path_to_file))
 
         return obj
 
@@ -40,14 +41,14 @@ class FrozenJSON(object):
 
     def __init__(self, mapping):
         self._logger = logging.getLogger(__name__)
-        self._logger.debug('Loaded with params: {}'.format(mapping))
+        self._logger.debug("Loaded with params: {}".format(mapping))
         self._path_to_file = None
 
         self._data = {}
 
         for key, value in mapping.items():
             if keyword.iskeyword(key):
-                key += '_'
+                key += "_"
 
             self._data[key] = value
 
@@ -65,10 +66,11 @@ class FrozenJSON(object):
 
         if value is None:
             key_ = key if not isinstance(key, str) else "'%s'" % key
-            msg = ('Key error: {}, available keys are: {}'.format(
-                key_, self._data.keys()))
+            msg = "Key error: {}, available keys are: {}".format(
+                key_, self._data.keys()
+            )
             if self._path_to_file is not None:
-                msg += '. File loaded from {}'.format(self._path_to_file)
+                msg += ". File loaded from {}".format(self._path_to_file)
             raise KeyError(msg)
 
         return value
@@ -80,4 +82,4 @@ class FrozenJSON(object):
             return str(self._data)
 
     def __repr__(self):
-        return 'FrozenJSON({})'.format(str(self))
+        return "FrozenJSON({})".format(str(self))

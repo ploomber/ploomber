@@ -6,10 +6,15 @@ from io import StringIO
 import parso
 from pyflakes import api as pyflakes_api
 from pyflakes.reporter import Reporter
-from pyflakes.messages import (UndefinedName, UndefinedLocal,
-                               DuplicateArgument, ReturnOutsideFunction,
-                               YieldOutsideFunction, ContinueOutsideLoop,
-                               BreakOutsideLoop)
+from pyflakes.messages import (
+    UndefinedName,
+    UndefinedLocal,
+    DuplicateArgument,
+    ReturnOutsideFunction,
+    YieldOutsideFunction,
+    ContinueOutsideLoop,
+    BreakOutsideLoop,
+)
 
 from ploomber.exceptions import RenderError
 from ploomber.io import pretty_print
@@ -26,15 +31,15 @@ _ERRORS = (
     BreakOutsideLoop,
 )
 
-_IS_IPYTHON_CELL_MAGIC = r'^\s*%{2}[a-zA-Z]+'
-_IS_IPYTHON_LINE_MAGIC = r'^\s*%{1}[a-zA-Z]+'
-_IS_INLINE_SHELL = r'^\s*!{1}.+'
+_IS_IPYTHON_CELL_MAGIC = r"^\s*%{2}[a-zA-Z]+"
+_IS_IPYTHON_LINE_MAGIC = r"^\s*%{1}[a-zA-Z]+"
+_IS_INLINE_SHELL = r"^\s*!{1}.+"
 
-HAS_INLINE_PYTHON = {'%%capture', '%%timeit', '%%time', '%time', '%timeit'}
+HAS_INLINE_PYTHON = {"%%capture", "%%timeit", "%%time", "%time", "%timeit"}
 
 
 def _process_messages(mesages):
-    return '\n'.join(str(msg) for msg in mesages)
+    return "\n".join(str(msg) for msg in mesages)
 
 
 def process_errors_and_warnings(messages):
@@ -49,11 +54,10 @@ def process_errors_and_warnings(messages):
         # name error. To provide more context, we modify the original error and
         # add a hint. Note that this only happens when using the Python API
         # directly, since the Spec API requires an upstream = None placeholder
-        if (isinstance(message, UndefinedName)
-                and message.message_args == ('upstream', )):
+        if isinstance(message, UndefinedName) and message.message_args == ("upstream",):
             message.message = (
-                message.message +
-                '. Did you forget to declare upstream dependencies?')
+                message.message + ". Did you forget to declare upstream dependencies?"
+            )
 
         if isinstance(message, _ERRORS):
             errors.append(message)
@@ -65,7 +69,6 @@ def process_errors_and_warnings(messages):
 
 # https://github.com/PyCQA/pyflakes/blob/master/pyflakes/reporter.py
 class MyReporter(Reporter):
-
     def __init__(self):
         self._stdout = StringIO()
         self._stderr = StringIO()
@@ -76,17 +79,15 @@ class MyReporter(Reporter):
     def flake(self, message):
         self._stdout_raw.append(message)
         self._stdout.write(str(message))
-        self._stdout.write('\n')
+        self._stdout.write("\n")
 
     def unexpectedError(self, *args, **kwargs):
-        """pyflakes calls this when ast.parse raises an unexpected error
-        """
+        """pyflakes calls this when ast.parse raises an unexpected error"""
         self._unexpected = True
         return super().unexpectedError(*args, **kwargs)
 
     def syntaxError(self, *args, **kwargs):
-        """pyflakes calls this when ast.parse raises a SyntaxError
-        """
+        """pyflakes calls this when ast.parse raises a SyntaxError"""
         self._syntax = True
         return super().syntaxError(*args, **kwargs)
 
@@ -95,10 +96,12 @@ class MyReporter(Reporter):
         self._stderr.seek(0)
 
     def _make_error_message(self, error):
-        return ('An error happened when checking the source code. '
-                f'\n{error}\n\n'
-                '(if you want to disable this check, set '
-                'static_analysis to "disable" in the task declaration)')
+        return (
+            "An error happened when checking the source code. "
+            f"\n{error}\n\n"
+            "(if you want to disable this check, set "
+            'static_analysis to "disable" in the task declaration)'
+        )
 
     def _check(self, raise_):
         self._seek_zero()
@@ -106,7 +109,7 @@ class MyReporter(Reporter):
         # syntax errors are stored in _stderr
         # https://github.com/PyCQA/pyflakes/blob/master/pyflakes/api.py
 
-        error_message = '\n'.join(self._stderr.readlines())
+        error_message = "\n".join(self._stderr.readlines())
 
         if self._syntax:
             msg = self._make_error_message(error_message)
@@ -117,8 +120,10 @@ class MyReporter(Reporter):
                 warnings.warn(msg)
 
         elif self._unexpected:
-            warnings.warn('An unexpected error happened '
-                          f'when analyzing code: {error_message.strip()!r}')
+            warnings.warn(
+                "An unexpected error happened "
+                f"when analyzing code: {error_message.strip()!r}"
+            )
         else:
             errors, warnings_ = process_errors_and_warnings(self._stdout_raw)
 
@@ -164,11 +169,11 @@ def check_notebook(nb, params, filename, raise_=True, check_signature=True):
     RenderError
         When certain pyflakes errors are detected (e.g., undefined name)
     """
-    params_cell, _ = find_cell_with_tag(nb, 'parameters')
+    params_cell, _ = find_cell_with_tag(nb, "parameters")
     check_source(nb, raise_=raise_)
 
     if check_signature:
-        check_params(params, params_cell['source'], filename, warn=not raise_)
+        check_params(params, params_cell["source"], filename, warn=not raise_)
 
 
 def check_source(nb, raise_=True):
@@ -177,29 +182,30 @@ def check_source(nb, raise_=True):
     parameters that do not have default values
     """
     # concatenate all cell's source code in a single string
-    source_code = '\n'.join([
-        _comment_if_ipython_magic(c['source']) for c in nb.cells
-        if c.cell_type == 'code'
-    ])
+    source_code = "\n".join(
+        [
+            _comment_if_ipython_magic(c["source"])
+            for c in nb.cells
+            if c.cell_type == "code"
+        ]
+    )
 
     # this objects are needed to capture pyflakes output
     reporter = MyReporter()
 
     # run pyflakes.api.check on the source code
-    pyflakes_api.check(source_code, filename='', reporter=reporter)
+    pyflakes_api.check(source_code, filename="", reporter=reporter)
 
     reporter._check(raise_)
 
 
 def _comment(line):
-    """Comments a line
-    """
-    return f'# {line}'
+    """Comments a line"""
+    return f"# {line}"
 
 
 def _comment_if_ipython_magic(source):
-    """Comments lines into comments if they're IPython magics (cell level)
-    """
+    """Comments lines into comments if they're IPython magics (cell level)"""
     # TODO: support for nested cell magics. e.g.,
     # %%timeit
     # %%timeit
@@ -248,7 +254,7 @@ def _comment_if_ipython_magic(source):
             else:
                 lines_out.append(line)
 
-    return '\n'.join(lines_out)
+    return "\n".join(lines_out)
 
 
 def _is_ipython_line_magic(line):
@@ -281,14 +287,13 @@ def _is_ipython_cell_magic(source):
 
 
 class ParamsCell:
-    """Parse variables defined in a  notebook cell
-    """
+    """Parse variables defined in a  notebook cell"""
 
     def __init__(self, source):
         self._source = source
         # dot not complain if product or upstream are missing since
         # they are not user-defined params
-        self._IGNORE = {'product', 'upstream'}
+        self._IGNORE = {"product", "upstream"}
 
         self._declared = _get_defined_variables(self._source)
 
@@ -341,30 +346,34 @@ def check_params(passed, params_source, filename, warn=False):
         errors = []
 
         if missing:
-            errors.append(f'Missing params: {pretty_print.iterable(missing)} '
-                          '(to fix this, pass '
-                          f'{pretty_print.them_or_name(missing)} in '
-                          'the \'params\' argument)')
+            errors.append(
+                f"Missing params: {pretty_print.iterable(missing)} "
+                "(to fix this, pass "
+                f"{pretty_print.them_or_name(missing)} in "
+                "the 'params' argument)"
+            )
         if unexpected:
             first = list(unexpected)[0]
             errors.append(
-                'Unexpected '
-                f'params: {pretty_print.iterable(unexpected)} (to fix this, '
-                f'add {pretty_print.them_or_name(unexpected)} to the '
-                '\'parameters\' cell and assign the value as '
-                f'None. e.g., {first} = None)')
+                "Unexpected "
+                f"params: {pretty_print.iterable(unexpected)} (to fix this, "
+                f"add {pretty_print.them_or_name(unexpected)} to the "
+                "'parameters' cell and assign the value as "
+                f"None. e.g., {first} = None)"
+            )
 
-        msg = (f"Parameters "
-               "declared in the 'parameters' cell do not match task "
-               f"params. {pretty_print.trailing_dot(errors)} To disable this "
-               "check, set 'static_analysis' to 'disable' in the "
-               "task declaration.")
+        msg = (
+            f"Parameters "
+            "declared in the 'parameters' cell do not match task "
+            f"params. {pretty_print.trailing_dot(errors)} To disable this "
+            "check, set 'static_analysis' to 'disable' in the "
+            "task declaration."
+        )
 
         if warn:
             warnings.warn(msg)
         else:
-            raise TypeError(
-                f"Error rendering notebook {str(filename)!r}. {msg}")
+            raise TypeError(f"Error rendering notebook {str(filename)!r}. {msg}")
 
 
 def _get_defined_variables(params_source):
@@ -376,8 +385,7 @@ def _get_defined_variables(params_source):
     used_names = parso.parse(params_source).get_used_names()
 
     def _get_value(value):
-        possible_literal = value.get_definition().children[-1].get_code(
-        ).strip()
+        possible_literal = value.get_definition().children[-1].get_code().strip()
 
         try:
             # NOTE: this cannot parse dict(a=1, b=2)
@@ -387,6 +395,6 @@ def _get_defined_variables(params_source):
 
     return {
         key: _get_value(value[-1])
-        for key, value in used_names.items() if value[-1].is_definition()
-        and value[-1].get_definition().type == 'expr_stmt'
+        for key, value in used_names.items()
+        if value[-1].is_definition() and value[-1].get_definition().type == "expr_stmt"
     }

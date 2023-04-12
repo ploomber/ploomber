@@ -8,7 +8,7 @@ from ploomber.placeholders.placeholder import Placeholder
 
 class EmptyProduct(Product):
     def __init__(self):
-        super().__init__(identifier='')
+        super().__init__(identifier="")
 
     def _init_identifier(self, identifier):
         return Placeholder(identifier)

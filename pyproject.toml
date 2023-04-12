@@ -1,3 +1,6 @@
+[tool.black]
+extend-exclude = "ploomber_add"
+
 [tool.pytest.ini_options]
 addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
 

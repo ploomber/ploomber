@@ -13,7 +13,7 @@ def test_warn_on_python_missing_docstrings():
         pass
 
     dag = DAG()
-    PythonCallable(fn1, File('file1.txt'), dag, name='fn1')
+    PythonCallable(fn1, File("file1.txt"), dag, name="fn1")
 
     qc = DAGQualityChecker()
 
@@ -23,12 +23,11 @@ def test_warn_on_python_missing_docstrings():
 
 def test_does_not_warn_on_python_docstrings():
     def fn1(product):
-        """This is a docstring
-        """
+        """This is a docstring"""
         pass
 
     dag = DAG()
-    PythonCallable(fn1, File('file1.txt'), dag, name='fn1')
+    PythonCallable(fn1, File("file1.txt"), dag, name="fn1")
 
     qc = DAGQualityChecker()
 
@@ -41,8 +40,8 @@ def test_does_not_warn_on_python_docstrings():
 def test_warn_on_sql_missing_docstrings():
     dag = DAG()
 
-    sql = 'SELECT * FROM table'
-    SQLDump(sql, File('file1.txt'), dag, client=Mock(), name='sql')
+    sql = "SELECT * FROM table"
+    SQLDump(sql, File("file1.txt"), dag, client=Mock(), name="sql")
 
     qc = DAGQualityChecker()
 
@@ -53,8 +52,8 @@ def test_warn_on_sql_missing_docstrings():
 def test_does_not_warn_on_sql_docstrings():
     dag = DAG()
 
-    sql = '/* get data from table */\nSELECT * FROM table'
-    SQLDump(sql, File('file1.txt'), dag, client=Mock(), name='sql')
+    sql = "/* get data from table */\nSELECT * FROM table"
+    SQLDump(sql, File("file1.txt"), dag, client=Mock(), name="sql")
 
     qc = DAGQualityChecker()
 
