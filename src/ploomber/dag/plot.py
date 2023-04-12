@@ -1,9 +1,7 @@
 import os
 import json
-import sys
 from importlib.util import find_spec
 from pathlib import Path
-import platform
 
 import jinja2
 from IPython.display import IFrame, HTML, display
@@ -23,10 +21,6 @@ def check_pygraphviz_installed():
     return find_spec("pygraphviz") is not None
 
 
-def check_if_windows_python_3_10():
-    return platform.system() == "Windows" and sys.version_info >= (3, 10)
-
-
 def choose_backend(backend, path=None):
     """Determine which backend to use for plotting
     Temporarily disable pygraphviz for Python 3.10 on Windows
@@ -35,7 +29,6 @@ def choose_backend(backend, path=None):
     if (
         (not check_pygraphviz_installed() and backend is None)
         or (backend == "d3")
-        or (check_if_windows_python_3_10())
         or (backend is None and path and Path(path).suffix == ".html")
     ):
         return "d3"
