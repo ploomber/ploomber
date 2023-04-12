@@ -226,6 +226,7 @@ class NetworkException(BaseException):
 class PlotException(RawBaseException):
     pass
 
+
 class DebuggingFinished(TaskBuildError):
     """Raised when quitting a debugging session"""
 
