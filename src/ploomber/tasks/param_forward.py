@@ -36,14 +36,13 @@ def input_data_passer(dag, name, preprocessor=None):
         A PythonCallable task with special characteristics. It cannot be
         invoked directly, but through ``InMemoryDAG(dag).build()``
     """
-    return PythonCallable(_input_data_passer,
-                          EmptyProduct(),
-                          dag=dag,
-                          name=name,
-                          params={
-                              'input_data': None,
-                              'preprocessor': preprocessor
-                          })
+    return PythonCallable(
+        _input_data_passer,
+        EmptyProduct(),
+        dag=dag,
+        name=name,
+        params={"input_data": None, "preprocessor": preprocessor},
+    )
 
 
 def in_memory_callable(callable_, dag, name, params):
@@ -74,8 +73,4 @@ def in_memory_callable(callable_, dag, name, params):
         A PythonCallable task with special characteristics. It cannot be
         invoked directly, but through ``InMemoryDAG(dag).build()``
     """
-    return PythonCallable(callable_,
-                          EmptyProduct(),
-                          dag=dag,
-                          name=name,
-                          params=params)
+    return PythonCallable(callable_, EmptyProduct(), dag=dag, name=name, params=params)

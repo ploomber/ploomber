@@ -9,9 +9,13 @@ class DAGConfiguration:
     """
     DAGConfiguration() initializes a configuration object with default values.
     """
+
     __attrs = {
-        'outdated_by_code', 'cache_rendered_status', 'logging_factory',
-        'differ', 'hot_reload'
+        "outdated_by_code",
+        "cache_rendered_status",
+        "logging_factory",
+        "differ",
+        "hot_reload",
     }
 
     @classmethod
@@ -37,7 +41,7 @@ class DAGConfiguration:
     @outdated_by_code.setter
     def outdated_by_code(self, value):
         if value not in {True, False}:
-            raise ValueError('outdated_by_code must be True or False')
+            raise ValueError("outdated_by_code must be True or False")
 
         self._outdated_by_code = value
 
@@ -48,7 +52,7 @@ class DAGConfiguration:
     @hot_reload.setter
     def hot_reload(self, value):
         if value not in {True, False}:
-            raise ValueError('hot_reload must be True or False')
+            raise ValueError("hot_reload must be True or False")
 
         self._hot_reload = value
 
@@ -59,7 +63,7 @@ class DAGConfiguration:
     @cache_rendered_status.setter
     def cache_rendered_status(self, value):
         if value not in {True, False}:
-            raise ValueError('cache_rendered_status must be True or False')
+            raise ValueError("cache_rendered_status must be True or False")
 
         self._cache_rendered_status = value
 
@@ -69,7 +73,7 @@ class DAGConfiguration:
 
     @differ.setter
     def differ(self, value):
-        if value == 'default':
+        if value == "default":
             value = CodeDiffer()
 
         self._differ = value
@@ -84,8 +88,10 @@ class DAGConfiguration:
 
     def __setattr__(self, key, value):
         # prevent non-existing parameters from being created
-        attr_name = key[1:] if key.startswith('_') else key
+        attr_name = key[1:] if key.startswith("_") else key
         if attr_name not in self.__attrs:
-            raise AttributeError('"{}" is not a valid parameter, must be '
-                                 'one of: {}'.format(key, self.__attrs))
+            raise AttributeError(
+                '"{}" is not a valid parameter, must be '
+                "one of: {}".format(key, self.__attrs)
+            )
         super().__setattr__(key, value)

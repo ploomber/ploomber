@@ -20,6 +20,7 @@ class ProductsContainer:
     keys), this non-standard behavior but it is needed to simpplify the
     MetaProduct API since it has to work with lists and dictionaries
     """
+
     def __init__(self, products):
         self.products = products
 
@@ -44,13 +45,9 @@ class ProductsContainer:
         return self.products[key]
 
     def to_json_serializable(self):
-        """Returns a JSON serializable version of this product
-        """
+        """Returns a JSON serializable version of this product"""
         if isinstance(self.products, Mapping):
-            return {
-                name: str(product)
-                for name, product in self.products.items()
-            }
+            return {name: str(product) for name, product in self.products.items()}
         else:
             return list(str(product) for product in self.products)
 
@@ -58,7 +55,7 @@ class ProductsContainer:
         return len(self.products)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, str(self.products))
+        return "{}({})".format(type(self).__name__, str(self.products))
 
     def __str__(self):
         return str(self.products)
@@ -91,6 +88,7 @@ class MetaProduct(Mapping):
     (executed via NotebookRunner), for fitting a model might as well serialize
     the things such as the model and any data preprocessors
     """
+
     def __init__(self, products):
         container = ProductsContainer(products)
 
@@ -120,7 +118,8 @@ class MetaProduct(Mapping):
                     "instancess (which have a 'task' attribute), but "
                     f"got {p!r}, an object of type {type(p)}. Replace it "
                     "with a valid Product object. If this is a file, use "
-                    f"File({p!r})") from e
+                    f"File({p!r})"
+                ) from e
 
     def exists(self):
         return all([p.exists() for p in self.products])
@@ -144,8 +143,7 @@ class MetaProduct(Mapping):
 
     def _is_outdated(self, outdated_by_code=True):
         is_outdated = [
-            p._is_outdated(outdated_by_code=outdated_by_code)
-            for p in self.products
+            p._is_outdated(outdated_by_code=outdated_by_code) for p in self.products
         ]
 
         if set(is_outdated) == {False}:
@@ -163,8 +161,7 @@ class MetaProduct(Mapping):
         return any([p._outdated_code_dependency() for p in self.products])
 
     def to_json_serializable(self):
-        """Returns a JSON serializable version of this product
-        """
+        """Returns a JSON serializable version of this product"""
         # NOTE: this is used in tasks where only JSON serializable parameters
         # are supported such as NotebookRunner that depends on papermill
         return self.products.to_json_serializable()
@@ -175,7 +172,7 @@ class MetaProduct(Mapping):
 
     def __repr__(self):
         content = self._repr.repr1(self.products.products, level=2)
-        return f'{type(self).__name__}({content})'
+        return f"{type(self).__name__}({content})"
 
     def __str__(self):
         return str(self.products)

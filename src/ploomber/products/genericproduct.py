@@ -5,14 +5,12 @@ exists/delete methods are bash commands
 from ploomber.products.product import Product
 from ploomber.products.mixins import SQLProductMixin, ProductWithClientMixin
 from ploomber.products.sql import SQLiteBackedProductMixin
-from ploomber.placeholders.placeholder import (Placeholder,
-                                               SQLRelationPlaceholder)
+from ploomber.placeholders.placeholder import Placeholder, SQLRelationPlaceholder
 
 
 # TODO: add check_product and run tests: e.g .name should return a string
 # no placeholders objects or {{}}
-class GenericProduct(SQLiteBackedProductMixin, ProductWithClientMixin,
-                     Product):
+class GenericProduct(SQLiteBackedProductMixin, ProductWithClientMixin, Product):
     """
     GenericProduct is used when there is no specific Product implementation.
     Sometimes it is technically possible to write a Product implementation
@@ -37,6 +35,7 @@ class GenericProduct(SQLiteBackedProductMixin, ProductWithClientMixin,
     exists does not check for product existence, just checks if metadata exists
     delete does not perform actual deletion, just deletes metadata
     """
+
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
         self._client = client
@@ -49,8 +48,7 @@ class GenericProduct(SQLiteBackedProductMixin, ProductWithClientMixin,
         return self.fetch_metadata() is not None
 
     def delete(self, force=False):
-        """Deletes the product
-        """
+        """Deletes the product"""
         # just delete the metadata, we cannot do anything else
         return self._delete_metadata()
 
@@ -79,6 +77,7 @@ class GenericSQLRelation(SQLProductMixin, GenericProduct):
     ploomber.products.SQRelation :
         SQL relation (table or view) with no metadata.
     """
+
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
 
@@ -95,7 +94,7 @@ class GenericSQLRelation(SQLProductMixin, GenericProduct):
         return self._identifier.kind
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+        return f"{type(self).__name__}({self._identifier._raw_repr()})"
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -123,6 +122,7 @@ class SQLRelation(SQLProductMixin, Product):
         SQL relation (table or view) that stores metadata (to enable
         incremental builds) in a SQLite database.
     """
+
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
 
@@ -151,7 +151,7 @@ class SQLRelation(SQLProductMixin, Product):
         pass
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+        return f"{type(self).__name__}({self._identifier._raw_repr()})"
 
     def __eq__(self, other):
         return str(self) == str(other)

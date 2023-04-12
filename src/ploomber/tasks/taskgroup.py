@@ -46,6 +46,7 @@ class TaskGroup:
 
     (task1 + task2) >> task3
     """
+
     def __init__(self, tasks):
         self.tasks = tasks
 
@@ -83,19 +84,21 @@ class TaskGroup:
         return other
 
     @classmethod
-    def from_params(cls,
-                    task_class,
-                    product_class,
-                    product_primitive,
-                    task_kwargs,
-                    dag,
-                    params_array,
-                    name=None,
-                    namer=None,
-                    resolve_relative_to=None,
-                    on_render=None,
-                    on_finish=None,
-                    on_failure=None):
+    def from_params(
+        cls,
+        task_class,
+        product_class,
+        product_primitive,
+        task_kwargs,
+        dag,
+        params_array,
+        name=None,
+        namer=None,
+        resolve_relative_to=None,
+        on_render=None,
+        on_finish=None,
+        on_failure=None,
+    ):
         """
         Build a group of tasks of the same class from an array of parameters
         using the same source. Generates one task per element in params_array.
@@ -143,24 +146,23 @@ class TaskGroup:
 
         """
         if name is None and namer is None:
-            raise ValueError(
-                'Only one of name and namer can be None, but not both')
+            raise ValueError("Only one of name and namer can be None, but not both")
 
         # validate task_kwargs
-        if 'dag' in task_kwargs:
-            raise KeyError('dag should not be part of task_kwargs')
+        if "dag" in task_kwargs:
+            raise KeyError("dag should not be part of task_kwargs")
 
-        if 'name' in task_kwargs:
-            raise KeyError('name should not be part of task_kwargs')
+        if "name" in task_kwargs:
+            raise KeyError("name should not be part of task_kwargs")
 
-        if 'params' in task_kwargs:
-            raise KeyError('params should not be part of task_kwargs')
+        if "params" in task_kwargs:
+            raise KeyError("params should not be part of task_kwargs")
 
-        if 'product' in task_kwargs:
-            raise KeyError('product should not be part of task_kwargs')
+        if "product" in task_kwargs:
+            raise KeyError("product should not be part of task_kwargs")
 
-        if 'source' not in task_kwargs:
-            raise KeyError('source should be in task_kwargs')
+        if "source" not in task_kwargs:
+            raise KeyError("source should be in task_kwargs")
 
         # TODO: validate {{index}} appears in product - maybe all products
         # should have a way to extract which placeholders exist?
@@ -168,7 +170,6 @@ class TaskGroup:
         tasks_all = []
 
         for index, params in enumerate(params_array):
-
             # each task should get a different deep copy, primarily cause they
             # should have a different product
             kwargs = deepcopy(task_kwargs)
@@ -182,8 +183,8 @@ class TaskGroup:
                 if isinstance(namer, str):
                     task_name = Template(
                         namer,
-                        variable_start_string='[[',
-                        variable_end_string=']]',
+                        variable_start_string="[[",
+                        variable_end_string="]]",
                     ).render(**params)
 
                 else:
@@ -198,13 +199,13 @@ class TaskGroup:
 
             if isinstance(product_primitive, str):
                 product_primitive_to_use = Template(product_primitive).render(
-                    name=task_name)
+                    name=task_name
+                )
             else:
                 product_primitive_to_use = product_primitive
 
             # add index to product primitive
-            if product_class is File or issubclass(product_class,
-                                                   SQLProductMixin):
+            if product_class is File or issubclass(product_class, SQLProductMixin):
                 product = _init_product(
                     product_class,
                     product_primitive_to_use,
@@ -213,15 +214,15 @@ class TaskGroup:
                     params=params,
                 )
             else:
-                raise NotImplementedError('TaskGroup only sypported for '
-                                          'File and SQL products. '
-                                          f'{product_class} is not supported')
+                raise NotImplementedError(
+                    "TaskGroup only sypported for "
+                    "File and SQL products. "
+                    f"{product_class} is not supported"
+                )
 
-            t = task_class(product=product,
-                           dag=dag,
-                           name=task_name,
-                           params=params,
-                           **kwargs)
+            t = task_class(
+                product=product, dag=dag, name=task_name, params=params, **kwargs
+            )
 
             if on_render:
                 t.on_render = on_render
@@ -237,20 +238,22 @@ class TaskGroup:
         return cls(tasks_all)
 
     @classmethod
-    def from_grid(cls,
-                  task_class,
-                  product_class,
-                  product_primitive,
-                  task_kwargs,
-                  dag,
-                  grid,
-                  name=None,
-                  namer=None,
-                  resolve_relative_to=None,
-                  on_render=None,
-                  on_finish=None,
-                  on_failure=None,
-                  params=None):
+    def from_grid(
+        cls,
+        task_class,
+        product_class,
+        product_primitive,
+        task_kwargs,
+        dag,
+        grid,
+        name=None,
+        namer=None,
+        resolve_relative_to=None,
+        on_render=None,
+        on_finish=None,
+        on_failure=None,
+        params=None,
+    ):
         """
         Build a group of tasks of the same class from an grid of parameters
         using the same source.
@@ -270,57 +273,66 @@ class TaskGroup:
         All parameters, except for grid are the same as in .from_params
         """
         params_array = ParamGrid(grid, params=params).product()
-        return cls.from_params(task_class=task_class,
-                               product_class=product_class,
-                               product_primitive=product_primitive,
-                               task_kwargs=task_kwargs,
-                               dag=dag,
-                               name=name,
-                               params_array=params_array,
-                               namer=namer,
-                               resolve_relative_to=resolve_relative_to,
-                               on_render=on_render,
-                               on_finish=on_finish,
-                               on_failure=on_failure)
+        return cls.from_params(
+            task_class=task_class,
+            product_class=product_class,
+            product_primitive=product_primitive,
+            task_kwargs=task_kwargs,
+            dag=dag,
+            name=name,
+            params_array=params_array,
+            namer=namer,
+            resolve_relative_to=resolve_relative_to,
+            on_render=on_render,
+            on_finish=on_finish,
+            on_failure=on_failure,
+        )
 
 
-def _init_product(product_class, product_primitive, index, resolve_relative_to,
-                  params):
+def _init_product(product_class, product_primitive, index, resolve_relative_to, params):
     if isinstance(product_primitive, Mapping):
         return {
-            key: _init_product(product_class, primitive, index,
-                               resolve_relative_to, params)
+            key: _init_product(
+                product_class, primitive, index, resolve_relative_to, params
+            )
             for key, primitive in product_primitive.items()
         }
     elif isinstance(product_primitive, str):
-        return _init_product_with_str(product_class, product_primitive, index,
-                                      resolve_relative_to, params)
+        return _init_product_with_str(
+            product_class, product_primitive, index, resolve_relative_to, params
+        )
     # is there a better way to check this? Sequence also matches str/bytes
     elif isinstance(product_primitive, (list, tuple)):
-        return _init_product_with_sql_elements(product_class,
-                                               product_primitive, index,
-                                               params)
+        return _init_product_with_sql_elements(
+            product_class, product_primitive, index, params
+        )
     else:
-        raise NotImplementedError('TaskGroup only supported for task dict '
-                                  'and str product primitives. Got '
-                                  f'{product_primitive}, an object of type '
-                                  f'{type(product_primitive).__name__}')
+        raise NotImplementedError(
+            "TaskGroup only supported for task dict "
+            "and str product primitives. Got "
+            f"{product_primitive}, an object of type "
+            f"{type(product_primitive).__name__}"
+        )
 
 
-def _init_product_with_str(product_class, product_primitive, index,
-                           resolve_relative_to, params):
+def _init_product_with_str(
+    product_class, product_primitive, index, resolve_relative_to, params
+):
     if index is not None:
-        path = (Path(product_primitive) if resolve_relative_to is None else
-                Path(resolve_relative_to, product_primitive).resolve())
+        path = (
+            Path(product_primitive)
+            if resolve_relative_to is None
+            else Path(resolve_relative_to, product_primitive).resolve()
+        )
 
-        suffix = ''.join(path.suffixes)
-        filename = path.name.replace(suffix, '')
-        filename_with_index = f'{filename}-{index}{suffix}'
+        suffix = "".join(path.suffixes)
+        filename = path.name.replace(suffix, "")
+        filename_with_index = f"{filename}-{index}{suffix}"
 
         path_final = Template(
             str(path.parent / filename_with_index),
-            variable_start_string='[[',
-            variable_end_string=']]',
+            variable_start_string="[[",
+            variable_end_string="]]",
         ).render(**params)
 
         return product_class(path_final)
@@ -328,18 +340,17 @@ def _init_product_with_str(product_class, product_primitive, index,
         return product_class(product_primitive)
 
 
-def _init_product_with_sql_elements(product_class, product_primitive, index,
-                                    params):
+def _init_product_with_sql_elements(product_class, product_primitive, index, params):
     # this could be [schema, name, type] or just [name, type]
     index_to_change = 1 if len(product_primitive) == 3 else 0
     updated = copy(product_primitive)
 
-    table_name = product_primitive[index_to_change] + f'-{index}'
+    table_name = product_primitive[index_to_change] + f"-{index}"
 
     table_name_final = Template(
         table_name,
-        variable_start_string='[[',
-        variable_end_string=']]',
+        variable_start_string="[[",
+        variable_end_string="]]",
     ).render(**params)
 
     updated[index_to_change] = table_name_final

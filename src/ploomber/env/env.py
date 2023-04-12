@@ -47,6 +47,7 @@ class Env:
     end them only during the execution of a function that builds a DAG by
     using the @with_env and @load_env decorators
     """
+
     __instance = None
 
     # just a variable to display in error messages so users know where
@@ -57,10 +58,12 @@ class Env:
             cls.__instance = super().__new__(cls)
             return cls.__instance
         else:
-            raise RuntimeError('Cannot start environment, one has already '
-                               'started: {}'.format(repr(cls.__instance)))
+            raise RuntimeError(
+                "Cannot start environment, one has already "
+                "started: {}".format(repr(cls.__instance))
+            )
 
-    def __init__(self, source='env.yaml'):
+    def __init__(self, source="env.yaml"):
         """Start the environment
 
         Parameters
@@ -103,8 +106,9 @@ class Env:
     @classmethod
     def load(cls):
         if cls.__instance is None:
-            raise RuntimeError('Env has not been set, run Env() before '
-                               'running Env.load()')
+            raise RuntimeError(
+                "Env has not been set, run Env() before " "running Env.load()"
+            )
         return cls.__instance
 
     @classmethod
@@ -120,13 +124,13 @@ class Env:
         return str(self._data)
 
     def __repr__(self):
-        s = 'Env({})'.format(str(self._data))
+        s = "Env({})".format(str(self._data))
 
         if self._fn_name:
-            s += ' (initialized in function: %s)' % self._fn_name
+            s += " (initialized in function: %s)" % self._fn_name
 
         if self._data.path_to_env:
-            s += ' (from file: %s)' % str(self._data.path_to_env)
+            s += " (from file: %s)" % str(self._data.path_to_env)
 
         return s
 
@@ -144,10 +148,10 @@ class Env:
         return self._data[key]
 
     def __setattr__(self, name, value):
-        if name.startswith('_'):
+        if name.startswith("_"):
             super().__setattr__(name, value)
         else:
-            raise RuntimeError('env is a read-only object')
+            raise RuntimeError("env is a read-only object")
 
     def __enter__(self):
         return self

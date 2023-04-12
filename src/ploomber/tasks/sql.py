@@ -5,9 +5,15 @@ from jinja2 import Template
 
 from ploomber.tasks.abc import Task
 from ploomber.tasks.mixins import ClientMixin
-from ploomber.sources import (SQLScriptSource, SQLQuerySource, FileSource)
-from ploomber.products import (File, PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation, GenericProduct, SQLRelation)
+from ploomber.sources import SQLScriptSource, SQLQuerySource, FileSource
+from ploomber.products import (
+    File,
+    PostgresRelation,
+    SQLiteRelation,
+    GenericSQLRelation,
+    GenericProduct,
+    SQLRelation,
+)
 from ploomber import io
 from ploomber.util import requires
 from ploomber.placeholders.placeholder import _add_globals
@@ -92,16 +98,15 @@ class SQLScript(ClientMixin, Task):
         A task to execute a ``SELECT`` statement and dump the output into
         a file
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation, SQLRelation)
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 client=None,
-                 params=None):
+    PRODUCT_CLASSES_ALLOWED = (
+        PostgresRelation,
+        SQLiteRelation,
+        GenericSQLRelation,
+        SQLRelation,
+    )
+
+    def __init__(self, source, product, dag, name=None, client=None, params=None):
         params = params or {}
         # TODO: access self.client so it uses the dag-level if available
         try:
@@ -109,8 +114,7 @@ class SQLScript(ClientMixin, Task):
         except AttributeError:
             split_source = None
 
-        kwargs = dict(hot_reload=dag._params.hot_reload,
-                      split_source=split_source)
+        kwargs = dict(hot_reload=dag._params.hot_reload, split_source=split_source)
 
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
@@ -134,8 +138,10 @@ class SQLScript(ClientMixin, Task):
             How many records to load, defaults to 10
         """
         import pandas as pd
-        return pd.read_sql(f'SELECT * FROM {self.product} LIMIT {int(limit)}',
-                           self.client)
+
+        return pd.read_sql(
+            f"SELECT * FROM {self.product} LIMIT {int(limit)}", self.client
+        )
 
     @staticmethod
     def _init_source(source, kwargs):
@@ -193,7 +199,7 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
           - source: script.sql
             product: data.parquet
 
-    `Full spec API example. <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_ 
+    `Full spec API example. <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_
 
     Python API:
 
@@ -231,18 +237,21 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
     --------
     ploomber.clients.SQLScript :
         A task to execute a SQL script and create a table/view as product
-    """ # noqa
+    """  # noqa
+
     PRODUCT_CLASSES_ALLOWED = (File, GenericProduct)
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 client=None,
-                 params=None,
-                 chunksize=10000,
-                 io_handler=None):
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        name=None,
+        client=None,
+        params=None,
+        chunksize=10000,
+        io_handler=None,
+    ):
         params = params or {}
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
@@ -253,7 +262,7 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
         self.chunksize = chunksize
 
         if io_handler is None:
-            if self.product._identifier._raw.endswith('.parquet'):
+            if self.product._identifier._raw.endswith(".parquet"):
                 self.io_handler = io.ParquetIO
             else:
                 self.io_handler = io.CSVIO
@@ -265,18 +274,17 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
         return SQLQuerySource(source, **kwargs)
 
     def run(self):
-
         # render runtime parameters
-        template = Template(str(self.source),
-                            variable_start_string='[[',
-                            variable_end_string=']]')
+        template = Template(
+            str(self.source), variable_start_string="[[", variable_end_string="]]"
+        )
         _add_globals(template.environment)
-        source_code = template.render(upstream=self.params.get('upstream'))
+        source_code = template.render(upstream=self.params.get("upstream"))
 
-        path = Path(str(self.params['product']))
+        path = Path(str(self.params["product"]))
         handler = self.io_handler(path, chunked=bool(self.chunksize))
 
-        self._logger.debug('Code: %s', source_code)
+        self._logger.debug("Code: %s", source_code)
 
         cursor = self.client.connection.cursor()
 
@@ -291,9 +299,9 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
             cursor.arraysize = self.chunksize
 
             while True:
-                self._logger.info('Fetching chunk {}...'.format(i))
+                self._logger.info("Fetching chunk {}...".format(i))
                 data = cursor.fetchmany()
-                self._logger.info('Fetched chunk {}'.format(i))
+                self._logger.info("Fetched chunk {}".format(i))
 
                 if i == 1:
                     headers = [c[0] for c in cursor.description]
@@ -351,18 +359,13 @@ class SQLTransfer(ClientMixin, Task):
     convenience way of transfering small to medium size datasets. It relies
     on pandas to read and write, which introduces a considerable overhead.
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation)
 
-    @requires(['pandas'], 'SQLTransfer')
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 client=None,
-                 params=None,
-                 chunksize=10000):
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation, GenericSQLRelation)
+
+    @requires(["pandas"], "SQLTransfer")
+    def __init__(
+        self, source, product, dag, name=None, client=None, params=None, chunksize=10000
+    ):
         params = params or {}
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
@@ -379,22 +382,24 @@ class SQLTransfer(ClientMixin, Task):
         import pandas as pd
 
         source_code = str(self.source)
-        product = self.params['product']
+        product = self.params["product"]
 
         # read from source_code, use connection from the Task
-        self._logger.info('Fetching data...')
-        dfs = pd.read_sql_query(source_code,
-                                self.client.engine,
-                                chunksize=self.chunksize)
-        self._logger.info('Done fetching data...')
+        self._logger.info("Fetching data...")
+        dfs = pd.read_sql_query(
+            source_code, self.client.engine, chunksize=self.chunksize
+        )
+        self._logger.info("Done fetching data...")
 
         for i, df in enumerate(dfs):
-            self._logger.info('Storing chunk {i}...'.format(i=i))
-            df.to_sql(name=product.name,
-                      con=product.client.engine,
-                      schema=product.schema,
-                      if_exists='replace' if i == 0 else 'append',
-                      index=False)
+            self._logger.info("Storing chunk {i}...".format(i=i))
+            df.to_sql(
+                name=product.name,
+                con=product.client.engine,
+                schema=product.schema,
+                if_exists="replace" if i == 0 else "append",
+                index=False,
+            )
 
 
 class SQLUpload(ClientMixin, Task):
@@ -453,20 +458,22 @@ class SQLUpload(ClientMixin, Task):
     convenience way of transfering small to medium size datasets. It relies
     on pandas to read and write, which introduces a considerable overhead.
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation)
 
-    @requires(['pandas'], 'SQLUpload')
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 client=None,
-                 params=None,
-                 chunksize=None,
-                 io_handler=None,
-                 to_sql_kwargs=None):
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation, GenericSQLRelation)
+
+    @requires(["pandas"], "SQLUpload")
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        name=None,
+        client=None,
+        params=None,
+        chunksize=None,
+        io_handler=None,
+        to_sql_kwargs=None,
+    ):
         params = params or {}
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
@@ -483,12 +490,12 @@ class SQLUpload(ClientMixin, Task):
     def run(self):
         import pandas as pd
 
-        product = self.params['product']
+        product = self.params["product"]
         path = str(self.source)
 
         mapping = {
-            '.csv': pd.read_csv,
-            '.parquet': pd.read_parquet,
+            ".csv": pd.read_csv,
+            ".parquet": pd.read_parquet,
         }
 
         if self.io_handler is None:
@@ -497,21 +504,23 @@ class SQLUpload(ClientMixin, Task):
 
             if not read_fn:
                 raise ValueError(
-                    'Could not infer reading function for '
-                    'file with extension: {}'.format(extension),
-                    'pass the function directly in the '
-                    'io_handler argument')
+                    "Could not infer reading function for "
+                    "file with extension: {}".format(extension),
+                    "pass the function directly in the " "io_handler argument",
+                )
         else:
             read_fn = self.io_handler
 
-        self._logger.info('Reading data...')
+        self._logger.info("Reading data...")
         df = read_fn(path)
-        self._logger.info('Done reading data...')
+        self._logger.info("Done reading data...")
 
-        df.to_sql(name=product.name,
-                  con=self.client.engine,
-                  schema=product.schema,
-                  **self.to_sql_kwargs)
+        df.to_sql(
+            name=product.name,
+            con=self.client.engine,
+            schema=product.schema,
+            **self.to_sql_kwargs,
+        )
 
 
 # TODO: provide more flexibility to configure the COPY statement
@@ -537,17 +546,13 @@ class PostgresCopyFrom(ClientMixin, Task):
     needs it to dynamically create the table, after the table is created
     the COPY statement is used to upload the data
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, )
 
-    @requires(['pandas', 'psycopg2'], 'PostgresCopyFrom')
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 client=None,
-                 params=None,
-                 columns=None):
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation,)
+
+    @requires(["pandas", "psycopg2"], "PostgresCopyFrom")
+    def __init__(
+        self, source, product, dag, name=None, client=None, params=None, columns=None
+    ):
         params = params or {}
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
@@ -562,28 +567,30 @@ class PostgresCopyFrom(ClientMixin, Task):
     def run(self):
         import pandas as pd
 
-        product = self.params['product']
+        product = self.params["product"]
         df = pd.read_parquet(str(self.source))
 
         # create the table
-        self._logger.info('Creating table...')
-        df.head(0).to_sql(name=product.name,
-                          con=self.client.engine,
-                          schema=product.schema,
-                          if_exists='replace',
-                          index=False)
-        self._logger.info('Done creating table.')
+        self._logger.info("Creating table...")
+        df.head(0).to_sql(
+            name=product.name,
+            con=self.client.engine,
+            schema=product.schema,
+            if_exists="replace",
+            index=False,
+        )
+        self._logger.info("Done creating table.")
 
         # create file-like object
         f = StringIO()
-        df.to_csv(f, sep='\t', na_rep='\\N', header=False, index=False)
+        df.to_csv(f, sep="\t", na_rep="\\N", header=False, index=False)
         f.seek(0)
 
         # upload using copy
         cur = self.client.connection.cursor()
 
-        self._logger.info('Copying data...')
-        cur.copy_expert(f'COPY {product} FROM STDIN', f)
+        self._logger.info("Copying data...")
+        cur.copy_expert(f"COPY {product} FROM STDIN", f)
 
         f.close()
         cur.close()

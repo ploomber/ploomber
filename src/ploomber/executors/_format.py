@@ -43,11 +43,14 @@ def exception(exc):
             # (this takes care of chained exceptions as well)
             tr = _format_exception(exceptions[breakpoint - 1])
         else:
-            tr = ''
+            tr = ""
 
         # append the short exceptions (only error message)
-        tr = tr + '\n' + '\n'.join(f'{_get_exc_name(exc)}: {str(exc)}'
-                                   for exc in exc_short)
+        tr = (
+            tr
+            + "\n"
+            + "\n".join(f"{_get_exc_name(exc)}: {str(exc)}" for exc in exc_short)
+        )
     else:
         # if not breakpoint, take the outermost exception and show it.
         # this ensures we show the full traceback in case there are chained
@@ -58,22 +61,19 @@ def exception(exc):
 
 
 def _get_exc_name(exc):
-    return f'{exc.__module__}.{type(exc).__name__}'
+    return f"{exc.__module__}.{type(exc).__name__}"
 
 
 def _format_exception(exc):
     # for these ones, the traceback isn't important, so just display the
     # message
-    if isinstance(exc,
-                  (PapermillExecutionError, RenderError, TaskRenderError)):
+    if isinstance(exc, (PapermillExecutionError, RenderError, TaskRenderError)):
         tr = str(exc)
     else:
         # format the exception, this will take care of chained exceptions
         # as well
-        tr = ''.join(
-            traceback.format_exception(type(exc),
-                                       exc,
-                                       exc.__traceback__,
-                                       limit=None))
+        tr = "".join(
+            traceback.format_exception(type(exc), exc, exc.__traceback__, limit=None)
+        )
 
     return tr

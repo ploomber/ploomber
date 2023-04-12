@@ -22,15 +22,18 @@ class UploadToS3(Task):
     bucket: str
         Bucked to upload
     """
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 bucket,
-                 name=None,
-                 params=None,
-                 client_kwargs=None,
-                 upload_file_kwargs=None):
+
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        bucket,
+        name=None,
+        params=None,
+        client_kwargs=None,
+        upload_file_kwargs=None,
+    ):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
@@ -38,19 +41,20 @@ class UploadToS3(Task):
         self._client_kwargs = client_kwargs
         self._upload_file_kwargs = upload_file_kwargs
 
-    @requires(['boto3'], 'UploadToS3')
+    @requires(["boto3"], "UploadToS3")
     def run(self):
         import boto3
         from botocore.exceptions import ClientError
 
         client_kwargs = self._client_kwargs or {}
         upload_file_kwargs = self._upload_file_kwargs or {}
-        s3_client = boto3.client('s3', **client_kwargs)
+        s3_client = boto3.client("s3", **client_kwargs)
         source = str(self.source)
 
         try:
-            s3_client.upload_file(source, self._bucket, str(self.product),
-                                  upload_file_kwargs)
+            s3_client.upload_file(
+                source, self._bucket, str(self.product), upload_file_kwargs
+            )
         except ClientError as e:
             logging.error(e)
 

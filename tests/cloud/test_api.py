@@ -355,7 +355,6 @@ def test_get_files_from_include_section_directory(tmp_directory_with_name):
 def test_get_files_from_include_section_error(
     tmp_directory, base_dir, paths, expected_paths
 ):
-
     with pytest.raises(BaseException) as excinfo:
         api.get_files_from_include_section(base_dir, paths)
 

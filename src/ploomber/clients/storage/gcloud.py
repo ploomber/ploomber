@@ -155,21 +155,26 @@ class GCloudStorageClient(AbstractStorageClient):
 
     Notes
     -----
-    `Complete example using the Spec API <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_ 
+    `Complete example using the Spec API <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_
 
     If a notebook (or script) task fails, the partially executed ``.ipynb``
     file will be uploaded using this client.
-    """ # noqa
-    @requires(['google.cloud.storage'],
-              name='GCloudStorageClient',
-              pip_names=['google-cloud-storage'])
-    def __init__(self,
-                 bucket_name,
-                 parent,
-                 json_credentials_path=None,
-                 path_to_project_root=None,
-                 credentials_relative_to_project_root=True,
-                 **kwargs):
+    """  # noqa
+
+    @requires(
+        ["google.cloud.storage"],
+        name="GCloudStorageClient",
+        pip_names=["google-cloud-storage"],
+    )
+    def __init__(
+        self,
+        bucket_name,
+        parent,
+        json_credentials_path=None,
+        path_to_project_root=None,
+        credentials_relative_to_project_root=True,
+        **kwargs,
+    ):
         if path_to_project_root:
             project_root = path_to_project_root
         else:
@@ -177,16 +182,21 @@ class GCloudStorageClient(AbstractStorageClient):
                 project_root = find_root_recursively()
             except Exception as e:
                 raise DAGSpecInvalidError(
-                    f'Cannot initialize {type(self).__name__} because there '
-                    'is not project root. Set one or explicitly pass '
-                    'a value in the path_to_project_root argument') from e
+                    f"Cannot initialize {type(self).__name__} because there "
+                    "is not project root. Set one or explicitly pass "
+                    "a value in the path_to_project_root argument"
+                ) from e
 
         self._path_to_project_root = Path(project_root).resolve()
 
-        if (credentials_relative_to_project_root and json_credentials_path
-                and not Path(json_credentials_path).is_absolute()):
-            json_credentials_path = Path(self._path_to_project_root,
-                                         json_credentials_path)
+        if (
+            credentials_relative_to_project_root
+            and json_credentials_path
+            and not Path(json_credentials_path).is_absolute()
+        ):
+            json_credentials_path = Path(
+                self._path_to_project_root, json_credentials_path
+            )
 
         self._from_json = json_credentials_path is not None
 
@@ -194,8 +204,8 @@ class GCloudStorageClient(AbstractStorageClient):
             self._client_kwargs = kwargs
         else:
             self._client_kwargs = {
-                'json_credentials_path': json_credentials_path,
-                **kwargs
+                "json_credentials_path": json_credentials_path,
+                **kwargs,
             }
 
         storage_client = self._init_client()
@@ -204,8 +214,11 @@ class GCloudStorageClient(AbstractStorageClient):
         self._bucket = storage_client.bucket(bucket_name)
 
     def _init_client(self):
-        constructor = (storage.Client.from_service_account_json
-                       if self._from_json else storage.Client)
+        constructor = (
+            storage.Client.from_service_account_json
+            if self._from_json
+            else storage.Client
+        )
         return constructor(**self._client_kwargs)
 
     def download(self, local, destination=None):
@@ -218,8 +231,9 @@ class GCloudStorageClient(AbstractStorageClient):
         else:
             counter = 0
 
-            for blob in self._bucket.client.list_blobs(self._bucket_name,
-                                                       prefix=remote):
+            for blob in self._bucket.client.list_blobs(
+                self._bucket_name, prefix=remote
+            ):
                 rel = PurePosixPath(blob.name).relative_to(remote)
                 destination_file = Path(destination, *rel.parts)
                 destination_file.parent.mkdir(exist_ok=True, parents=True)
@@ -227,16 +241,17 @@ class GCloudStorageClient(AbstractStorageClient):
                 counter += 1
 
             if not counter:
-                raise RemoteFileNotFound('Could not download '
-                                         f'{local!r} using client {self}: '
-                                         'No such file or directory')
+                raise RemoteFileNotFound(
+                    "Could not download "
+                    f"{local!r} using client {self}: "
+                    "No such file or directory"
+                )
 
     def _is_file(self, remote):
         return self._bucket.blob(remote).exists()
 
     def _is_dir(self, remote):
-        return any(
-            self._bucket.client.list_blobs(self._bucket_name, prefix=remote))
+        return any(self._bucket.client.list_blobs(self._bucket_name, prefix=remote))
 
     def _download(self, local, remote):
         blob = self._bucket.blob(remote)
@@ -250,7 +265,7 @@ class GCloudStorageClient(AbstractStorageClient):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state['_bucket']
+        del state["_bucket"]
         return state
 
     def __setstate__(self, state):
@@ -259,9 +274,11 @@ class GCloudStorageClient(AbstractStorageClient):
         self._bucket = storage_client.bucket(self._bucket_name)
 
     def __repr__(self):
-        return (f'{type(self).__name__}(bucket_name={self._bucket_name!r}, '
-                f'parent={self._parent!r}, '
-                f'path_to_project_root={str(self._path_to_project_root)!r})')
+        return (
+            f"{type(self).__name__}(bucket_name={self._bucket_name!r}, "
+            f"parent={self._parent!r}, "
+            f"path_to_project_root={str(self._path_to_project_root)!r})"
+        )
 
     @property
     def parent(self):

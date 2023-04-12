@@ -35,7 +35,7 @@ class AbstractStorageClient(abc.ABC):
             Path to local file or folder to upload
         """
         if Path(local).is_dir():
-            for f in glob.iglob(str(Path(local, '**')), recursive=True):
+            for f in glob.iglob(str(Path(local, "**")), recursive=True):
                 if Path(f).is_file():
                     self._upload(f)
         else:
@@ -43,32 +43,27 @@ class AbstractStorageClient(abc.ABC):
 
     @abc.abstractproperty
     def parent(self):
-        """Parent where all products are stored
-        """
+        """Parent where all products are stored"""
         pass
 
     @abc.abstractmethod
     def _download(self, local, destination):
-        """Download a single file
-        """
+        """Download a single file"""
         pass
 
     @abc.abstractmethod
     def _upload(self, local):
-        """Upload a single file
-        """
+        """Upload a single file"""
         pass
 
     @abc.abstractmethod
     def _is_file(self, remote):
-        """Check if path to remote is file
-        """
+        """Check if path to remote is file"""
         pass
 
     @abc.abstractmethod
     def _is_dir(self, remote):
-        """Check if path to remote is a directory
-        """
+        """Check if path to remote is a directory"""
         pass
 
     def _remote_path(self, local):

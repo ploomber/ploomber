@@ -7,6 +7,7 @@ import inspect
 import argparse
 from collections.abc import Mapping
 import warnings
+
 try:
     import importlib.resources as importlib_resources
 except ImportError:  # pragma: no cover
@@ -23,14 +24,14 @@ from ploomber.entrypoint import EntryPoint
 def process_arg(s):
     clean = None
 
-    if s.startswith('--'):
+    if s.startswith("--"):
         clean = s[2:]
-    elif s.startswith('-'):
+    elif s.startswith("-"):
         clean = s[1:]
     else:
         clean = s
 
-    return clean.replace('-', '_')
+    return clean.replace("-", "_")
 
 
 class CustomMutuallyExclusiveGroup(argparse._MutuallyExclusiveGroup):
@@ -41,14 +42,13 @@ class CustomMutuallyExclusiveGroup(argparse._MutuallyExclusiveGroup):
 
     def add_argument(self, *args, **kwargs):
         if not self._container.finished_static_api:
-            if (not self._container.in_context
-                    and self._container.finished_init):
-                raise RuntimeError('Cannot add arguments until the static '
-                                   'API has been declared')
+            if not self._container.in_context and self._container.finished_init:
+                raise RuntimeError(
+                    "Cannot add arguments until the static " "API has been declared"
+                )
             else:
                 # running inside the context manager
-                self._container.static_args.extend(
-                    [process_arg(arg) for arg in args])
+                self._container.static_args.extend([process_arg(arg) for arg in args])
 
         # outside context manager
         return super().add_argument(*args, **kwargs)
@@ -76,29 +76,30 @@ class CustomParser(argparse.ArgumentParser):
         self.finished_init = False
         super().__init__(*args, **kwargs)
 
-        self.add_argument('--log',
-                          '-l',
-                          help='Enables logging to stdout at the '
-                          'specified level',
-                          default=None)
+        self.add_argument(
+            "--log",
+            "-l",
+            help="Enables logging to stdout at the " "specified level",
+            default=None,
+        )
 
-        self.add_argument('--log-file',
-                          '-F',
-                          help='Enables logging to the given file',
-                          default=None)
+        self.add_argument(
+            "--log-file", "-F", help="Enables logging to the given file", default=None
+        )
 
         if self.DEFAULT_ENTRY_POINT:
-            entry_point_help = ('Entry point, defaults '
-                                f'to {self.DEFAULT_ENTRY_POINT}')
-            if os.environ.get('ENTRY_POINT'):
-                entry_point_help += ' (ENTRY_POINT env var)'
+            entry_point_help = "Entry point, defaults " f"to {self.DEFAULT_ENTRY_POINT}"
+            if os.environ.get("ENTRY_POINT"):
+                entry_point_help += " (ENTRY_POINT env var)"
         else:
-            entry_point_help = 'Entry point'
+            entry_point_help = "Entry point"
 
-        self.add_argument('--entry-point',
-                          '-e',
-                          help=entry_point_help,
-                          default=self.DEFAULT_ENTRY_POINT)
+        self.add_argument(
+            "--entry-point",
+            "-e",
+            help=entry_point_help,
+            default=self.DEFAULT_ENTRY_POINT,
+        )
 
         self.finished_init = True
 
@@ -111,26 +112,28 @@ class CustomParser(argparse.ArgumentParser):
         index = None
 
         try:
-            index = sys.argv.index('--entry-point')
+            index = sys.argv.index("--entry-point")
         except ValueError:
             pass
 
         try:
-            index = sys.argv.index('-e')
+            index = sys.argv.index("-e")
         except ValueError:
             pass
 
         # no --entry-point/-e arg passed, use default
         if index is None:
             if self.DEFAULT_ENTRY_POINT is None:
-                self.error('Unable to find a pipeline. '
-                           'Use --entry-point/-e to pass a '
-                           'entry point\'s location or '
-                           'place it in a standard location.\n\n'
-                           'Otherwise check if your pipeline have '
-                           '.yml as extension, '
-                           'change it to .yaml instead.\n\n'
-                           'Need help? https://ploomber.io/community')
+                self.error(
+                    "Unable to find a pipeline. "
+                    "Use --entry-point/-e to pass a "
+                    "entry point's location or "
+                    "place it in a standard location.\n\n"
+                    "Otherwise check if your pipeline have "
+                    ".yml as extension, "
+                    "change it to .yaml instead.\n\n"
+                    "Need help? https://ploomber.io/community"
+                )
 
             return self.DEFAULT_ENTRY_POINT
         else:
@@ -140,9 +143,9 @@ class CustomParser(argparse.ArgumentParser):
                 pass
 
             # replicate the original message emitted by argparse
-            action = self._option_string_actions['-e']
-            options = '/'.join(action.option_strings)
-            self.error(f'argument {options}: expected one argument')
+            action = self._option_string_actions["-e"]
+            options = "/".join(action.option_strings)
+            self.error(f"argument {options}: expected one argument")
 
     def add_argument(self, *args, **kwargs):
         """
@@ -154,8 +157,9 @@ class CustomParser(argparse.ArgumentParser):
         """
         if not self.finished_static_api:
             if not self.in_context and self.finished_init:
-                raise RuntimeError('Cannot add arguments until the static '
-                                   'API has been declared')
+                raise RuntimeError(
+                    "Cannot add arguments until the static " "API has been declared"
+                )
             else:
                 # running inside the context manager
                 self.static_args.extend([process_arg(arg) for arg in args])
@@ -181,8 +185,7 @@ class CustomParser(argparse.ArgumentParser):
         self.finished_static_api = True
 
     def process_factory_dotted_path(self, dotted_path):
-        """Parse a factory entry point, returns initialized dag and parsed args
-        """
+        """Parse a factory entry point, returns initialized dag and parsed args"""
         entry = load_dotted_path(str(dotted_path), raise_=True)
 
         # add args using the function's signature
@@ -190,7 +193,7 @@ class CustomParser(argparse.ArgumentParser):
 
         # if entry point was decorated with @with_env, add arguments
         # to replace declared variables in env.yaml
-        if hasattr(entry, '_env_dict'):
+        if hasattr(entry, "_env_dict"):
             _add_cli_args_from_env_dict_keys(self, entry._env_dict)
 
         args = self.parse_args()
@@ -219,13 +222,12 @@ class CustomParser(argparse.ArgumentParser):
         Returns a dag and the parsed args
         """
         entry_point = EntryPoint(self.parse_entry_point_value())
-        dag, args = load_dag_from_entry_point_and_parser(
-            entry_point, self, sys.argv)
+        dag, args = load_dag_from_entry_point_and_parser(entry_point, self, sys.argv)
         return dag, args
 
 
 def _path_for_module_path(module_path):
-    mod_name, path_part = module_path.split('::')
+    mod_name, path_part = module_path.split("::")
 
     # TODO: check it's only two parts after splitting
     with importlib_resources.path(mod_name, path_part) as p:
@@ -235,7 +237,7 @@ def _path_for_module_path(module_path):
 
 
 def _first_non_empty_line(doc):
-    for line in doc.split('\n'):
+    for line in doc.split("\n"):
         if line:
             return line.strip()
 
@@ -248,28 +250,25 @@ def _parse_doc(callable_):
 
     # no docstring
     if doc is None:
-        return {'params': {}, 'summary': None}
+        return {"params": {}, "summary": None}
 
     # try to import numpydoc, if can't find it, just returnt the first line
     try:
-        docscrape = importlib.import_module('numpydoc.docscrape')
+        docscrape = importlib.import_module("numpydoc.docscrape")
     except ModuleNotFoundError:
-        return {'params': {}, 'summary': _first_non_empty_line(doc)}
+        return {"params": {}, "summary": _first_non_empty_line(doc)}
 
     doc_parsed = docscrape.NumpyDocString(doc)
 
     parameters = {
-        p.name: {
-            'desc': ' '.join(p.desc),
-            'type': p.type
-        }
-        for p in doc_parsed['Parameters']
+        p.name: {"desc": " ".join(p.desc), "type": p.type}
+        for p in doc_parsed["Parameters"]
     }
 
     # docscrape returns one element per line
-    summary = 'Docstring: {}'.format('\n'.join(doc_parsed['Summary']))
+    summary = "Docstring: {}".format("\n".join(doc_parsed["Summary"]))
 
-    return {'params': parameters, 'summary': summary}
+    return {"params": parameters, "summary": summary}
 
 
 def _env_keys_to_override(args, static_args):
@@ -280,8 +279,10 @@ def _env_keys_to_override(args, static_args):
     """
     return {
         name: getattr(args, name)
-        for name in dir(args) if not name.startswith('_')
-        if getattr(args, name) is not None if name not in static_args
+        for name in dir(args)
+        if not name.startswith("_")
+        if getattr(args, name) is not None
+        if name not in static_args
     }
 
 
@@ -302,8 +303,7 @@ def _add_cli_args_from_env_dict_keys(parser, env_dict):
     for arg, val in flat_env_dict.items():
         # do not add default keys like {{cwd}}, {{here}}
         if arg not in env_dict.default_keys:
-            parser.add_argument('--env--' + arg,
-                                help='Default: {}'.format(val))
+            parser.add_argument("--env--" + arg, help="Default: {}".format(val))
 
 
 def _parse_signature_from_callable(callable_):
@@ -313,21 +313,18 @@ def _parse_signature_from_callable(callable_):
     """
     sig = inspect.signature(callable_)
 
-    required = [
-        k for k, v in sig.parameters.items() if v.default == inspect._empty
-    ]
+    required = [k for k, v in sig.parameters.items() if v.default == inspect._empty]
 
     defaults = {
-        k: v.default
-        for k, v in sig.parameters.items() if v.default != inspect._empty
+        k: v.default for k, v in sig.parameters.items() if v.default != inspect._empty
     }
 
     return required, defaults, sig.parameters
 
 
 def get_desc(doc, arg):
-    arg_data = doc['params'].get(arg)
-    return None if arg_data is None else arg_data['desc']
+    arg_data = doc["params"].get(arg)
+    return None if arg_data is None else arg_data["desc"]
 
 
 def add_argument_kwargs(params, arg):
@@ -341,11 +338,11 @@ def add_argument_kwargs(params, arg):
 
     # special case, bool with default value becomes a flag
     if fn_annotation is bool and fn_default is not inspect._empty:
-        kwargs = {'action': 'store_true' if not fn_default else 'store_false'}
+        kwargs = {"action": "store_true" if not fn_default else "store_false"}
     elif fn_annotation in valid_hints:
-        kwargs = {'type': fn_annotation, 'default': fn_default}
+        kwargs = {"type": fn_annotation, "default": fn_default}
     else:
-        kwargs = {'default': fn_default}
+        kwargs = {"default": fn_default}
 
     return kwargs
 
@@ -367,30 +364,31 @@ def _add_args_from_callable(parser, callable_):
         conflict = False
 
         try:
-            parser.add_argument('--' + arg,
-                                help=get_desc(doc, arg),
-                                **add_argument_kwargs(params, arg))
+            parser.add_argument(
+                "--" + arg, help=get_desc(doc, arg), **add_argument_kwargs(params, arg)
+            )
         except argparse.ArgumentError as e:
             conflict = e
 
         if conflict:
-            if 'conflicting option string' in conflict.message:
+            if "conflicting option string" in conflict.message:
                 raise ValueError(
-                    f'The signature from {callable_.__name__!r} '
-                    'conflicts with existing arguments in the command-line '
-                    'interface, please rename the following '
-                    f'argument: {arg!r}')
+                    f"The signature from {callable_.__name__!r} "
+                    "conflicts with existing arguments in the command-line "
+                    "interface, please rename the following "
+                    f"argument: {arg!r}"
+                )
             else:
                 raise conflict
 
     for arg in required:
-        parser.add_argument(arg,
-                            help=get_desc(doc, arg),
-                            **add_argument_kwargs(params, arg))
+        parser.add_argument(
+            arg, help=get_desc(doc, arg), **add_argument_kwargs(params, arg)
+        )
 
-    if doc['summary']:
+    if doc["summary"]:
         desc = parser.description
-        parser.description = '{}. {}'.format(desc, doc['summary'])
+        parser.description = "{}. {}".format(desc, doc["summary"])
 
     return required, defaults
 
@@ -420,9 +418,12 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
         path_to_env = default.path_to_env_from_spec(entry_point_value)
 
     if path_to_env:
-        env_dict = EnvDict(path_to_env,
-                           path_to_here=Path(entry_point_value).parent
-                           if entry.type == EntryPoint.File else None)
+        env_dict = EnvDict(
+            path_to_env,
+            path_to_here=Path(entry_point_value).parent
+            if entry.type == EntryPoint.File
+            else None,
+        )
         _add_cli_args_from_env_dict_keys(parser, env_dict)
 
     args = parser.parse_args()
@@ -462,21 +463,25 @@ def load_dag_from_entry_point_and_parser(entry_point, parser, argv):
     argv : list
         Command line arguments
     """
-    help_cmd = '--help' in argv or '-h' in argv
+    help_cmd = "--help" in argv or "-h" in argv
 
     # if the file does not exist but the value has sufix yaml/yml, show a
     # warning because the last thing to try is to interpret it as a dotted
     # path and that's probably not what the user wants
-    if not entry_point.exists() and entry_point.suffix in {'.yaml', '.yml'}:
-        warnings.warn('Entry point value "{}" has extension "{}", which '
-                      'suggests a spec file, but the file doesn\'t '
-                      'exist'.format(entry_point, entry_point.suffix))
+    if not entry_point.exists() and entry_point.suffix in {".yaml", ".yml"}:
+        warnings.warn(
+            'Entry point value "{}" has extension "{}", which '
+            "suggests a spec file, but the file doesn't "
+            "exist".format(entry_point, entry_point.suffix)
+        )
 
     # even if the entry file is not a file nor a valid module, show the
     # help menu, but show a warning
-    if (help_cmd and not entry_point.exists()):
-        warnings.warn('Failed to load entry point "{}". It is not a file '
-                      'nor a valid dotted path'.format(entry_point))
+    if help_cmd and not entry_point.exists():
+        warnings.warn(
+            'Failed to load entry point "{}". It is not a file '
+            "nor a valid dotted path".format(entry_point)
+        )
 
         args = parser.parse_args()
 
@@ -489,7 +494,8 @@ def load_dag_from_entry_point_and_parser(entry_point, parser, argv):
         dag, args = parser.process_factory_dotted_path(entry_point)
     elif entry_point.type == EntryPoint.ModulePath:
         dag, args = _process_file_dir_or_glob(
-            parser, dagspec_arg=_path_for_module_path(entry_point.value))
+            parser, dagspec_arg=_path_for_module_path(entry_point.value)
+        )
     else:
         # process file, directory or glob pattern
         dag, args = _process_file_dir_or_glob(parser)
@@ -497,7 +503,7 @@ def load_dag_from_entry_point_and_parser(entry_point, parser, argv):
     return dag, args
 
 
-def _flatten_dict(d, prefix=''):
+def _flatten_dict(d, prefix=""):
     """
     Convert a nested dict: {'a': {'b': 1}} -> {'a--b': 1}
     """
@@ -505,7 +511,7 @@ def _flatten_dict(d, prefix=''):
 
     for k, v in d.items():
         if isinstance(v, Mapping):
-            out = {**out, **_flatten_dict(v, prefix=prefix + k + '--')}
+            out = {**out, **_flatten_dict(v, prefix=prefix + k + "--")}
         else:
             out[prefix + k] = v
 
@@ -513,9 +519,8 @@ def _flatten_dict(d, prefix=''):
 
 
 def _configure_logger(args):
-    """Configure logger if user passed --log/--log-file args
-    """
-    if hasattr(args, 'log'):
+    """Configure logger if user passed --log/--log-file args"""
+    if hasattr(args, "log"):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 

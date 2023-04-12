@@ -24,7 +24,7 @@ class Interval:
 
     def __init__(self, lower, upper, delta):
         if lower >= upper:
-            raise ValueError('lower must be strictly lower than upper')
+            raise ValueError("lower must be strictly lower than upper")
 
         self.lower = lower
         self.upper = upper
@@ -48,8 +48,9 @@ class Interval:
         return tuples
 
     def __repr__(self):
-        return ('Interval from {} to {} with delta {}'.format(
-            self.lower, self.upper, self.delta))
+        return "Interval from {} to {} with delta {}".format(
+            self.lower, self.upper, self.delta
+        )
 
 
 class ParamGrid:
@@ -97,7 +98,7 @@ class ParamGrid:
             lengths = set(len(v) for v in d.values())
 
             if len(lengths) != 1:
-                raise ValueError('All parameters should have the same length')
+                raise ValueError("All parameters should have the same length")
 
             length = list(lengths)[0]
 
@@ -137,10 +138,11 @@ def _expand(d):
 
 
 def _check_keys_overlap(a, b):
-
     overlap = set(a) & set(b)
 
     if overlap:
         overlap_ = pretty_print.iterable(overlap)
-        raise ValueError("Error generating grid: 'grid' and 'params' "
-                         f"have overlapping keys: {overlap_}")
+        raise ValueError(
+            "Error generating grid: 'grid' and 'params' "
+            f"have overlapping keys: {overlap_}"
+        )

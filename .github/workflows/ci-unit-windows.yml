@@ -45,10 +45,9 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
-        # make the build fail quickly on flake8 errors
-        # pinning it because newer versions break the setup
-        pip install "flake8<6"
-        flake8
+        # make the build fail quickly on linting errors
+        pip install pkgmt
+        pkgmt lint
 
         # there's a bug in jupyter, we need to install this first
         conda install pywin32

@@ -103,15 +103,18 @@ from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
 from ploomber.dag.dagconfiguration import DAGConfiguration
-from ploomber.exceptions import (DAGSpecInitializationError,
-                                 MissingKeysValidationError)
+from ploomber.exceptions import DAGSpecInitializationError, MissingKeysValidationError
 from ploomber.env.envdict import EnvDict
-from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
-                                 expand_raw_dictionaries_and_extract_tags)
+from ploomber.env.expand import (
+    expand_raw_dictionary_and_extract_tags,
+    expand_raw_dictionaries_and_extract_tags,
+)
 from ploomber.tasks import NotebookRunner
 from ploomber.tasks.taskgroup import TaskGroup
-from ploomber.validators.string import (validate_product_class_name,
-                                        validate_task_class_name)
+from ploomber.validators.string import (
+    validate_product_class_name,
+    validate_task_class_name,
+)
 from ploomber.executors import Parallel
 from ploomber.io import pretty_print
 
@@ -213,21 +216,27 @@ class DAGSpec(MutableMapping):
     # appropriate place, this by construction, means that the spec as it is
     # cannot be converted to a dag yet, since it has at least one task
     # whose source does not exist
-    def __init__(self,
-                 data,
-                 env=None,
-                 lazy_import=False,
-                 reload=False,
-                 parent_path=None):
-        self._init(data=data,
-                   env=env,
-                   lazy_import=lazy_import,
-                   reload=reload,
-                   parent_path=parent_path,
-                   look_up_project_root_recursively=True)
+    def __init__(
+        self, data, env=None, lazy_import=False, reload=False, parent_path=None
+    ):
+        self._init(
+            data=data,
+            env=env,
+            lazy_import=lazy_import,
+            reload=reload,
+            parent_path=parent_path,
+            look_up_project_root_recursively=True,
+        )
 
-    def _init(self, data, env, lazy_import, reload, parent_path,
-              look_up_project_root_recursively):
+    def _init(
+        self,
+        data,
+        env,
+        lazy_import,
+        reload,
+        parent_path,
+        look_up_project_root_recursively,
+    ):
         self._lazy_import = lazy_import
         self._name = None
         data_argument_is_filepath = isinstance(data, (str, Path))
@@ -236,9 +245,11 @@ class DAGSpec(MutableMapping):
         if data_argument_is_filepath:
             # TODO: test this
             if parent_path is not None:
-                raise ValueError('parent_path must be None when '
-                                 f'initializing {type(self).__name__} with '
-                                 'a path to a YAML spec')
+                raise ValueError(
+                    "parent_path must be None when "
+                    f"initializing {type(self).__name__} with "
+                    "a path to a YAML spec"
+                )
             # resolve the parent path to make sources and products unambiguous
             # even if the current working directory changes
             self._path = Path(data).resolve()
@@ -249,35 +260,37 @@ class DAGSpec(MutableMapping):
 
             if not Path(data).is_file():
                 raise FileNotFoundError(
-                    'Error initializing DAGSpec with argument '
-                    f'{data!r}: Expected it to be a path to a YAML file, but '
-                    'such file does not exist')
+                    "Error initializing DAGSpec with argument "
+                    f"{data!r}: Expected it to be a path to a YAML file, but "
+                    "such file does not exist"
+                )
 
             content = Path(data).read_text()
 
             try:
                 data = yaml.safe_load(content)
             except (
-                    yaml.parser.ParserError,
-                    yaml.constructor.ConstructorError,
-                    yaml.scanner.ScannerError,
+                yaml.parser.ParserError,
+                yaml.constructor.ConstructorError,
+                yaml.scanner.ScannerError,
             ) as e:
                 error = e
             else:
                 error = None
 
             if error:
-                if '{{' in content or '}}' in content:
+                if "{{" in content or "}}" in content:
                     raise DAGSpecInitializationError(
-                        'Failed to initialize spec. It looks like '
-                        'you\'re using placeholders (i.e. {{placeholder}}). '
-                        'Make sure values are enclosed in parentheses '
+                        "Failed to initialize spec. It looks like "
+                        "you're using placeholders (i.e. {{placeholder}}). "
+                        "Make sure values are enclosed in parentheses "
                         '(e.g. key: "{{placeholder}}"). Original '
-                        'parser error:\n\n'
-                        f'{error}')
+                        "parser error:\n\n"
+                        f"{error}"
+                    )
                 else:
                     raise DAGSpecInitializationError(
-                        'Failed to initialize spec. Got invalid YAML'
+                        "Failed to initialize spec. Got invalid YAML"
                     ) from error
 
         # initialized with a dictionary...
@@ -289,57 +302,55 @@ class DAGSpec(MutableMapping):
             # directory if it's appropriate - this is mostly to make relative
             # paths consistent: they should be relative to the file that
             # contains them
-            self._parent_path = (None if not parent_path else str(
-                Path(parent_path).resolve()))
+            self._parent_path = (
+                None if not parent_path else str(Path(parent_path).resolve())
+            )
 
         self.data = data
 
         if isinstance(self.data, list):
-            self.data = {'tasks': self.data}
+            self.data = {"tasks": self.data}
 
-        if self.data.get('tasks') and not isinstance(self.data['tasks'], list):
+        if self.data.get("tasks") and not isinstance(self.data["tasks"], list):
             raise DAGSpecInitializationError(
-                'Expected \'tasks\' in the dag spec to contain a '
+                "Expected 'tasks' in the dag spec to contain a "
                 f'list, but got: {self.data["tasks"]} '
-                '(an object with '
-                f'type: {type(self.data["tasks"]).__name__!r})')
+                "(an object with "
+                f'type: {type(self.data["tasks"]).__name__!r})'
+            )
 
         # validate keys defined at the top (nested keys are not validated here)
         self._validate_top_keys(self.data, self._path)
 
-        logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
+        logger.debug("DAGSpec enviroment:\n%s", pp.pformat(env))
 
         env = env or dict()
-        path_to_defaults = default.path_to_env_from_spec(
-            path_to_spec=self._path)
+        path_to_defaults = default.path_to_env_from_spec(path_to_spec=self._path)
         # there is an env.yaml we can use
         if path_to_defaults:
             defaults = yaml.safe_load(Path(path_to_defaults).read_text())
-            self.env = EnvDict(env,
-                               path_to_here=self._parent_path,
-                               defaults=defaults)
+            self.env = EnvDict(env, path_to_here=self._parent_path, defaults=defaults)
 
         # there is no env.yaml
         else:
             # wrong extension of env.yml or env.{name}.yml found
             if default.try_to_find_env_yml(path_to_spec=self._path):
                 raise DAGSpecInitializationError(
-                    'Error: found env file ends with .yml. '
-                    'Change the extension to .yaml.')
+                    "Error: found env file ends with .yml. "
+                    "Change the extension to .yaml."
+                )
             self.env = EnvDict(env, path_to_here=self._parent_path)
 
-        self.data, tags = expand_raw_dictionary_and_extract_tags(
-            self.data, self.env)
+        self.data, tags = expand_raw_dictionary_and_extract_tags(self.data, self.env)
 
-        logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
+        logger.debug("Expanded DAGSpec:\n%s", pp.pformat(data))
 
         # if there is a "location" top key, we don't have to do anything else
         # as we will just load the dotted path when .to_dag() is called
-        if 'location' not in self.data:
-
+        if "location" not in self.data:
             Meta.initialize_inplace(self.data)
 
-            import_tasks_from = self.data['meta']['import_tasks_from']
+            import_tasks_from = self.data["meta"]["import_tasks_from"]
 
             if import_tasks_from is not None:
                 # when using a relative path in "import_tasks_from", we must
@@ -347,70 +358,79 @@ class DAGSpec(MutableMapping):
                 if not Path(import_tasks_from).is_absolute():
                     # use _parent_path if there is one
                     if self._parent_path:
-                        self.data['meta']['import_tasks_from'] = str(
-                            Path(self._parent_path, import_tasks_from))
+                        self.data["meta"]["import_tasks_from"] = str(
+                            Path(self._parent_path, import_tasks_from)
+                        )
                     # otherwise just make it absolute
                     else:
-                        self.data['meta']['import_tasks_from'] = str(
-                            Path(import_tasks_from).resolve())
+                        self.data["meta"]["import_tasks_from"] = str(
+                            Path(import_tasks_from).resolve()
+                        )
 
                 imported = yaml.safe_load(
-                    Path(self.data['meta']['import_tasks_from']).read_text())
+                    Path(self.data["meta"]["import_tasks_from"]).read_text()
+                )
 
                 if not imported:
-                    path = str(self.data['meta']['import_tasks_from'])
-                    raise ValueError('expected import_tasks_from file '
-                                     f'({path!r}) to return a list of tasks, '
-                                     f'got: {imported}')
+                    path = str(self.data["meta"]["import_tasks_from"])
+                    raise ValueError(
+                        "expected import_tasks_from file "
+                        f"({path!r}) to return a list of tasks, "
+                        f"got: {imported}"
+                    )
 
                 if not isinstance(imported, list):
                     raise TypeError(
-                        'Expected list when loading YAML file from '
-                        'import_tasks_from: file.yaml, '
-                        f'but got {type(imported)}')
+                        "Expected list when loading YAML file from "
+                        "import_tasks_from: file.yaml, "
+                        f"but got {type(imported)}"
+                    )
 
                 if self.env is not None:
-                    (imported,
-                     tags_other) = expand_raw_dictionaries_and_extract_tags(
-                         imported, self.env)
+                    (imported, tags_other) = expand_raw_dictionaries_and_extract_tags(
+                        imported, self.env
+                    )
                     tags = tags | tags_other
 
                 # relative paths here are relative to the file where they
                 # are declared
-                base_path = Path(self.data['meta']['import_tasks_from']).parent
+                base_path = Path(self.data["meta"]["import_tasks_from"]).parent
 
                 for task in imported:
-                    add_base_path_to_source_if_relative(task,
-                                                        base_path=base_path)
+                    add_base_path_to_source_if_relative(task, base_path=base_path)
 
-                self.data['tasks'].extend(imported)
+                self.data["tasks"].extend(imported)
 
             # check if there are any params declared in env, not used in
             # in the pipeline
             extra = self.env.get_unused_placeholders() - tags
 
             if extra:
-                warnings.warn('The following placeholders are declared in the '
-                              'environment but '
-                              f'unused in the spec: {extra}')
+                warnings.warn(
+                    "The following placeholders are declared in the "
+                    "environment but "
+                    f"unused in the spec: {extra}"
+                )
 
-            if self.data['tasks'] is None:
+            if self.data["tasks"] is None:
                 raise DAGSpecInitializationError(
-                    'Failed to initialize spec, "tasks" section is empty')
+                    'Failed to initialize spec, "tasks" section is empty'
+                )
 
-            self.data['tasks'] = [
-                normalize_task(task) for task in self.data['tasks']
-            ]
+            self.data["tasks"] = [normalize_task(task) for task in self.data["tasks"]]
 
             # NOTE: for simple projects, project root is the parent folder
             # of pipeline.yaml, for package projects is the parent folder
             # of setup.py
             if look_up_project_root_recursively:
                 project_root = (
-                    None if not self._parent_path else
-                    default.find_root_recursively(
+                    None
+                    if not self._parent_path
+                    else default.find_root_recursively(
                         starting_dir=self._parent_path,
-                        filename=None if not self._path else self._path.name))
+                        filename=None if not self._path else self._path.name,
+                    )
+                )
             else:
                 project_root = self._parent_path
 
@@ -418,56 +438,60 @@ class DAGSpec(MutableMapping):
             # otherwise dynamic imports needed by TaskSpec will fail
             with add_to_sys_path(self._parent_path, chdir=False):
                 task_specs = []
-                for t in self.data['tasks']:
+                for t in self.data["tasks"]:
                     try:
                         task_specs.append(
-                            TaskSpec(t,
-                                     self.data['meta'],
-                                     project_root=project_root,
-                                     lazy_import=lazy_import,
-                                     reload=reload))
+                            TaskSpec(
+                                t,
+                                self.data["meta"],
+                                project_root=project_root,
+                                lazy_import=lazy_import,
+                                reload=reload,
+                            )
+                        )
                     except MissingKeysValidationError as e:
                         example_spec = _build_example_spec(t["source"])
                         if data_argument_is_filepath:
-                            example_str = yaml.dump(example_spec,
-                                                    sort_keys=False)
+                            example_str = yaml.dump(example_spec, sort_keys=False)
                         else:
                             example_str = json.dumps(example_spec)
-                        e.message += ('\nTo fix it, add the missing key ' +
-                                      '(example):\n\n{}').format(example_str)
+                        e.message += (
+                            "\nTo fix it, add the missing key " + "(example):\n\n{}"
+                        ).format(example_str)
                         raise e
-                self.data['tasks'] = task_specs
+                self.data["tasks"] = task_specs
         else:
-            self.data['meta'] = Meta.empty()
+            self.data["meta"] = Meta.empty()
 
     def _validate_top_keys(self, spec, path):
-        """Validate keys at the top of the spec
-        """
-        if 'tasks' not in spec and 'location' not in spec:
+        """Validate keys at the top of the spec"""
+        if "tasks" not in spec and "location" not in spec:
             raise DAGSpecInitializationError(
-                'Failed to initialize spec. Missing "tasks" key')
+                'Failed to initialize spec. Missing "tasks" key'
+            )
 
-        if 'location' in spec:
+        if "location" in spec:
             if len(spec) > 1:
                 raise DAGSpecInitializationError(
-                    'Failed to initialize spec. If '
+                    "Failed to initialize spec. If "
                     'using the "location" key there should not '
-                    'be other keys')
+                    "be other keys"
+                )
 
         else:
             valid = {
-                'meta',
-                'config',
-                'clients',
-                'tasks',
-                'serializer',
-                'unserializer',
-                'executor',
-                'on_finish',
-                'on_render',
-                'on_failure',
+                "meta",
+                "config",
+                "clients",
+                "tasks",
+                "serializer",
+                "unserializer",
+                "executor",
+                "on_finish",
+                "on_render",
+                "on_failure",
             }
-            validate.keys(valid, spec.keys(), name='dag spec')
+            validate.keys(valid, spec.keys(), name="dag spec")
 
     def __getitem__(self, key):
         return self.data[key]
@@ -486,8 +510,7 @@ class DAGSpec(MutableMapping):
         return len(self.data)
 
     def to_dag(self):
-        """Converts the DAG spec to a DAG object
-        """
+        """Converts the DAG spec to a DAG object"""
         # when initializing DAGs from pipeline.yaml files, we have to ensure
         # that the folder where pipeline.yaml is located is in sys.path for
         # imports to work (for dag clients), this happens most of the time but
@@ -506,52 +529,61 @@ class DAGSpec(MutableMapping):
         Internal method to manage the different cases to convert to a DAG
         object
         """
-        if 'location' in self:
-            return dotted_path.call_dotted_path(self['location'])
+        if "location" in self:
+            return dotted_path.call_dotted_path(self["location"])
 
         dag = DAG(name=self._name)
 
-        if 'config' in self:
-            dag._params = DAGConfiguration.from_dict(self['config'])
+        if "config" in self:
+            dag._params = DAGConfiguration.from_dict(self["config"])
 
-        if 'executor' in self:
-            executor = self['executor']
+        if "executor" in self:
+            executor = self["executor"]
 
-            if isinstance(executor,
-                          str) and executor in {'serial', 'parallel'}:
-                if executor == 'parallel':
+            if isinstance(executor, str) and executor in {"serial", "parallel"}:
+                if executor == "parallel":
                     dag.executor = Parallel()
             elif isinstance(executor, Mapping):
                 dag.executor = dotted_path.DottedPath(
-                    executor, lazy_load=False, allow_return_none=False)()
+                    executor, lazy_load=False, allow_return_none=False
+                )()
             else:
                 raise DAGSpecInitializationError(
                     '"executor" must be '
                     '"serial", "parallel", or a dotted path'
-                    f', got: {executor!r}')
+                    f", got: {executor!r}"
+                )
 
-        clients = self.get('clients')
+        clients = self.get("clients")
 
         if clients:
             for class_name, dotted_path_spec in clients.items():
                 if dotted_path_spec is None:
                     continue
-                dps = dotted_path.DottedPath(dotted_path_spec,
-                                             lazy_load=self._lazy_import,
-                                             allow_return_none=False)
+                dps = dotted_path.DottedPath(
+                    dotted_path_spec,
+                    lazy_load=self._lazy_import,
+                    allow_return_none=False,
+                )
 
                 if self._lazy_import:
                     dag.clients[class_name] = dps
                 else:
                     dag.clients[class_name] = dps()
 
-        for attr in ('serializer', 'unserializer', 'on_finish', 'on_render',
-                     'on_failure'):
+        for attr in (
+            "serializer",
+            "unserializer",
+            "on_finish",
+            "on_render",
+            "on_failure",
+        ):
             if attr in self:
                 setattr(
-                    dag, attr,
-                    dotted_path.DottedPath(self[attr],
-                                           lazy_load=self._lazy_import))
+                    dag,
+                    attr,
+                    dotted_path.DottedPath(self[attr], lazy_load=self._lazy_import),
+                )
 
         process_tasks(dag, self, root_path=self._parent_path)
 
@@ -578,12 +610,9 @@ class DAGSpec(MutableMapping):
         return cls(relative_path, lazy_import=lazy_import), relative_path
 
     @classmethod
-    def find(cls,
-             env=None,
-             reload=False,
-             lazy_import=False,
-             starting_dir=None,
-             name=None):
+    def find(
+        cls, env=None, reload=False, lazy_import=False, starting_dir=None, name=None
+    ):
         """
         Automatically find pipeline.yaml and return a DAGSpec object, which
         can be converted to a DAG using .to_dag()
@@ -599,16 +628,17 @@ class DAGSpec(MutableMapping):
         """
         starting_dir = starting_dir or os.getcwd()
         path_to_entry_point = default.entry_point_with_name(
-            root_path=starting_dir, name=name)
+            root_path=starting_dir, name=name
+        )
 
         try:
-            return cls(path_to_entry_point,
-                       env=env,
-                       lazy_import=lazy_import,
-                       reload=reload)
+            return cls(
+                path_to_entry_point, env=env, lazy_import=lazy_import, reload=reload
+            )
         except Exception as e:
-            exc = DAGSpecInitializationError('Error initializing DAG from '
-                                             f'{path_to_entry_point!s}')
+            exc = DAGSpecInitializationError(
+                "Error initializing DAG from " f"{path_to_entry_point!s}"
+            )
             raise exc from e
 
     @classmethod
@@ -632,18 +662,19 @@ class DAGSpec(MutableMapping):
         in ``path_to_dir``, hence, there is no way to embed tags
         """
         valid_extensions = [
-            name for name, class_ in suffix2taskclass.items()
+            name
+            for name, class_ in suffix2taskclass.items()
             if class_ is NotebookRunner
         ]
 
         if Path(path_to_dir).is_dir():
-            pattern = str(Path(path_to_dir, '*'))
+            pattern = str(Path(path_to_dir, "*"))
             files = list(
-                chain.from_iterable(
-                    iglob(pattern + ext) for ext in valid_extensions))
+                chain.from_iterable(iglob(pattern + ext) for ext in valid_extensions)
+            )
             return cls.from_files(files)
         else:
-            raise NotADirectoryError(f'{path_to_dir!r} is not a directory')
+            raise NotADirectoryError(f"{path_to_dir!r} is not a directory")
 
     @classmethod
     def from_files(cls, files):
@@ -658,7 +689,8 @@ class DAGSpec(MutableMapping):
             pattern, ignores directories that match the criteria.
         """
         valid_extensions = [
-            name for name, class_ in suffix2taskclass.items()
+            name
+            for name, class_ in suffix2taskclass.items()
             if class_ is NotebookRunner
         ]
 
@@ -668,13 +700,15 @@ class DAGSpec(MutableMapping):
         invalid = [f for f in files if Path(f).suffix not in valid_extensions]
 
         if invalid:
-            raise ValueError(f'Cannot instantiate DAGSpec from files with '
-                             f'invalid extensions: {invalid}. '
-                             f'Allowed extensions are: {valid_extensions}')
+            raise ValueError(
+                f"Cannot instantiate DAGSpec from files with "
+                f"invalid extensions: {invalid}. "
+                f"Allowed extensions are: {valid_extensions}"
+            )
 
-        tasks = [{'source': file_} for file_ in files]
-        meta = {'extract_product': True, 'extract_upstream': True}
-        return cls({'tasks': tasks, 'meta': meta})
+        tasks = [{"source": file_} for file_ in files]
+        meta = {"extract_product": True, "extract_upstream": True}
+        return cls({"tasks": tasks, "meta": meta})
 
 
 class DAGSpecPartial(DAGSpec):
@@ -689,116 +723,118 @@ class DAGSpecPartial(DAGSpec):
 
         if not isinstance(tasks, list):
             raise ValueError(
-                f'Expected partial {path_to_partial!r} to be a '
-                f'list of tasks, but got a {type(tasks).__name__} instead')
+                f"Expected partial {path_to_partial!r} to be a "
+                f"list of tasks, but got a {type(tasks).__name__} instead"
+            )
 
         # cannot extract upstream because this is an incomplete DAG
-        meta = {'extract_product': False, 'extract_upstream': False}
-        data = {'tasks': tasks, 'meta': meta}
+        meta = {"extract_product": False, "extract_upstream": False}
+        data = {"tasks": tasks, "meta": meta}
 
         env = env or default.path_to_env_from_spec(path_to_partial)
 
-        self._init(data=data,
-                   env=env,
-                   lazy_import=False,
-                   reload=False,
-                   parent_path=Path(path_to_partial).parent,
-                   look_up_project_root_recursively=False)
+        self._init(
+            data=data,
+            env=env,
+            lazy_import=False,
+            reload=False,
+            parent_path=Path(path_to_partial).parent,
+            look_up_project_root_recursively=False,
+        )
 
 
 class Meta:
-    """Schema for meta section in pipeline.yaml
-    """
+    """Schema for meta section in pipeline.yaml"""
+
     VALID = {
-        'extract_upstream',
-        'extract_product',
-        'product_default_class',
-        'product_relative_to_source',
-        'jupyter_hot_reload',
-        'source_loader',
-        'jupyter_functions_as_notebooks',
-        'import_tasks_from',
+        "extract_upstream",
+        "extract_product",
+        "product_default_class",
+        "product_relative_to_source",
+        "jupyter_hot_reload",
+        "source_loader",
+        "jupyter_functions_as_notebooks",
+        "import_tasks_from",
     }
 
     @classmethod
     def initialize_inplace(cls, data):
-        """Validate and instantiate the "meta" section
-        """
-        if 'meta' not in data:
-            data['meta'] = {}
+        """Validate and instantiate the "meta" section"""
+        if "meta" not in data:
+            data["meta"] = {}
 
-        data['meta'] = Meta.default_meta(data['meta'])
+        data["meta"] = Meta.default_meta(data["meta"])
 
     @classmethod
     def default_meta(cls, meta=None):
-        """Fill missing values in a meta dictionary
-        """
+        """Fill missing values in a meta dictionary"""
         if meta is None:
             meta = {}
 
-        validate.keys(cls.VALID, meta, name='dag spec')
+        validate.keys(cls.VALID, meta, name="dag spec")
 
-        if 'extract_upstream' not in meta:
-            meta['extract_upstream'] = True
+        if "extract_upstream" not in meta:
+            meta["extract_upstream"] = True
 
-        if 'extract_product' not in meta:
-            meta['extract_product'] = False
+        if "extract_product" not in meta:
+            meta["extract_product"] = False
 
-        if 'product_relative_to_source' not in meta:
-            meta['product_relative_to_source'] = False
+        if "product_relative_to_source" not in meta:
+            meta["product_relative_to_source"] = False
 
-        if 'jupyter_hot_reload' not in meta:
-            meta['jupyter_hot_reload'] = True
+        if "jupyter_hot_reload" not in meta:
+            meta["jupyter_hot_reload"] = True
 
-        if 'jupyter_functions_as_notebooks' not in meta:
-            meta['jupyter_functions_as_notebooks'] = False
+        if "jupyter_functions_as_notebooks" not in meta:
+            meta["jupyter_functions_as_notebooks"] = False
 
-        if 'import_tasks_from' not in meta:
-            meta['import_tasks_from'] = None
+        if "import_tasks_from" not in meta:
+            meta["import_tasks_from"] = None
 
-        if 'source_loader' not in meta:
-            meta['source_loader'] = None
+        if "source_loader" not in meta:
+            meta["source_loader"] = None
         else:
             try:
-                meta['source_loader'] = SourceLoader(**meta['source_loader'])
+                meta["source_loader"] = SourceLoader(**meta["source_loader"])
             except Exception as e:
-                msg = ('Error initializing SourceLoader with '
-                       f'{meta["source_loader"]}. Error message: {e.args[0]}')
-                e.args = (msg, )
+                msg = (
+                    "Error initializing SourceLoader with "
+                    f'{meta["source_loader"]}. Error message: {e.args[0]}'
+                )
+                e.args = (msg,)
                 raise
 
         defaults = {
-            'SQLDump': 'File',
-            'NotebookRunner': 'File',
-            'ScriptRunner': 'File',
-            'SQLScript': 'SQLRelation',
-            'PythonCallable': 'File',
-            'ShellScript': 'File',
+            "SQLDump": "File",
+            "NotebookRunner": "File",
+            "ScriptRunner": "File",
+            "SQLScript": "SQLRelation",
+            "PythonCallable": "File",
+            "ShellScript": "File",
         }
 
-        if 'product_default_class' not in meta:
-            meta['product_default_class'] = defaults
+        if "product_default_class" not in meta:
+            meta["product_default_class"] = defaults
         else:
             for class_, prod in defaults.items():
-                if class_ not in meta['product_default_class']:
-                    meta['product_default_class'][class_] = prod
+                if class_ not in meta["product_default_class"]:
+                    meta["product_default_class"][class_] = prod
 
         # validate keys and values in product_default_class
-        for task_name, product_name in meta['product_default_class'].items():
+        for task_name, product_name in meta["product_default_class"].items():
             try:
                 validate_task_class_name(task_name)
                 validate_product_class_name(product_name)
             except Exception as e:
-                msg = f'Error validating product_default_class: {e.args[0]}'
-                e.args = (msg, )
+                msg = f"Error validating product_default_class: {e.args[0]}"
+                e.args = (msg,)
                 raise
 
         return meta
 
     @classmethod
     def empty(cls):
-        """Default meta values when a spec is initialized with "location"
-        """
+        """Default meta values when a spec is initialized with "location" """
         return {v: None for v in cls.VALID}
 
 
@@ -807,29 +843,29 @@ def process_tasks(dag, dag_spec, root_path=None):
     Initialize Task objects from TaskSpec, extract product and dependencies
     if needed and set the dag dependencies structure
     """
-    root_path = root_path or '.'
+    root_path = root_path or "."
 
     # options
-    extract_up = dag_spec['meta']['extract_upstream']
-    extract_prod = dag_spec['meta']['extract_product']
+    extract_up = dag_spec["meta"]["extract_upstream"]
+    extract_prod = dag_spec["meta"]["extract_product"]
 
     # raw values extracted from the upstream key
     upstream_raw = {}
 
     # first pass: init tasks and them to dag
-    for task_dict in dag_spec['tasks']:
+    for task_dict in dag_spec["tasks"]:
         # init source to extract product
-        fn = task_dict['class']._init_source
+        fn = task_dict["class"]._init_source
         kwargs = {
-            'kwargs': {},
-            'extract_up': extract_up,
-            'extract_prod': extract_prod,
-            **task_dict
+            "kwargs": {},
+            "extract_up": extract_up,
+            "extract_prod": extract_prod,
+            **task_dict,
         }
         source = call_with_dictionary(fn, kwargs=kwargs)
 
         if extract_prod:
-            task_dict['product'] = source.extract_product()
+            task_dict["product"] = source.extract_product()
 
         # convert to task, up has the content of "upstream" if any
         task, up = task_dict.to_task(dag)
@@ -839,8 +875,9 @@ def process_tasks(dag, dag_spec, root_path=None):
                 upstream_raw[t] = up
         else:
             if extract_prod:
-                logger.debug('Extracted product for task "%s": %s', task.name,
-                             task.product)
+                logger.debug(
+                    'Extracted product for task "%s": %s', task.name, task.product
+                )
             upstream_raw[task] = up
 
     # second optional pass: extract upstream
@@ -856,30 +893,32 @@ def process_tasks(dag, dag_spec, root_path=None):
                 extracted = task.source.extract_upstream()
             except Exception as e:
                 raise DAGSpecInitializationError(
-                    f'Failed to initialize task {task.name!r}') from e
+                    f"Failed to initialize task {task.name!r}"
+                ) from e
 
             upstream[task] = _expand_upstream(extracted, task_names)
         else:
             upstream[task] = _expand_upstream(upstream_raw[task], task_names)
 
-        logger.debug('Extracted upstream dependencies for task %s: %s',
-                     task.name, upstream[task])
+        logger.debug(
+            "Extracted upstream dependencies for task %s: %s", task.name, upstream[task]
+        )
 
     # Last pass: set upstream dependencies
     for task in tasks:
         if upstream[task]:
             for task_name, group_name in upstream[task].items():
-
                 up = dag.get(task_name)
 
                 if up is None:
                     names = [t.name for t in tasks]
                     raise DAGSpecInitializationError(
-                        f'Task {task.name!r} '
-                        'has an upstream dependency '
-                        f'{task_name!r}, but such task '
-                        'doesn\'t exist. Available tasks: '
-                        f'{pretty_print.iterable(names)}')
+                        f"Task {task.name!r} "
+                        "has an upstream dependency "
+                        f"{task_name!r}, but such task "
+                        "doesn't exist. Available tasks: "
+                        f"{pretty_print.iterable(names)}"
+                    )
 
                 task.set_upstream(up, group_name=group_name)
 
@@ -888,19 +927,19 @@ def normalize_task(task):
     # NOTE: we haven't documented that we support tasks as just strings,
     # should we keep this or deprecate it?
     if isinstance(task, str):
-        return {'source': task}
+        return {"source": task}
     else:
         return task
 
 
 def add_base_path_to_source_if_relative(task, base_path):
-    path = Path(task['source'])
+    path = Path(task["source"])
     relative_source = not path.is_absolute()
 
     # must be a relative source with a valid extension, otherwise, it can
     # be a dotted path
     if relative_source and path.suffix in set(suffix2taskclass):
-        task['source'] = str(Path(base_path, task['source']).resolve())
+        task["source"] = str(Path(base_path, task["source"]).resolve())
 
 
 def _expand_upstream(upstream, task_names):
@@ -917,7 +956,7 @@ def _expand_upstream(upstream, task_names):
     expanded = {}
 
     for up in upstream:
-        if '*' in up:
+        if "*" in up:
             matches = fnmatch.filter(task_names, up)
             expanded.update({match: up for match in matches})
         else:
@@ -939,8 +978,10 @@ def _build_example_spec(source):
         }
     else:
         example_product = "products/data.csv"
-    example_spec = [{
-        "source": source,
-        "product": example_product,
-    }]
+    example_spec = [
+        {
+            "source": source,
+            "product": example_product,
+        }
+    ]
     return example_spec

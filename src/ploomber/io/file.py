@@ -17,8 +17,8 @@ from ploomber.util import safe_remove, requires
 
 
 class FileIO(abc.ABC):
-    """Abstract class for file I/O
-    """
+    """Abstract class for file I/O"""
+
     def __init__(self, path, chunked):
         self.path = Path(path)
         self.chunked = chunked
@@ -45,7 +45,7 @@ class FileIO(abc.ABC):
 
     def write(self, data, headers):
         if self.chunked:
-            path = self.path / '{i}.{ext}'.format(i=self.i, ext=self.extension)
+            path = self.path / "{i}.{ext}".format(i=self.i, ext=self.extension)
             self.write_in_path(str(path), data, headers)
             self.i = self.i + 1
         else:
@@ -75,25 +75,28 @@ class ParquetIO(FileIO):
 
     This function uses the pyarrow package directly to save to parquet
     """
-    @requires(['pyarrow'], 'ParquetIO')
+
+    @requires(["pyarrow"], "ParquetIO")
     def __init__(self, path, chunked):
         if chunked:
-            warnings.warn('ploomber.io.ParquetIO was initilized with '
-                          'chunked=True, '
-                          'since each chunk will create a parquet file '
-                          'and schema will be inferred chunkwise '
-                          'there could be inconsistencies. '
-                          'To avoid this, the schema from the first chunk '
-                          'will be applied to all chunks, if this causes '
-                          'problems, either chunked option off or '
-                          'use the ploomber.io.CSVIO')
+            warnings.warn(
+                "ploomber.io.ParquetIO was initilized with "
+                "chunked=True, "
+                "since each chunk will create a parquet file "
+                "and schema will be inferred chunkwise "
+                "there could be inconsistencies. "
+                "To avoid this, the schema from the first chunk "
+                "will be applied to all chunks, if this causes "
+                "problems, either chunked option off or "
+                "use the ploomber.io.CSVIO"
+            )
 
         super().__init__(path, chunked)
         self.schema = None
 
     def write(self, data, headers):
         if self.chunked:
-            path = self.path / '{i}.{ext}'.format(i=self.i, ext=self.extension)
+            path = self.path / "{i}.{ext}".format(i=self.i, ext=self.extension)
             schema = self.write_in_path(str(path), data, headers, self.schema)
             self.i = self.i + 1
 
@@ -101,14 +104,16 @@ class ParquetIO(FileIO):
                 self.schema = schema
 
                 self._logger.info(
-                    'Got first chunk, to avoid schemas '
-                    'incompatibility, the schema from this chunk '
-                    'will be applied to the other chunks, verify '
-                    'that this is correct: %s. Columns might be '
+                    "Got first chunk, to avoid schemas "
+                    "incompatibility, the schema from this chunk "
+                    "will be applied to the other chunks, verify "
+                    "that this is correct: %s. Columns might be "
                     'incorrectly detected as "null" if all values'
-                    ' from the first chunk are empty, in such '
-                    'case the only safe way to dump is in one '
-                    'chunk (by setting chunksize to None)', schema)
+                    " from the first chunk are empty, in such "
+                    "case the only safe way to dump is in one "
+                    "chunk (by setting chunksize to None)",
+                    schema,
+                )
         else:
             self.write_in_path(str(self.path), data, headers, schema=None)
 
@@ -121,19 +126,19 @@ class ParquetIO(FileIO):
 
     @property
     def extension(self):
-        return 'parquet'
+        return "parquet"
 
 
 class CSVIO(FileIO):
-    """csv file handler
-    """
+    """csv file handler"""
+
     @classmethod
     def write_in_path(cls, path, data, headers):
-        with open(path, 'w', newline='') as csvfile:
+        with open(path, "w", newline="") as csvfile:
             writer = csv.writer(csvfile, dialect=csv.unix_dialect)
             writer.writerow(headers)
             writer.writerows(data)
 
     @property
     def extension(self):
-        return 'csv'
+        return "csv"

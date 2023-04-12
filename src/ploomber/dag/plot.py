@@ -22,23 +22,25 @@ def check_pygraphviz_installed():
 
 
 def check_if_windows_python_3_10():
-    return 'win' in sys.platform and sys.version_info >= (3, 10)
+    return "win" in sys.platform and sys.version_info >= (3, 10)
 
 
 def choose_backend(backend):
     """Determine which backend to use for plotting
-       Temporarily disable pygraphviz for Python 3.10 on Windows
+    Temporarily disable pygraphviz for Python 3.10 on Windows
     """
-    if ((not check_pygraphviz_installed() and backend is None)
-            or (backend == 'd3') or (check_if_windows_python_3_10())):
-        return 'd3'
+    if (
+        (not check_pygraphviz_installed() and backend is None)
+        or (backend == "d3")
+        or (check_if_windows_python_3_10())
+    ):
+        return "d3"
 
-    return 'pygraphviz'
+    return "pygraphviz"
 
 
 def json_dag_parser(graph: dict):
-    """Format dag dict so d3 can understand it
-    """
+    """Format dag dict so d3 can understand it"""
     nodes = {}
 
     for task in graph["nodes"]:
@@ -46,8 +48,7 @@ def json_dag_parser(graph: dict):
 
     # change name label to products for now
     for node in nodes:
-        nodes[node]["products"] = (nodes[node]["label"].replace("\n",
-                                                                "").split(","))
+        nodes[node]["products"] = nodes[node]["label"].replace("\n", "").split(",")
 
     for link in graph["links"]:
         node_links = nodes[link["target"]].get("parentIds", [])
@@ -58,14 +59,14 @@ def json_dag_parser(graph: dict):
 
 
 def with_d3(graph, output, image_only=False):
-    """Generates D3 Dag html output and return output file name
-    """
+    """Generates D3 Dag html output and return output file name"""
     json_data = json_dag_parser(graph=graph)
     if image_only:
         Path(output).write_text(json_data)
     else:
         template = jinja2.Template(
-            importlib_resources.read_text(resources, 'dag_template.html'))
+            importlib_resources.read_text(resources, "dag_template.html")
+        )
 
         rendered = template.render(json_data=json_data)
         Path(output).write_text(rendered)
@@ -73,22 +74,22 @@ def with_d3(graph, output, image_only=False):
 
 def embedded_html(path):
     # set output cell to hold 100% of the embedded content
-    display(HTML('<style>.output.output_scroll { height: 100% }</style>'))
+    display(HTML("<style>.output.output_scroll { height: 100% }</style>"))
 
     # create a copy of the file to embed in a local
     # directory inorder to load it with iFrame
 
-    embedded_assets_dir = 'embedded-assets'
+    embedded_assets_dir = "embedded-assets"
     clear_embedded_assets_dir(embedded_assets_dir)
 
     original_file = Path(path)
     local_file_copy = os.path.join(embedded_assets_dir, original_file.name)
 
-    with open(local_file_copy, 'w+') as html:
+    with open(local_file_copy, "w+") as html:
         copy_of_html = Path(path).read_text()
         html.write(copy_of_html)
 
-    iframe = IFrame(src=local_file_copy, width='100%', height=600)
+    iframe = IFrame(src=local_file_copy, width="100%", height=600)
 
     return iframe
 

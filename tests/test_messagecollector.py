@@ -14,11 +14,11 @@ def test_task_build_exception_works_for_valid_args(monkeypatch):
     url = """
     https://google.com
     """
-    task = DownloadFromURL(url, File('file'), dag=dag, name='download')
+    task = DownloadFromURL(url, File("file"), dag=dag, name="download")
 
-    exceptionText = mc.task_build_exception(task=task,
-                                            message="hello",
-                                            exception=Exception("hello)"))
+    exceptionText = mc.task_build_exception(
+        task=task, message="hello", exception=Exception("hello)")
+    )
 
     expected = """
 ============================== Task build failed ===============================

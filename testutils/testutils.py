@@ -13,12 +13,13 @@ def fixture_backup(source):
     """
     Similar to fixture_tmp_dir but backups the content instead
     """
+
     def decorator(function):
         @wraps(function)
         def wrapper():
             old = os.getcwd()
             backup = tempfile.mkdtemp()
-            root = _path_to_tests() / 'assets' / source
+            root = _path_to_tests() / "assets" / source
             shutil.copytree(str(root), str(Path(backup, source)))
 
             os.chdir(root)
@@ -51,7 +52,7 @@ def fixture_tmp_dir(source, **kwargs):
         def wrapper():
             old = os.getcwd()
             tmp_dir = tempfile.mkdtemp()
-            tmp = Path(tmp_dir, 'content')
+            tmp = Path(tmp_dir, "content")
             # we have to add extra folder content/, otherwise copytree
             # complains
             shutil.copytree(str(source), str(tmp))
@@ -71,12 +72,12 @@ def fixture_tmp_dir(source, **kwargs):
 
 
 def _path_to_tests():
-    return Path(__file__).resolve().parent.parent / 'tests'
+    return Path(__file__).resolve().parent.parent / "tests"
 
 
 def _fix_all_dot_git_permissions(tmp):
-    if os.name == 'nt':
-        for path in iglob(f'{tmp}/**/.git', recursive=True):
+    if os.name == "nt":
+        for path in iglob(f"{tmp}/**/.git", recursive=True):
             _fix_dot_git_permissions(path)
 
 

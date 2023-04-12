@@ -3,8 +3,8 @@ from itertools import chain
 
 
 class SuperDAG:
-    """DAG-like interface to make multiple dags behave like one
-    """
+    """DAG-like interface to make multiple dags behave like one"""
+
     def __init__(self, dags):
         G = nx.DiGraph()
 
@@ -29,7 +29,7 @@ class SuperDAG:
 
     def plot(self, path):
         G_ = nx.nx_agraph.to_agraph(self.G)
-        G_.draw(path, prog='dot', args='-Grankdir=LR')
+        G_.draw(path, prog="dot", args="-Grankdir=LR")
 
     def build(self):
         for dag in self.dags:

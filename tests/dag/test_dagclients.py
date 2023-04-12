@@ -11,14 +11,14 @@ from ploomber.clients import LocalStorageClient
 
 
 def test_error_if_setting_invalid_key():
-
     clients = DAGClients()
 
     with pytest.raises(ValueError) as excinfo:
         clients[object] = Mock()
 
-    assert ('DAG client keys must be Tasks or '
-            'Products, value <class \'object\'> is not') == str(excinfo.value)
+    assert (
+        "DAG client keys must be Tasks or " "Products, value <class 'object'> is not"
+    ) == str(excinfo.value)
 
 
 def test_iter():
@@ -30,10 +30,10 @@ def test_setitem_and_getitem_with_str():
 
     mock = Mock()
 
-    clients['SQLScript'] = mock
+    clients["SQLScript"] = mock
 
     assert clients[SQLScript] is mock
-    assert clients['SQLScript'] is mock
+    assert clients["SQLScript"] is mock
 
 
 def test_error_setitem_invalid_str():
@@ -42,21 +42,26 @@ def test_error_setitem_invalid_str():
     mock = Mock()
 
     with pytest.raises(ValueError) as excinfo:
-        clients['invalid_name'] = mock
+        clients["invalid_name"] = mock
 
-    expected = (f"Could not set DAG-level client {mock!r}. 'invalid_name' "
-                "is not a valid Task or Product class name")
+    expected = (
+        f"Could not set DAG-level client {mock!r}. 'invalid_name' "
+        "is not a valid Task or Product class name"
+    )
     assert str(excinfo.value) == expected
 
 
-@pytest.mark.parametrize('typo, expected', [
-    ['sqlscript', 'SQLScript'],
-    ['SQLSCRIPT', 'SQLScript'],
-    ['sql_script', 'SQLScript'],
-    ['sql-script', 'SQLScript'],
-    ['sql script', 'SQLScript'],
-    ['file', 'File'],
-])
+@pytest.mark.parametrize(
+    "typo, expected",
+    [
+        ["sqlscript", "SQLScript"],
+        ["SQLSCRIPT", "SQLScript"],
+        ["sql_script", "SQLScript"],
+        ["sql-script", "SQLScript"],
+        ["sql script", "SQLScript"],
+        ["file", "File"],
+    ],
+)
 def test_error_setitem_invalid_str_with_typo(typo, expected):
     clients = DAGClients()
 
@@ -68,14 +73,17 @@ def test_error_setitem_invalid_str_with_typo(typo, expected):
     assert f"Did you mean {expected!r}?" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('typo, expected, class_', [
-    ['sqlscript', 'SQLScript', SQLScript],
-    ['SQLSCRIPT', 'SQLScript', SQLScript],
-    ['sql_script', 'SQLScript', SQLScript],
-    ['sql-script', 'SQLScript', SQLScript],
-    ['sql script', 'SQLScript', SQLScript],
-    ['file', 'File', File],
-])
+@pytest.mark.parametrize(
+    "typo, expected, class_",
+    [
+        ["sqlscript", "SQLScript", SQLScript],
+        ["SQLSCRIPT", "SQLScript", SQLScript],
+        ["sql_script", "SQLScript", SQLScript],
+        ["sql-script", "SQLScript", SQLScript],
+        ["sql script", "SQLScript", SQLScript],
+        ["file", "File", File],
+    ],
+)
 def test_error_getitem_invalid_str_with_typo(typo, expected, class_):
     clients = DAGClients()
 
@@ -94,7 +102,7 @@ def test_error_does_not_suggest_if_key_does_not_exist():
     clients = DAGClients()
 
     with pytest.raises(KeyError) as excinfo:
-        clients['sqlscript']
+        clients["sqlscript"]
 
     assert "Did you mean 'SQLScript'?" not in str(excinfo.value)
 
@@ -108,16 +116,18 @@ def test_repr():
 
 
 def test_initializes_dotted_path_spec(tmp_directory, tmp_imports):
-    Path('my_testing_clients.py').write_text("""
+    Path("my_testing_clients.py").write_text(
+        """
 from ploomber.clients import LocalStorageClient
 
 def get_client():
     return LocalStorageClient('backup', path_to_project_root='.')
-""")
+"""
+    )
 
     clients = DAGClients()
     # this happens when using the spec API and lazy load is turned on
-    clients[File] = DottedPath('my_testing_clients.get_client')
+    clients[File] = DottedPath("my_testing_clients.get_client")
 
     client = clients[File]
 

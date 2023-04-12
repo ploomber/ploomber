@@ -4,5 +4,5 @@ from pathlib import Path
 product = None
 
 # %%
-Path(product['data']).touch()
-Path(product['another']).touch()
+Path(product["data"]).touch()
+Path(product["another"]).touch()

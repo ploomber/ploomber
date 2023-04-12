@@ -13,7 +13,7 @@ class DAGRenderError(Exception):
     """
 
     def __init__(self, message):
-        message = message + '\nNeed help? https://ploomber.io/community'
+        message = message + "\nNeed help? https://ploomber.io/community"
         super().__init__(message)
 
 
@@ -29,13 +29,13 @@ class DAGBuildError(Exception):
     """
 
     def __init__(self, message):
-        message = message + '\nNeed help? https://ploomber.io/community'
+        message = message + "\nNeed help? https://ploomber.io/community"
         super().__init__(message)
 
 
 class DAGWithDuplicatedProducts(BaseException):
-    """Raised when more than one task has the same product
-    """
+    """Raised when more than one task has the same product"""
+
     pass
 
 
@@ -44,48 +44,49 @@ class DAGBuildEarlyStop(Exception):
     This is raised on purpose to signal that the DAG should not continue
     executing but is not considered a build error
     """
+
     pass
 
 
 class TaskInitializationError(BaseException):
-    """Raised when a task fails to initialize
-    """
+    """Raised when a task fails to initialize"""
+
     pass
 
 
 class TaskBuildError(BaseException):
-    """Raise when a task fails to build
-    """
+    """Raise when a task fails to build"""
+
     pass
 
 
 class TaskRenderError(Exception):
-    """Raise when a task fails to render
-    """
+    """Raise when a task fails to render"""
+
     pass
 
 
 class RenderError(Exception):
-    """Raise when a template fails to render
-    """
+    """Raise when a template fails to render"""
+
     pass
 
 
 class SourceInitializationError(BaseException):
-    """Raise when a source fails to initialize due to wrong parameters
-    """
+    """Raise when a source fails to initialize due to wrong parameters"""
+
     pass
 
 
 class MissingParametersCellError(SourceInitializationError):
-    """Raise when a script or notebook is missing the parameters cell
-    """
+    """Raise when a script or notebook is missing the parameters cell"""
+
     pass
 
 
 class CallbackSignatureError(Exception):
-    """When a callback function does not have the right signature
-    """
+    """When a callback function does not have the right signature"""
+
     pass
 
 
@@ -94,6 +95,7 @@ class CallbackCheckAborted(Exception):
     Used by callback_check to signal that signature check is unfeasible because
     the user passed a DottedPath whose underlying function hasn't been imported
     """
+
     pass
 
 
@@ -104,6 +106,7 @@ class UpstreamKeyError(Exception):
     to ignore our error messages (if we raise the usual KeyError).
     See: https://jinja.palletsprojects.com/en/2.11.x/templates/#variables
     """
+
     pass
 
 
@@ -111,6 +114,7 @@ class DAGSpecInitializationError(BaseException):
     """
     Raised when failing to initialize a DAGSpec object
     """
+
     pass
 
 
@@ -119,6 +123,7 @@ class DAGSpecInvalidError(Exception):
     Raised when trying to find dagspec automatically but the file doesn't exist
     or there is an invalid configuration
     """
+
     pass
 
 
@@ -147,10 +152,12 @@ class SpecValidationError(Exception):
     def __str__(self):
         n_errors = len(self.errors)
 
-        msg = (f'{n_errors} error{"" if n_errors == 1 else "s"} found '
-               f'when validating {self.model.__name__} with values '
-               f'{self.kwargs}\n\n'
-               f'{display_errors(self.errors)}')
+        msg = (
+            f'{n_errors} error{"" if n_errors == 1 else "s"} found '
+            f"when validating {self.model.__name__} with values "
+            f"{self.kwargs}\n\n"
+            f"{display_errors(self.errors)}"
+        )
 
         return msg
 
@@ -164,9 +171,11 @@ class SQLTaskBuildError(TaskBuildError):
         self.type_ = type_
         self.source_code = source_code
         self.original = original
-        error_message = ('An error occurred when executing '
-                         f'{type_.__name__} task with '
-                         f'source code:\n\n{source_code!r}\n')
+        error_message = (
+            "An error occurred when executing "
+            f"{type_.__name__} task with "
+            f"source code:\n\n{source_code!r}\n"
+        )
         super().__init__(error_message)
 
 
@@ -174,6 +183,7 @@ class RemoteFileNotFound(Exception):
     """
     Raised by File clients when atempting to download a file that doesn't exist
     """
+
     pass
 
 
@@ -182,24 +192,23 @@ class MissingClientError(Exception):
     Raised when failing to get a valid task-level or dag-level client
     for a Task or Product
     """
+
     pass
 
 
 class ValidationError(BaseException):
-    """Raised when failed to validate input data
-    """
+    """Raised when failed to validate input data"""
+
     pass
 
 
 class RawBaseException(BaseException):
-
     def get_message(self):
         return str(self)
 
 
 class MissingKeysValidationError(ValidationError):
-    """Raised when failed to validate input data because keys were missing
-    """
+    """Raised when failed to validate input data because keys were missing"""
 
     def __init__(self, message, missing_keys):
         self.missing_keys = missing_keys
@@ -207,8 +216,7 @@ class MissingKeysValidationError(ValidationError):
 
 
 class NetworkException(BaseException):
-    """Raised when failing to call remote APIs
-    """
+    """Raised when failing to call remote APIs"""
 
     def __init__(self, error_message, code=None):
         self.code = code
@@ -216,17 +224,16 @@ class NetworkException(BaseException):
 
 
 class DebuggingFinished(TaskBuildError):
-    """Raised when quitting a debugging session
-    """
+    """Raised when quitting a debugging session"""
 
     def __init__(self, task_name):
-        error_message = f'Finished debugging session for task {task_name!r}'
+        error_message = f"Finished debugging session for task {task_name!r}"
         super().__init__(error_message)
 
 
 def display_errors(errors):
-    return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
+    return "\n".join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
 
 
 def _display_error_loc(error):
-    return ' -> '.join(str(e) for e in error['loc'])
+    return " -> ".join(str(e) for e in error["loc"])

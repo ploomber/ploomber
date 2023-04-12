@@ -27,7 +27,7 @@ def yield_index(file_size, max_size):
 
 
 def read_from_index(path, i, j):
-    with Path(path).open('rb') as f:
+    with Path(path).open("rb") as f:
         f.seek(i)
         return f.read(j - i)
 
@@ -46,15 +46,18 @@ def n_parts(path, max_size=None):
 
 
 def generate_links(bucket_name, key, upload_id, n_parts):
-    s3 = boto3.client('s3')
+    s3 = boto3.client("s3")
     return [
-        s3.generate_presigned_url(ClientMethod='upload_part',
-                                  Params={
-                                      'Bucket': bucket_name,
-                                      'Key': key,
-                                      'UploadId': upload_id,
-                                      'PartNumber': part_no
-                                  }) for part_no in range(1, n_parts + 1)
+        s3.generate_presigned_url(
+            ClientMethod="upload_part",
+            Params={
+                "Bucket": bucket_name,
+                "Key": key,
+                "UploadId": upload_id,
+                "PartNumber": part_no,
+            },
+        )
+        for part_no in range(1, n_parts + 1)
     ]
 
 
@@ -72,13 +75,7 @@ class UploadJobGenerator:
     https://github.com/boto/boto3/issues/2305
     """
 
-    def __init__(self,
-                 path,
-                 key,
-                 upload_id,
-                 links,
-                 bucket=None,
-                 max_size=None):
+    def __init__(self, path, key, upload_id, links, bucket=None, max_size=None):
         # only reuired if calling complete
         self._bucket = bucket
         self._upload_id = upload_id
@@ -94,26 +91,24 @@ class UploadJobGenerator:
 
     @classmethod
     def from_scratch(cls, path, max_size, bucket, key):
-        s3 = boto3.client('s3')
+        s3 = boto3.client("s3")
         res = s3.create_multipart_upload(Bucket=bucket, Key=key)
-        upload_id = res['UploadId']
+        upload_id = res["UploadId"]
         links = generate_links(bucket, key, upload_id, n_parts(path, max_size))
         return cls(path, max_size, bucket, key, upload_id, links)
 
     def __iter__(self):
         file_size = Path(self._path).stat().st_size
 
-        for num, (link, (i, j)) in enumerate(zip(
-                self._links, yield_index(file_size, self._max_size)),
-                                             start=1):
+        for num, (link, (i, j)) in enumerate(
+            zip(self._links, yield_index(file_size, self._max_size)), start=1
+        ):
             yield UploadJob(self._path, link, i, j, num)
 
     def upload(self, complete=False):
-
         with ThreadPoolExecutor(max_workers=4) as executor:
             future2job = {
-                executor.submit(upload_job): upload_job
-                for upload_job in self
+                executor.submit(upload_job): upload_job for upload_job in self
             }
 
             for future in as_completed(future2job):
@@ -122,8 +117,9 @@ class UploadJobGenerator:
                 if exception:
                     job = future2job[future]
                     raise RuntimeError(
-                        'An error occurred when downloading product from '
-                        f'job: {job!r}') from exception
+                        "An error occurred when downloading product from "
+                        f"job: {job!r}"
+                    ) from exception
 
         parts = [job._res for job in future2job.values()]
 
@@ -133,15 +129,16 @@ class UploadJobGenerator:
         return parts
 
     def complete(self, parts):
-        s3 = boto3.client('s3')
-        return s3.complete_multipart_upload(Bucket=self._bucket,
-                                            Key=self._key,
-                                            MultipartUpload={'Parts': parts},
-                                            UploadId=self._upload_id)
+        s3 = boto3.client("s3")
+        return s3.complete_multipart_upload(
+            Bucket=self._bucket,
+            Key=self._key,
+            MultipartUpload={"Parts": parts},
+            UploadId=self._upload_id,
+        )
 
 
 class UploadJob:
-
     def __init__(self, path, link, i, j, num):
         self._path = path
         self._link = link
@@ -151,30 +148,28 @@ class UploadJob:
         self._res = None
 
     def __call__(self):
-        res = requests.put(self._link,
-                           data=read_from_index(self._path, self._i, self._j))
-        etag = res.headers['ETag']
-        self._res = {'ETag': etag, 'PartNumber': self._num}
+        res = requests.put(
+            self._link, data=read_from_index(self._path, self._i, self._j)
+        )
+        etag = res.headers["ETag"]
+        self._res = {"ETag": etag, "PartNumber": self._num}
 
 
 def download_notebook_if_needed(location):
-    """Download a notebook if passed a URL, otherwise, return the argument
-    """
-    if location.startswith('http://') or location.startswith('https://'):
+    """Download a notebook if passed a URL, otherwise, return the argument"""
+    if location.startswith("http://") or location.startswith("https://"):
         # handle github urls
-        if location.startswith('https://github.com'):
-            template = ("https://raw.githubusercontent.com"
-                        "/{user}/{name}/{branch}/{path}")
+        if location.startswith("https://github.com"):
+            template = (
+                "https://raw.githubusercontent.com" "/{user}/{name}/{branch}/{path}"
+            )
             parts = PurePosixPath(urllib.parse.urlparse(location).path).parts
             user, name, branch = parts[1], parts[2], parts[4]
-            path = '/'.join(parts[5:])
-            location = template.format(user=user,
-                                       name=name,
-                                       branch=branch,
-                                       path=path)
+            path = "/".join(parts[5:])
+            location = template.format(user=user, name=name, branch=branch, path=path)
 
         name = PurePosixPath(location).name
-        click.echo(f'Downloading {name}')
+        click.echo(f"Downloading {name}")
         urllib.request.urlretrieve(location, name)
         return name
     else:

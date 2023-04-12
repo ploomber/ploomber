@@ -14,13 +14,12 @@ from ploomber.placeholders.placeholder import SQLRelationPlaceholder
 
 
 class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
-    """Mixin for products that store metadata in a SQLite database
-    """
+    """Mixin for products that store metadata in a SQLite database"""
+
     @property
     @abc.abstractmethod
     def name(self):
-        """Used as identifier in the database
-        """
+        """Used as identifier in the database"""
         pass
 
     def __create_metadata_relation(self):
@@ -37,7 +36,7 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
     def __get_schema(self):
         # the actual implementation can be a simple identifier or a sql
         # identifier
-        if hasattr(self, 'schema'):
+        if hasattr(self, "schema"):
             # there is a schema (can be None)
             return self.schema
         else:
@@ -47,7 +46,8 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
     def fetch_metadata(self):
         self.__create_metadata_relation()
 
-        query = Template("""
+        query = Template(
+            """
         SELECT metadata FROM _metadata
         WHERE name = '{{name}}'
         {% if schema is not sameas false %}
@@ -57,7 +57,8 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
                 AND schema IS NULL
             {% endif %}
         {% endif %}
-        """).render(name=self.name, schema=self.__get_schema())
+        """
+        ).render(name=self.name, schema=self.__get_schema())
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -73,18 +74,18 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
     def save_metadata(self, metadata):
         self.__create_metadata_relation()
 
-        metadata_bin = json.dumps(metadata).encode('utf-8')
+        metadata_bin = json.dumps(metadata).encode("utf-8")
         cur = self.client.connection.cursor()
         schema = self.__get_schema()
 
         if schema is not False:
             if schema is None:
-                cur.execute('DELETE FROM _metadata WHERE name = ?',
-                            (self.name, ))
+                cur.execute("DELETE FROM _metadata WHERE name = ?", (self.name,))
             else:
                 cur.execute(
-                    'DELETE FROM _metadata '
-                    'WHERE name = ? AND schema = ?', (self.name, schema))
+                    "DELETE FROM _metadata " "WHERE name = ? AND schema = ?",
+                    (self.name, schema),
+                )
 
             # we cannot rely on INSERT INTO since NULL schema values are
             # allowed
@@ -92,8 +93,7 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
                 INSERT INTO _metadata (metadata, name, schema)
                 VALUES(?, ?, ?)
             """
-            cur.execute(query,
-                        (sqlite3.Binary(metadata_bin), self.name, schema))
+            cur.execute(query, (sqlite3.Binary(metadata_bin), self.name, schema))
         else:
             query = """
                 REPLACE INTO _metadata(metadata, name)
@@ -107,7 +107,8 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
     def _delete_metadata(self):
         self.__create_metadata_relation()
 
-        query = Template("""
+        query = Template(
+            """
         DELETE FROM _metadata
         WHERE name = '{{name}}'
         {% if schema is not sameas false %}
@@ -117,7 +118,8 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
                 AND schema IS NULL
             {% endif %}
         {% endif %}
-        """).render(name=self.name, schema=self.__get_schema())
+        """
+        ).render(name=self.name, schema=self.__get_schema())
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -146,6 +148,7 @@ class SQLiteRelation(SQLProductMixin, SQLiteBackedProductMixin, Product):
     >>> str(relation) # returns qualified name
     'schema.some_table'
     """
+
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
         self._client = client
@@ -159,7 +162,9 @@ class SQLiteRelation(SQLProductMixin, SQLiteBackedProductMixin, Product):
         FROM sqlite_master
         WHERE type = '{kind}'
         AND name = '{name}'
-        """.format(kind=self.kind, name=self.name)
+        """.format(
+            kind=self.kind, name=self.name
+        )
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -168,12 +173,11 @@ class SQLiteRelation(SQLProductMixin, SQLiteBackedProductMixin, Product):
         return exists
 
     def delete(self):
-        """Deletes the product
-        """
-        query = ("DROP {kind} IF EXISTS {relation}".format(kind=self.kind,
-                                                           relation=str(self)))
-        self.logger.debug(
-            'Running "{query}" on the databse...'.format(query=query))
+        """Deletes the product"""
+        query = "DROP {kind} IF EXISTS {relation}".format(
+            kind=self.kind, relation=str(self)
+        )
+        self.logger.debug('Running "{query}" on the databse...'.format(query=query))
         self.client.execute(query)
 
     @property
@@ -195,7 +199,7 @@ class SQLiteRelation(SQLProductMixin, SQLiteBackedProductMixin, Product):
         return hash((self.schema, self.name, self.kind))
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+        return f"{type(self).__name__}({self._identifier._raw_repr()})"
 
 
 # FIXME: self._identifier should not be accessed direclty since it might
@@ -270,9 +274,9 @@ class PostgresRelation(SQLProductMixin, ProductWithClientMixin, Product):
     def save_metadata(self, metadata):
         metadata = Base64Serializer.serialize(metadata)
 
-        query = (("COMMENT ON {} {} IS '{}';".format(self.kind,
-                                                     self._identifier,
-                                                     metadata)))
+        query = "COMMENT ON {} {} IS '{}';".format(
+            self.kind, self._identifier, metadata
+        )
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -309,10 +313,9 @@ class PostgresRelation(SQLProductMixin, ProductWithClientMixin, Product):
         return exists
 
     def delete(self, force=False):
-        """Deletes the product
-        """
-        cascade = 'CASCADE' if force else ''
-        query = ("DROP {} IF EXISTS {} {}".format(self.kind, self, cascade))
+        """Deletes the product"""
+        cascade = "CASCADE" if force else ""
+        query = "DROP {} IF EXISTS {} {}".format(self.kind, self, cascade)
         self.logger.debug('Running "%s" on the databse...', query)
 
         cur = self.client.connection.cursor()
@@ -339,4 +342,4 @@ class PostgresRelation(SQLProductMixin, ProductWithClientMixin, Product):
         return hash((self.schema, self.name, self.kind))
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+        return f"{type(self).__name__}({self._identifier._raw_repr()})"

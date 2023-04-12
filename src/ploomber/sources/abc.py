@@ -140,12 +140,14 @@ class Source(abc.ABC):
     # optional
 
     def extract_product(self):
-        raise NotImplementedError('extract_product is not implemented in '
-                                  '{}'.format(type(self).__name__))
+        raise NotImplementedError(
+            "extract_product is not implemented in " "{}".format(type(self).__name__)
+        )
 
     def extract_upstream(self):
-        raise NotImplementedError('extract_upstream is not implemented in '
-                                  '{}'.format(type(self).__name__))
+        raise NotImplementedError(
+            "extract_upstream is not implemented in " "{}".format(type(self).__name__)
+        )
 
     @property
     def hot_reload(self):

@@ -1320,7 +1320,6 @@ def test_close_clients_only_calls_close_once_per_client():
 
 
 def test_deepcopying_dag_does_not_copy_clients():
-
     dag = DAG()
 
     client = Mock()

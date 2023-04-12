@@ -23,6 +23,7 @@ class LocalStorageClient(AbstractStorageClient):
         up automatically and assigns it to the parent folder of the root YAML
         spec ot setup.py (if your project is a package).
     """
+
     def __init__(self, path_to_backup_dir, path_to_project_root=None):
         self._path_to_backup_dir = Path(path_to_backup_dir)
         self._path_to_backup_dir.mkdir(exist_ok=True, parents=True)
@@ -34,9 +35,10 @@ class LocalStorageClient(AbstractStorageClient):
                 project_root = find_root_recursively()
             except Exception as e:
                 raise DAGSpecInvalidError(
-                    f'Cannot initialize {self!r} because there '
-                    'is not project root. Set one or explicitly pass '
-                    'a value in the path_to_project_root argument') from e
+                    f"Cannot initialize {self!r} because there "
+                    "is not project root. Set one or explicitly pass "
+                    "a value in the path_to_project_root argument"
+                ) from e
 
         self._path_to_project_root = Path(project_root).resolve()
 
@@ -60,9 +62,11 @@ class LocalStorageClient(AbstractStorageClient):
         elif remote.is_dir():
             shutil.copytree(remote, destination)
         else:
-            raise RemoteFileNotFound('Could not download '
-                                     f'{str(local)!r} using client {self}: '
-                                     'No such file or directory')
+            raise RemoteFileNotFound(
+                "Could not download "
+                f"{str(local)!r} using client {self}: "
+                "No such file or directory"
+            )
 
     def upload(self, local):
         remote_path = self._remote_path(local)
@@ -86,7 +90,7 @@ class LocalStorageClient(AbstractStorageClient):
         raise NotImplementedError
 
     def __repr__(self):
-        return f'{type(self).__name__}({str(self._path_to_backup_dir)!r})'
+        return f"{type(self).__name__}({str(self._path_to_backup_dir)!r})"
 
     @property
     def parent(self):

@@ -1,7 +1,13 @@
 import string
-from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
-                                                    Assignment, Name, Operator,
-                                                    String, Null)
+from ploomber.static_analysis.parser.tokens import (
+    Integer,
+    BinaryOperator,
+    Assignment,
+    Name,
+    Operator,
+    String,
+    Null,
+)
 from ploomber.static_analysis.parser.abstract import Lexer
 
 
@@ -13,6 +19,7 @@ class RLexer(Lexer):
     -----
     R data structures: http://adv-r.had.co.nz/Data-structures.html
     """
+
     def __init__(self, text):
         self.text = text
         self.pos = 0
@@ -23,10 +30,10 @@ class RLexer(Lexer):
         return self.text[self.pos + 1]
 
     def comes_next(self, s):
-        return self.text[self.pos:self.pos + len(s)] == s
+        return self.text[self.pos : self.pos + len(s)] == s
 
     def advance(self, n=1):
-        advanced = self.text[self.pos:self.pos + n]
+        advanced = self.text[self.pos : self.pos + n]
 
         self.pos += n
 
@@ -42,10 +49,11 @@ class RLexer(Lexer):
             self.advance()
 
     def read_name(self):
-        result = ''
+        result = ""
 
-        while (self.current_char is not None
-               and self.current_char in string.ascii_letters):
+        while (
+            self.current_char is not None and self.current_char in string.ascii_letters
+        ):
             result += self.current_char
             self.advance()
 
@@ -54,10 +62,9 @@ class RLexer(Lexer):
     def read_string(self):
         self.advance()
 
-        result = ''
+        result = ""
 
-        while (self.current_char is not None
-               and self.current_char not in ['"', "'"]):
+        while self.current_char is not None and self.current_char not in ['"', "'"]:
             result += self.current_char
             self.advance()
 
@@ -66,7 +73,7 @@ class RLexer(Lexer):
         return result
 
     def read_integer(self):
-        result = ''
+        result = ""
 
         while self.current_char is not None and self.current_char.isdigit():
             result += self.current_char
@@ -76,40 +83,39 @@ class RLexer(Lexer):
 
     def __iter__(self):
         while self.current_char is not None:
-
             if self.current_char.isspace():
                 self.skip_whitespace()
                 continue
 
-            elif self.comes_next('list'):
-                op = Operator('list')
-                self.advance(n=len('list'))
+            elif self.comes_next("list"):
+                op = Operator("list")
+                self.advance(n=len("list"))
                 yield op
 
-            elif self.comes_next('NULL'):
+            elif self.comes_next("NULL"):
                 null = Null()
-                self.advance(n=len('NULL'))
+                self.advance(n=len("NULL"))
                 yield null
 
             # Vector definiton start
-            elif self.current_char == 'c' and self.next_char == '(':
+            elif self.current_char == "c" and self.next_char == "(":
                 self.advance(n=2)
-                yield Operator('c(')
+                yield Operator("c(")
 
             elif self.current_char in string.ascii_letters:
                 yield Name(self.read_name())
 
             # Assignment (<-)
-            elif self.current_char == '<' and self.next_char == '-':
+            elif self.current_char == "<" and self.next_char == "-":
                 self.advance(n=2)
-                yield Assignment('<-')
+                yield Assignment("<-")
 
-            elif self.current_char == '=':
+            elif self.current_char == "=":
                 self.advance()
-                yield Assignment('=')
+                yield Assignment("=")
 
             # Other operators
-            elif self.current_char in ['(', ')', ',']:
+            elif self.current_char in ["(", ")", ","]:
                 op = Operator(self.current_char)
                 self.advance()
                 yield op
@@ -120,12 +126,14 @@ class RLexer(Lexer):
             elif self.current_char.isdigit():
                 yield Integer(self.read_integer())
 
-            elif self.current_char in ['+', '-', '*']:
+            elif self.current_char in ["+", "-", "*"]:
                 op = BinaryOperator(self.current_char)
                 self.advance()
                 yield op
             else:
-                raise SyntaxError('Could not parse parameters in R notebook. '
-                                  'Verify they have the right format: '
-                                  '"upstream = list(\'a\', \'b\')" or '
-                                  '"product = list(name=\'path/to/file\')"')
+                raise SyntaxError(
+                    "Could not parse parameters in R notebook. "
+                    "Verify they have the right format: "
+                    "\"upstream = list('a', 'b')\" or "
+                    "\"product = list(name='path/to/file')\""
+                )

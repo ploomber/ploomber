@@ -3,7 +3,7 @@ import pytest
 
 
 def test_one_arg_not_start_with_env():
-    @with_env({'a': 1})
+    @with_env({"a": 1})
     def works(env, b):
         return b
 
@@ -11,7 +11,7 @@ def test_one_arg_not_start_with_env():
 
 
 def test_many_args_not_start_with_env():
-    @with_env({'a': 1})
+    @with_env({"a": 1})
     def works(env, b, c):
         return b, c
 
@@ -21,7 +21,7 @@ def test_many_args_not_start_with_env():
 def test_one_arg_starting_with_env():
     with pytest.raises(RuntimeError) as excinfo:
 
-        @with_env({'a': 1})
+        @with_env({"a": 1})
         def does_not_work(env, env_something):
             return env_something
 
@@ -31,7 +31,7 @@ def test_one_arg_starting_with_env():
 def test_many_args_starting_with_env():
     with pytest.raises(RuntimeError) as excinfo:
 
-        @with_env({'a': 1})
+        @with_env({"a": 1})
         def does_not_work(env, env_a, env_b):
             return env_a, env_b
 
@@ -41,7 +41,7 @@ def test_many_args_starting_with_env():
 def test_cap_arg_starting_with_env():
     with pytest.raises(RuntimeError) as excinfo:
 
-        @with_env({'a': 1})
+        @with_env({"a": 1})
         def does_not_work(env, ENV_something):
             return ENV_something
 

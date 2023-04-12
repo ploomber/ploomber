@@ -11,9 +11,11 @@ from ploomber.exceptions import NetworkException, RawBaseException
 
 
 def _make_error(reason):
-    return NetworkException(f'{reason}\n'
-                            'If you need help, reach out to us: '
-                            'https://ploomber.io/community')
+    return NetworkException(
+        f"{reason}\n"
+        "If you need help, reach out to us: "
+        "https://ploomber.io/community"
+    )
 
 
 def _request(method, url, params=None, json_error=False, **kwargs):
@@ -22,12 +24,15 @@ def _request(method, url, params=None, json_error=False, **kwargs):
     except requests.exceptions.Timeout:
         # we do this instead of a chained exception since we want to hide
         # the original error and replace it with this one
-        error = _make_error('The server took too long to respond '
-                            f'when calling: {url}. Try again. ')
+        error = _make_error(
+            "The server took too long to respond " f"when calling: {url}. Try again. "
+        )
     except requests.exceptions.ConnectionError:
-        error = _make_error('A connection '
-                            f'error occurred when calling: {url}. '
-                            'Verify your internet connection. ')
+        error = _make_error(
+            "A connection "
+            f"error occurred when calling: {url}. "
+            "Verify your internet connection. "
+        )
     else:
         error = None
 
@@ -43,17 +48,17 @@ def _request(method, url, params=None, json_error=False, **kwargs):
         if json_ is None:
             raise NetworkException(
                 f"An error happened (code: {response.status_code})",
-                code=response.status_code)
+                code=response.status_code,
+            )
 
         message = json_.get("Message")
 
         if message and not json_error:
             raise NetworkException(
-                f'{message} (status: {response.status_code})',
-                code=response.status_code)
+                f"{message} (status: {response.status_code})", code=response.status_code
+            )
         elif not message and not json_error:
-            raise NetworkException(f'Error: {json_}',
-                                   code=response.status_code)
+            raise NetworkException(f"Error: {json_}", code=response.status_code)
         else:
             raise RawBaseException(json.dumps(json_))
 

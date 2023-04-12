@@ -4,35 +4,43 @@ from ploomber_cli.cli import _suggest_command, cmd_router
 import sys
 
 
-@pytest.mark.parametrize('name, expected', [
-    [None, None],
-    ['d', 'do'],
-    ['ake', 'make'],
-    ['MAKE', 'make'],
-    ['do', None],
-    ['make', None],
-    ['run', 'build'],
-    ['execute', 'build'],
-])
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        [None, None],
+        ["d", "do"],
+        ["ake", "make"],
+        ["MAKE", "make"],
+        ["do", None],
+        ["make", None],
+        ["run", "build"],
+        ["execute", "build"],
+    ],
+)
 def test_suggest_command(name, expected):
-    assert _suggest_command(name, ['do', 'make']) == expected
+    assert _suggest_command(name, ["do", "make"]) == expected
 
 
-@pytest.mark.parametrize('name, expected', [
-    ['gt-key', 'get-key'],
-    ['gt', None],
-])
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ["gt-key", "get-key"],
+        ["gt", None],
+    ],
+)
 def test_nested_suggest_command(name, expected):
-    assert _suggest_command(
-        name, ['set-key', 'get-key', 'get-pipelines']) == expected
+    assert _suggest_command(name, ["set-key", "get-key", "get-pipelines"]) == expected
 
 
-@pytest.mark.parametrize('cmd, nested_cmd, suggestion', [
-    ['cloud', 'gt-key', 'get-key'],
-    ['cloud', 'gt', None],
-])
+@pytest.mark.parametrize(
+    "cmd, nested_cmd, suggestion",
+    [
+        ["cloud", "gt-key", "get-key"],
+        ["cloud", "gt", None],
+    ],
+)
 def test_nested_suggestions(monkeypatch, capsys, cmd, nested_cmd, suggestion):
-    monkeypatch.setattr(sys, 'argv', ['ploomber', cmd, nested_cmd])
+    monkeypatch.setattr(sys, "argv", ["ploomber", cmd, nested_cmd])
 
     with pytest.raises(SystemExit) as excinfo:
         cmd_router()

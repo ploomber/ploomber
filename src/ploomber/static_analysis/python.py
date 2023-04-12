@@ -16,18 +16,18 @@ class PythonNotebookExtractor(NotebookExtractor):
         """
         Extract "product" from a Python code string
         """
-        product_found, product = extract_variable(self.parameters_cell,
-                                                  'product')
+        product_found, product = extract_variable(self.parameters_cell, "product")
 
         if not product_found or product is None:
-            raise ValueError("Couldn't extract 'product' "
-                             f"from code: {self.parameters_cell!r}")
+            raise ValueError(
+                "Couldn't extract 'product' " f"from code: {self.parameters_cell!r}"
+            )
         else:
             return product
 
 
 def get_key_value(node):
-    return node.value.id if hasattr(node.value, 'id') else None
+    return node.value.id if hasattr(node.value, "id") else None
 
 
 def get_constant(node):
@@ -36,14 +36,14 @@ def get_constant(node):
         return node.slice
     # for earlier versions (if the attribute doesn't exist we are dealing with
     # the upstream[some_name]) case
-    elif hasattr(node.slice, 'value'):
+    elif hasattr(node.slice, "value"):
         return node.slice.value
 
 
 def get_value(node):
     constant = get_constant(node)
     # .s for python 3.7 and 3.7, .value for 3.8 and newer
-    return constant.s if hasattr(constant, 's') else constant.value
+    return constant.s if hasattr(constant, "s") else constant.value
 
 
 class PythonCallableExtractor(Extractor):
@@ -55,13 +55,15 @@ class PythonCallableExtractor(Extractor):
         return {
             get_value(node)
             for node in ast.walk(module)
-            if isinstance(node, ast.Subscript) and get_key_value(node) ==
-            'upstream' and isinstance(get_constant(node), ast.Str)
+            if isinstance(node, ast.Subscript)
+            and get_key_value(node) == "upstream"
+            and isinstance(get_constant(node), ast.Str)
         } or None
 
     def extract_product(self):
-        raise NotImplementedError('Extract product is not implemented '
-                                  'for python callables')
+        raise NotImplementedError(
+            "Extract product is not implemented " "for python callables"
+        )
 
 
 def extract_variable(code_str, name):
@@ -73,7 +75,7 @@ def extract_variable(code_str, name):
     value = None
 
     for stmt in _iterate_assignments(code_str):
-        if hasattr(stmt, 'get_defined_names'):
+        if hasattr(stmt, "get_defined_names"):
             defined = stmt.get_defined_names()
 
             if len(defined) == 1 and defined[0].value == name:
@@ -89,10 +91,10 @@ def _iterate_assignments(code_str):
     for ch in p.children:
         # FIXME: this works but we should find out what's the difference
         # between these two and if they are the only two valid cases
-        if ch.type in ['simple_stmt', 'expr_stmt']:
-            if ch.type == 'simple_stmt':
+        if ch.type in ["simple_stmt", "expr_stmt"]:
+            if ch.type == "simple_stmt":
                 stmt = ch.children[0]
-            elif ch.type == 'expr_stmt':
+            elif ch.type == "expr_stmt":
                 stmt = ch
 
             yield stmt
@@ -103,20 +105,24 @@ def extract_upstream_assign(cell_code):
     Infer dependencies from a single Python cell. Looks for a cell that
     defines an upstream variable which must be either a dictionary or None
     """
-    upstream_found, upstream = extract_variable(cell_code, 'upstream')
+    upstream_found, upstream = extract_variable(cell_code, "upstream")
 
     if not upstream_found:
-        raise ValueError("Could not parse a valid 'upstream' variable "
-                         "in the 'parameters' cell with code:\n'%s'\n"
-                         "If the notebook does not have dependencies add "
-                         "upstream = None" % cell_code)
+        raise ValueError(
+            "Could not parse a valid 'upstream' variable "
+            "in the 'parameters' cell with code:\n'%s'\n"
+            "If the notebook does not have dependencies add "
+            "upstream = None" % cell_code
+        )
     else:
         valid_types = (Mapping, list, tuple, set)
         if not (isinstance(upstream, valid_types) or upstream is None):
-            raise ValueError("Found an upstream variable but it is not a "
-                             "valid type (dictionary, list, tuple set or None "
-                             ", got '%s' type from code:\n"
-                             "'%s'" % (type(upstream), cell_code))
+            raise ValueError(
+                "Found an upstream variable but it is not a "
+                "valid type (dictionary, list, tuple set or None "
+                ", got '%s' type from code:\n"
+                "'%s'" % (type(upstream), cell_code)
+            )
         elif isinstance(upstream, valid_types):
             return set(upstream)
         else:

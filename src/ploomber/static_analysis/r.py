@@ -10,9 +10,9 @@ def naive_parsing(code, var_name):
     we want, this will be replaced for a more efficient implementation
     once we improve the parser
     """
-    for code in code.split('\n'):
+    for code in code.split("\n"):
         # ignore empty lines and comments
-        if code != '' and not code.startswith('#'):
+        if code != "" and not code.startswith("#"):
             parser = Parser(list(RLexer(code)))
             exp = parser.parse()
 
@@ -21,10 +21,9 @@ def naive_parsing(code, var_name):
 
 
 class RNotebookExtractor(NotebookExtractor):
-
     def extract_upstream(self):
-        parsed = naive_parsing(self.parameters_cell, 'upstream')
+        parsed = naive_parsing(self.parameters_cell, "upstream")
         return parsed if not parsed else set(parsed)
 
     def extract_product(self):
-        return naive_parsing(self.parameters_cell, 'product')
+        return naive_parsing(self.parameters_cell, "product")

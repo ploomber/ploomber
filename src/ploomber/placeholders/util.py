@@ -3,11 +3,11 @@ from jinja2.nodes import Assign
 
 from ploomber.placeholders import extensions
 
-extensions = (extensions.RaiseExtension, )
+extensions = (extensions.RaiseExtension,)
 env_render = Environment(extensions=extensions)
-env_runtime = Environment(extensions=extensions,
-                          variable_start_string='[[',
-                          variable_end_string=']]')
+env_runtime = Environment(
+    extensions=extensions, variable_start_string="[[", variable_end_string="]]"
+)
 
 
 def get_tags_in_str(s, require_runtime_placeholders=True):

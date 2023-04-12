@@ -14,14 +14,14 @@ import os
 import sys
 from ploomber import __version__
 
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("."))
 import hooks  # noqa
 
 # -- Project information -----------------------------------------------------
 
-project = 'ploomber'
-copyright = '2022, ploomber'
-author = 'ploomber'
+project = "ploomber"
+copyright = "2022, ploomber"
+author = "ploomber"
 version = __version__
 release = version
 
@@ -31,21 +31,21 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.autosectionlabel',
-    'nbsphinx',
-    'sphinx_toolbox.collapse',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.autosectionlabel",
+    "nbsphinx",
+    "sphinx_toolbox.collapse",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".ipynb_checkpoints/"]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -53,28 +53,28 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
 # a list of builtin themes.
 #
 
-html_theme = 'basic'
+html_theme = "basic"
 
 # https://docs.readthedocs.io/en/stable/guides/adding-custom-css.html
-html_style = 'css/custom-theme.css'
+html_style = "css/custom-theme.css"
 
 html_js_files = [
-    'js/custom.js',
-    'js/mermaid.min.js',
-    'js/terminal.js',
+    "js/custom.js",
+    "js/mermaid.min.js",
+    "js/terminal.js",
 ]
 
-html_css_files = ['css/mermaid-style.css', 'css/mermaid-layout.css']
+html_css_files = ["css/mermaid-style.css", "css/mermaid-layout.css"]
 
-pygments_style = 'monokai'
+pygments_style = "monokai"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # landing page
-html_additional_pages = {'videos': 'videos.html'}
+html_additional_pages = {"videos": "videos.html"}
 
 # nbsphinx
 
@@ -93,7 +93,7 @@ nbsphinx_prolog = """
 
 # disable require.js loading - giving an exception. we don't need this anyway
 # since this is only required to display widgets
-nbsphinx_requirejs_path = ''
+nbsphinx_requirejs_path = ""
 
 autosummary_generate = True
 
@@ -101,5 +101,5 @@ html_show_copyright = False
 
 
 def setup(app):
-    app.connect('config-inited', hooks.config_init)
+    app.connect("config-inited", hooks.config_init)
     app.connect("builder-inited", hooks.jinja_filters)
