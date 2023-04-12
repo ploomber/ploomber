@@ -37,14 +37,7 @@ jobs:
         pip install pkgmt
         pkgmt lint
 
-        # To support python 3.10, installing only for other versions.
-        VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
-        if [ $VERSION != "10" ]; then
-          echo "installing pygraphviz"
-          conda install -y pygraphviz -c conda-forge
-        else
-          echo "skipping pygraphviz installation"
-        fi
+        conda install -y pygraphviz -c conda-forge
 
         # Test vanilla installation, make sure core modules are importable
         # note: I needed to add "--ignore-installed certifi" because the
