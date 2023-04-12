@@ -88,6 +88,7 @@ from ploomber.exceptions import (
     DAGRenderError,
     DAGBuildEarlyStop,
     DAGCycle,
+    PlotException,
 )
 from ploomber.messagecollector import RenderExceptionsCollector, RenderWarningsCollector
 from ploomber.util.util import callback_check, _make_requires_error_message, svg2html
@@ -861,7 +862,7 @@ class DAG(AbstractDAG):
         else:
             status = False
 
-        backend = plot.choose_backend(backend)
+        backend = plot.choose_backend(backend, path)
 
         if "plot" in sections:
             ext = ".png" if backend == "pygraphviz" else ".html"
@@ -925,7 +926,7 @@ class DAG(AbstractDAG):
             you can force to use a backend by passing 'pygraphviz' or 'd3'.
         """
         if backend not in {None, "d3", "pygraphviz"}:
-            raise ValueError(
+            raise PlotException(
                 "Expected backend to be: None, 'd3' "
                 f"or 'pygraphviz', but got: {backend!r}"
             )
@@ -933,9 +934,9 @@ class DAG(AbstractDAG):
         # FIXME: add tests for this
         self.render()
 
-        if plot.choose_backend(backend) == "d3":
+        if plot.choose_backend(backend, output) == "d3":
             if include_products:
-                raise ValueError(
+                raise PlotException(
                     "'include_products' is not supported "
                     "when using the d3 backend. Switch the "
                     "flag or change to the pypgrahviz backend"
@@ -944,8 +945,14 @@ class DAG(AbstractDAG):
             if output != "embed":
                 suffix = Path(output).suffix
 
+                if suffix == ".png":
+                    raise PlotException(
+                        "'d3' plotting backend cannot generate .png plots. "
+                        "Change the extension to .html or install pygraphviz"
+                    )
+
                 if suffix != ".html":
-                    raise ValueError(
+                    raise PlotException(
                         "Error when using d3 backend: "
                         "expected a path with "
                         f"extension .html, but got: {output!r}, "
@@ -965,7 +972,7 @@ class DAG(AbstractDAG):
                     return path
 
         elif not plot.check_pygraphviz_installed() and backend == "pygraphviz":
-            raise ImportError(
+            raise ModuleNotFoundError(
                 _make_requires_error_message(
                     ["pygraphviz<1.8"] if sys.version_info < (3, 8) else ["pygraphviz"],
                     "plot",

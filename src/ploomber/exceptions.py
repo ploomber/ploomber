@@ -223,6 +223,9 @@ class NetworkException(BaseException):
         super().__init__(error_message)
 
 
+class PlotException(RawBaseException):
+    pass
+
 class DebuggingFinished(TaskBuildError):
     """Raised when quitting a debugging session"""
 
