@@ -853,7 +853,7 @@ class ScriptRunner(NotebookMixin, Task):
     local_execution : bool, optional
         Change working directory to be the parent of the script's source.
         Defaults to True. This resembles the default behavior when
-        running script from the parent folder
+        running the script from the parent folder
 
     Examples
     --------
