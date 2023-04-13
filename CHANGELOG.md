@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.22.3dev
+[Feature] More robust support for ploomber engine
 
 ## 0.22.2 (2023-01-30)
 
