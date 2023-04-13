@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.22.3dev
+* [Fix] Clearer error messages when generating pipeline plots
+* [Fix] Fix error when choosing which backend plot to use (when user didn't expicitly requested one)
 
 ## 0.22.2 (2023-01-30)
 

@@ -22,6 +22,7 @@ from ploomber.exceptions import (
     DAGRenderError,
     DAGBuildEarlyStop,
     DAGCycle,
+    PlotException,
 )
 from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
@@ -199,7 +200,7 @@ def test_plot_path(dag, tmp_directory, monkeypatch_plot):
 
 
 def test_plot_validates_backend(dag, tmp_directory):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(PlotException) as excinfo:
         dag.plot(backend="unknown")
 
     expected = (
@@ -209,10 +210,10 @@ def test_plot_validates_backend(dag, tmp_directory):
 
 
 def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(PlotException) as excinfo:
         dag.plot(backend="d3", output="pipeline.png")
 
-    expected = "expected a path with extension .html"
+    expected = "'d3' plotting backend cannot generate .png plots"
     assert expected in str(excinfo.value)
 
 
@@ -243,7 +244,7 @@ def test_plot_with_d3_file(dag, tmp_directory, monkeypatch, backend):
 
 
 def test_plot_error_if_d3_and_include_products(dag):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(PlotException) as excinfo:
         dag.plot(backend="d3", include_products=True)
 
     expected = "'include_products' is not supported when using the d3 backend."
