@@ -42,9 +42,7 @@ NB = [
 
 # Optional dependencies are packages that are used in several modules but are
 # not strictly required. Dependencies that are required for a single use case
-# (e.g. upload to s3) should be included in the "TESTING" list. Both optional
-# and one-time modules should use the @requires decorator to show an error if
-# the dependency is missing. numpydoc is an special case because it's an
+# (e.g. upload to s3) should be included in the "TESTING" list. numpydoc is an special case because it's an
 # optional dependency but not having it installed does not trigger an error
 # it will just not print the parsed docstring.
 OPTIONAL = [
@@ -162,7 +160,7 @@ setup(
         # added fix to manage the IPython terminal singleton
         "ploomber-engine>=0.0.8",
         # added @deprecated.method
-        "ploomber-core>=0.0.5",
+        "ploomber-core>=0.0.11",
         "pyyaml",
         "networkx>=2.5",
         "jinja2",
