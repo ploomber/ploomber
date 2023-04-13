@@ -2,7 +2,7 @@ import logging
 
 from ploomber.tasks.abc import Task
 from ploomber.sources import FileSource
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 
 
 class UploadToS3(Task):

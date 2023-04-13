@@ -15,7 +15,7 @@ from ploomber.products import (
     SQLRelation,
 )
 from ploomber import io
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 from ploomber.placeholders.placeholder import _add_globals
 from ploomber.exceptions import SQLTaskBuildError
 

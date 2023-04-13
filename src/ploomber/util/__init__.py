@@ -6,7 +6,6 @@ from ploomber.util.util import (
     safe_remove,
     image_bytes2html,
     isiterable,
-    requires,
     chdir_code,
 )
 from ploomber.util.param_grid import Interval, ParamGrid

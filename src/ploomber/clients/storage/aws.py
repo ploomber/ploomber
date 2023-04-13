@@ -12,7 +12,7 @@ except ImportError:
     botocore = None
 
 from ploomber.util.default import find_root_recursively
-from ploomber.util.util import requires
+from ploomber_core.dependencies import requires
 from ploomber.clients.storage.abc import AbstractStorageClient
 from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
