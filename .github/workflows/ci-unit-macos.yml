@@ -64,6 +64,9 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
+        # upgrade pip to use the most recent resolver
+        pip install pip --upgrade
+
         # make the build fail quickly on linting errors
         pip install pkgmt
         pkgmt lint
