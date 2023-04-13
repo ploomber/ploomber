@@ -1,7 +1,9 @@
 # CHANGELOG
 
 ## 0.22.3dev
-[Feature] More robust support for ploomber engine
+* [Feature] More robust support for ploomber engine
+* [Fix] Clearer error messages when generating pipeline plots
+* [Fix] Fix error when choosing which backend plot to use (when user didn't expicitly requested one)
 
 ## 0.22.2 (2023-01-30)
 
