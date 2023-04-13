@@ -12,6 +12,7 @@ except ImportError:
 from ploomber.clients.client import Client
 from ploomber_core.dependencies import requires
 
+
 def code_split(code, token=";"):
     only_whitespace = re.compile(r"^\s*$")
 
