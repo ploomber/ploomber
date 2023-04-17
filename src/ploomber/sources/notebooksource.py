@@ -42,7 +42,7 @@ import parso
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 from ploomber.sources.abc import Source
 from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language

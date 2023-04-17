@@ -15,7 +15,7 @@ from ploomber.exceptions import DAGBuildError
 from ploomber.messagecollector import BuildExceptionsCollector, Message
 from ploomber.executors import _format
 from ploomber.io import pretty_print
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 
 import click
 

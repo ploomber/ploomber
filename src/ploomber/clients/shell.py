@@ -12,7 +12,7 @@ import subprocess
 
 from ploomber.clients.client import Client
 from ploomber.placeholders.placeholder import Placeholder
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 
 
 class ShellClient(Client):
