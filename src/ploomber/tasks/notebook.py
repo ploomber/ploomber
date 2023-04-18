@@ -850,10 +850,6 @@ class ScriptRunner(NotebookMixin, Task):
         of any task, furthermore, it verifies that the parameters cell and
         the params passed to the notebook match, thus, making the script
         behave like a function with a signature.
-    local_execution : bool, optional
-        Change working directory to be the parent of the script's source.
-        Defaults to True. This resembles the default behavior when
-        running the script from the parent folder
 
     Examples
     --------
@@ -892,10 +888,8 @@ class ScriptRunner(NotebookMixin, Task):
         params=None,
         ext_in=None,
         static_analysis="regular",
-        local_execution=True,
     ):
         self.ext_in = ext_in
-        self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = ScriptRunner._init_source(
@@ -940,13 +934,9 @@ class ScriptRunner(NotebookMixin, Task):
             ]
         )
 
-        if self.local_execution:
-            cwd = str(self.source.loc.parent.resolve())
-            orig_env = os.environ.copy()
-            orig_env["PYTHONPATH"] = cwd
-        else:
-            cwd = None
-            orig_env = None
+        cwd = str(self.source.loc.parent.resolve())
+        orig_env = os.environ.copy()
+        orig_env["PYTHONPATH"] = cwd
 
         tmp = Path(tmp)
         tmp.write_text(code)
