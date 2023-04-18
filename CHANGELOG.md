@@ -850,7 +850,7 @@
 - New Quickstart and User Guide section in documentation
 - DAG rendering and build now continue until no more tasks can
   render/build (instead of failing at the first exception)
-- New `[@with_env](https://github.com/with_env)` and `[@load_env](https://github.com/load_env)` decorators for managing environments
+- New `with_env` and `load_env` decorators for managing environments
 - Env expansion ({{user}} expands to the current, also {{git}} and
   {{version}} available)
 - `Task.name` is now optional when Task is initialized with a source
