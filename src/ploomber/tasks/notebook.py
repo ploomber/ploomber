@@ -816,11 +816,10 @@ class NotebookRunner(NotebookMixin, Task):
             # no need to pass parameters, they are already there
             if "engine_name" in self.nb_executor_params:
                 if self.nb_executor_params["engine_name"] == "ploomber_engine":
-                    # Currently only limited support due to mismatch of arguments
-                    # between papermill.execute_notebook() and
-                    # ploomber_engine.execute_notebook(). Therefore not passing
-                    # self.nb_executor_params
-                    pe.execute_notebook(str(tmp), str(path_to_out_ipynb))
+                    self.nb_executor_params.pop("engine_name")
+                    pe.execute_notebook(
+                        str(tmp), str(path_to_out_ipynb), **self.nb_executor_params
+                    )
                 else:
                     pm.execute_notebook(
                         str(tmp), str(path_to_out_ipynb), **self.nb_executor_params
