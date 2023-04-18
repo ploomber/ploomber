@@ -1,7 +1,11 @@
 # CHANGELOG
 
-## 0.22.3dev
+## 0.22.4dev
+
 * [Feature] More robust support for ploomber engine
+
+## 0.22.3 (2023-04-13)
+
 * [Fix] Clearer error messages when generating pipeline plots
 * [Fix] Fix error when choosing which backend plot to use (when user didn't expicitly requested one)
 
@@ -63,7 +67,7 @@
 ## 0.21.1 (2022-10-02)
 
 * Adds `ploomber cloud task` command
-* `ploomber cloud` can take the `@latest` argument in the `abort`, `log` and `status` commands
+* `ploomber cloud` can take the `[@latest](https://github.com/latest)` argument in the `abort`, `log` and `status` commands
 * Adds conda support to `ploomber cloud build` via `environment.lock.yml`
 * Adds feature to select which parameters to install if the same source appears more than once ([#985](https://github.com/ploomber/ploomber/issues/985))
 * Fixes an error when pairing notebooks ([#979](https://github.com/ploomber/ploomber/issues/979))
@@ -320,7 +324,7 @@
 
 ## 0.14.1 (2022-01-02)
 
-* `ploomber scaffold` creates missing modules when adding functions ([#332](https://github.com/ploomber/ploomber/issues/332), @fferegrino)
+* `ploomber scaffold` creates missing modules when adding functions ([#332](https://github.com/ploomber/ploomber/issues/332), [@fferegrino](https://github.com/fferegrino))
 * `NotebookRunner` creates product's parent directories before running ([#460](https://github.com/ploomber/ploomber/issues/460))
 
 ## 0.14 (2021-12-25)
@@ -848,7 +852,7 @@
 - New Quickstart and User Guide section in documentation
 - DAG rendering and build now continue until no more tasks can
   render/build (instead of failing at the first exception)
-- New `@with_env` and `@load_env` decorators for managing environments
+- New `with_env` and `load_env` decorators for managing environments
 - Env expansion ({{user}} expands to the current, also {{git}} and
   {{version}} available)
 - `Task.name` is now optional when Task is initialized with a source

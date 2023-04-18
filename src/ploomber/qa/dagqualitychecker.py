@@ -1,7 +1,7 @@
 # NOTE: should this be part of each Source?
 import warnings
 
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 
 
 class DAGQualityChecker:

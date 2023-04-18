@@ -10,7 +10,7 @@ except ImportError:
     sqlalchemy = None
 
 from ploomber.clients.client import Client
-from ploomber.util import requires
+from ploomber_core.dependencies import requires
 
 
 def code_split(code, token=";"):

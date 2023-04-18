@@ -13,7 +13,8 @@ except ImportError:
     pa = None
     pq = None
 
-from ploomber.util import safe_remove, requires
+from ploomber.util import safe_remove
+from ploomber_core.dependencies import requires
 
 
 class FileIO(abc.ABC):
