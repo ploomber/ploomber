@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path, PurePosixPath
 from unittest.mock import ANY, Mock
+import os
 
 import jupytext
 import nbconvert
@@ -1411,3 +1412,42 @@ Path(product).touch()
     dag = DAG()
     ScriptRunner(Path("exec.py"), File("tmp.txt"), dag)
     dag.build()
+
+
+def test_PythonPath_ScriptRunner(capsys):
+    lib_pth = Path("lib_test.py")
+    lib_pth.write_text(
+        """
+import os
+def os_path():
+    return os.environ["PYTHONPATH"]
+        """
+    )
+
+    exec_pth = Path("exec.py")
+    exec_pth.write_text(
+        """
+# + tags=["parameters"]
+product = None
+
+# +
+import lib_test
+a = lib_test.os_path()
+from pathlib import Path
+Path(product).write_text(a)
+        """
+    )
+    if "PYTHONPATH" not in os.environ:
+        os.environ["PYTHONPATH"]="Testing"
+    else:
+        os.environ["PYTHONPATH"]+=os.pathsep + "Testing"
+    dag = DAG()
+
+    product_file = Path("tmp.txt")
+    ScriptRunner(Path("exec.py"), File(product_file), dag)
+    
+    dag.build()
+
+    output = product_file.read_text()
+    print(output)
+    assert "Testing" in output
