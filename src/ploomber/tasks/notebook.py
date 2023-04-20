@@ -940,7 +940,7 @@ class ScriptRunner(NotebookMixin, Task):
         if "PYTHONPATH" not in orig_env:
             orig_env["PYTHONPATH"] = cwd
         else:
-            orig_env["PYTHONPATH"] += os.pathsep +cwd
+            orig_env["PYTHONPATH"] += os.pathsep + cwd
 
         tmp = Path(tmp)
         tmp.write_text(code)

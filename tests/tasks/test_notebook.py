@@ -1438,14 +1438,14 @@ Path(product).write_text(a)
         """
     )
     if "PYTHONPATH" not in os.environ:
-        os.environ["PYTHONPATH"]="Testing"
+        os.environ["PYTHONPATH"] = "Testing"
     else:
-        os.environ["PYTHONPATH"]+=os.pathsep + "Testing"
+        os.environ["PYTHONPATH"] += os.pathsep + "Testing"
     dag = DAG()
 
     product_file = Path("tmp.txt")
     ScriptRunner(Path("exec.py"), File(product_file), dag)
-    
+
     dag.build()
 
     output = product_file.read_text()
