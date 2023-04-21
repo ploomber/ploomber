@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.22.4dev
+## 0.22.4
 
 * [Feature] More robust support for ploomber engine
 

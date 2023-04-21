@@ -522,7 +522,7 @@ class NotebookRunner(NotebookMixin, Task):
     -----
     .. collapse:: changelog
 
-        .. versionchanged:: 0.22.3dev
+        .. versionchanged:: 0.22.4
             Added native ploomber_engine support with `ploomber_engine`
             parameter
 
