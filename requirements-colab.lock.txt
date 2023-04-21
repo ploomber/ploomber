@@ -23,6 +23,6 @@ pyflakes==2.4.0
 Pygments==2.7.4
 PyYAML==5.4
 SQLAlchemy==1.4.36
-sqlparse==0.4.2
+sqlparse==0.4.4
 tabulate==0.8.9
 tqdm==4.64.0
