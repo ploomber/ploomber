@@ -850,6 +850,9 @@ class ScriptRunner(NotebookMixin, Task):
         of any task, furthermore, it verifies that the parameters cell and
         the params passed to the notebook match, thus, making the script
         behave like a function with a signature.
+    local_execution : bool, optional
+        Change working directory to be the parent of the script source.
+        Defaults to False.
 
     Examples
     --------
@@ -888,6 +891,7 @@ class ScriptRunner(NotebookMixin, Task):
         params=None,
         ext_in=None,
         static_analysis="regular",
+        local_execution=False,
     ):
         self.ext_in = ext_in
 
@@ -895,6 +899,7 @@ class ScriptRunner(NotebookMixin, Task):
         self._source = ScriptRunner._init_source(
             source, kwargs, ext_in, static_analysis, False, False
         )
+        self.local_execution = local_execution
         super().__init__(product, dag, name, params)
 
     @staticmethod
