@@ -16,5 +16,6 @@ Cookbook
     serialization
     db-config
     grid
+    engine
     spec-load-python
     hooks
