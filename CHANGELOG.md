@@ -2,7 +2,9 @@
 
 ## 0.22.4dev
 
+* [Feature] More robust support for ploomber engine
 * [Fix] Fix error in `ScriptRunner` that didn't allow to import modules in script's directory (#1072)
+
 
 ## 0.22.3 (2023-04-13)
 
