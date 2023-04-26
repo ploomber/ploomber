@@ -39,8 +39,6 @@ from ploomber.util import chdir_code
 from ploomber.io import FileLoaderMixin, pretty_print, _validate
 from ploomber.util._sys import _python_bin
 
-import ploomber_engine as pe
-
 
 # TODO: ensure that all places where we call this function are unit tested
 def _write_text_utf_8(path, text):
@@ -375,12 +373,6 @@ class NotebookRunner(NotebookMixin, Task):
         Notebook parameters. This are passed as the "parameters" argument
         to the papermill.execute_notebook function, by default, "product"
         and "upstream" are included
-    ploomber_engine: bool, optional
-        Whether to use ploomber-engine or not, defaults to false.
-        Can also be passed as "engine_name" param to nb_executor_params
-    nb_executor_params: dict, optional
-        Parameters passed to ploomber_engine, defaults to None. In order
-        to use ploomber_engine please assign "engine" key to "ploomber_engine"
     papermill_params : dict, optional
         Other parameters passed to papermill.execute_notebook, defaults to None
     kernelspec_name: str, optional
@@ -522,10 +514,6 @@ class NotebookRunner(NotebookMixin, Task):
     -----
     .. collapse:: changelog
 
-        .. versionchanged:: 0.22.4
-            Added native ploomber_engine support with `ploomber_engine`
-            parameter
-
         .. versionchanged:: 0.20
             ``debug`` constructor flag renamed to ``debug_mode`` to prevent
             conflicts with the ``debug`` method
@@ -600,8 +588,6 @@ class NotebookRunner(NotebookMixin, Task):
         dag,
         name=None,
         params=None,
-        ploomber_engine=False,
-        nb_executor_params=None,
         papermill_params=None,
         kernelspec_name=None,
         nbconvert_exporter_name=None,
@@ -613,8 +599,6 @@ class NotebookRunner(NotebookMixin, Task):
         check_if_kernel_installed=True,
         debug_mode=None,
     ):
-        self.ploomber_engine = ploomber_engine
-        self.nb_executor_params = nb_executor_params or {}
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -625,43 +609,16 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.debug_mode = debug_mode
 
-        # We are migrating to nb_executor_params
-        if self.papermill_params != {}:
-            if self.nb_executor_params == {}:
-                warnings.warn(
-                    "papermill_params will be deprecated in future releases."
-                    "Please use nb_executor_params instead"
-                    "Copying to nb_executor_params instead",
-                    FutureWarning,
-                )
-                self.nb_executor_params = self.papermill_params
-            else:
-                warnings.warn(
-                    "Both papermill_params and nb_executor_params passed."
-                    "Overriding with nb_executor_params",
-                    SyntaxError,
-                )
-
-        if self.ploomber_engine:
-            if "engine_name" not in self.nb_executor_params:
-                self.nb_executor_params["engine_name"] = "ploomber_engine"
-            elif self.nb_executor_params["engine_name"] != "ploomber_engine":
-                raise KeyError(
-                    "Found conflicting options: ploomber_engine is set "
-                    f'to {self.ploomber_engine} but "engine_name" is set to '
-                    f'{self.nb_executor_params["engine_name"]} in "nb_executor_params'
-                )
-
-        if "cwd" in self.nb_executor_params and self.local_execution:
+        if "cwd" in self.papermill_params and self.local_execution:
             raise KeyError(
                 'If local_execution is set to True, "cwd" should '
-                "not appear in nb_executor_params, as such "
+                "not appear in papermill_params, as such "
                 "parameter will be set by the task itself"
             )
 
-        if "engine_name" in self.nb_executor_params and debug_mode:
+        if "engine" in self.papermill_params and debug_mode:
             raise ValueError(
-                '"engine_name" should not appear in "nb_executor_params" '
+                'Engine should not appear in "papermill_params" '
                 'when "debug_mode" is enabled'
             )
 
@@ -800,34 +757,23 @@ class NotebookRunner(NotebookMixin, Task):
         _write_text_utf_8(tmp, self.source.nb_str_rendered)
 
         if self.local_execution:
-            self.nb_executor_params["cwd"] = str(self.source.loc.parent)
+            self.papermill_params["cwd"] = str(self.source.loc.parent)
 
         # use our custom engine
         if self.debug_mode == "now":
-            self.nb_executor_params["engine_name"] = "debug"
+            self.papermill_params["engine_name"] = "debug"
         elif self.debug_mode == "later":
-            self.nb_executor_params["engine_name"] = "debuglater"
-            self.nb_executor_params["path_to_dump"] = f"{self.name}.dump"
+            self.papermill_params["engine_name"] = "debuglater"
+            self.papermill_params["path_to_dump"] = f"{self.name}.dump"
 
         # create parent folders if they don't exist
         Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
 
         try:
             # no need to pass parameters, they are already there
-            if "engine_name" in self.nb_executor_params:
-                if self.nb_executor_params["engine_name"] == "ploomber_engine":
-                    self.nb_executor_params.pop("engine_name")
-                    pe.execute_notebook(
-                        str(tmp), str(path_to_out_ipynb), **self.nb_executor_params
-                    )
-                else:
-                    pm.execute_notebook(
-                        str(tmp), str(path_to_out_ipynb), **self.nb_executor_params
-                    )
-            else:
-                pm.execute_notebook(
-                    str(tmp), str(path_to_out_ipynb), **self.nb_executor_params
-                )
+            pm.execute_notebook(
+                str(tmp), str(path_to_out_ipynb), **self.papermill_params
+            )
         except Exception as e:
             # upload partially executed notebook if there's a clint
             if nb_product.client:
