@@ -50,10 +50,10 @@ Replace the existing ``pipeline.yaml`` with following content:
       - source: 1-get.py
         # products are task's outputs
         product:
-        # scripts generate executed notebooks as outputs
-        nb: output/1-get.html
-        # you can define as many outputs as you want
-        data: output/raw_data.csv
+          # scripts generate executed notebooks as outputs
+          nb: output/1-get.html
+          # you can define as many outputs as you want
+          data: output/raw_data.csv
 
         # Explicity specifying the engine parameter
       - source: 2-profile-raw.py
