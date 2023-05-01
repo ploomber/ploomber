@@ -631,21 +631,21 @@ class NotebookRunner(NotebookMixin, Task):
             if self.nb_executor_params == {}:
                 warnings.warn(
                     "papermill_params will be deprecated in future releases."
-                    "Please use nb_executor_params instead"
+                    "Please use nb_executor_params instead "
                     "Copying to nb_executor_params instead",
                     FutureWarning,
                 )
                 self.nb_executor_params = self.papermill_params
             else:
                 warnings.warn(
-                    "Both papermill_params and nb_executor_params passed."
+                    "Both papermill_params and nb_executor_params passed. "
                     "Overriding with nb_executor_params",
                     UserWarning,
                 )
 
         if "engine_name" in self.nb_executor_params and self.debug_mode:
             raise ValueError(
-                '"engine_name" should not appear in "nb_executor_params" '
+                '"engine_name" should not appear in "nb_executor_params " '
                 'when "debug_mode" is enabled'
             )
 
@@ -654,7 +654,7 @@ class NotebookRunner(NotebookMixin, Task):
                 raise KeyError(
                     "Found conflicting options: engine is set "
                     f'to {self.engine} but "engine_name" is set to '
-                    f'{self.nb_executor_params["engine_name"]} in "nb_executor_params'
+                    f'{self.nb_executor_params["engine_name"]} in "nb_executor_params '
                     "Please use only one of the parameters or "
                     "pass the same engine to both"
                 )
