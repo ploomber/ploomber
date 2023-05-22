@@ -487,7 +487,9 @@ def test_render_error_on_unexpected_params(tmp_directory, factory, executor):
     "executor",
     [["papermill"], ["ploomber-engine"]],
 )
-def test_render_error_on_missing_and_unexpected_params(tmp_directory, factory, executor):
+def test_render_error_on_missing_and_unexpected_params(
+    tmp_directory, factory, executor
+):
     dag = factory(
         executor,
         nb_params=True,
