@@ -626,7 +626,7 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.debug_mode = debug_mode
 
-        if self.executor not in ["papermill","ploomber-engine"]:
+        if self.executor not in ["papermill", "ploomber-engine"]:
             raise ValueError(
                 f"Invalid executor : {self.executor}. "
                 f"Please choose from 'papermill' or 'ploomber-engine'"

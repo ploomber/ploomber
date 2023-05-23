@@ -990,7 +990,6 @@ var = None
     return dag
 
 
-
 def test_debug_error_if_r_notebook(tmp_sample_tasks):
     dag = DAG()
 
