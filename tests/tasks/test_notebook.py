@@ -20,6 +20,7 @@ from ploomber.exceptions import (
 from ploomber.executors import Serial
 from ploomber.products import File
 from ploomber.sources.nb_utils import find_cell_with_tag
+from ploomber.sources import NotebookSource
 from ploomber.tasks import NotebookRunner, notebook, ScriptRunner
 
 
@@ -159,12 +160,7 @@ def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
         ["sample.ipynb", "missing_folder", "papermill"],
         # For Ploomber executor
         ["sample.py", ".", "ploomber-engine"],
-        pytest.param(
-            "sample.R",
-            ".",
-            True,
-            marks=pytest.mark.xfail(reason="Ploomber Engine doesn't support R"),
-        ),
+        ["sample.R", ".", "ploomber-engine"],
         ["sample.ipynb", ".", "ploomber-engine"],
         # check still works even if the folder does not exit yet
         ["sample.ipynb", "missing_folder", "ploomber-engine"],
@@ -173,13 +169,27 @@ def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
 def test_execute_sample_nb(name, out_dir, executor, tmp_sample_tasks):
     dag = DAG()
 
-    NotebookRunner(
-        Path(name),
-        product=File(Path(out_dir, name + ".out.ipynb")),
-        dag=dag,
-        executor=executor,
-    )
-    dag.build()
+    nb_source = NotebookSource(Path(name))
+
+    if nb_source.language == "r" and executor == "ploomber-engine":
+        with pytest.raises(Exception) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+
+        assert "NameError: name 'c' is not defined" in str(excinfo.value)
+    else:
+        NotebookRunner(
+            Path(name),
+            product=File(Path(out_dir, name + ".out.ipynb")),
+            dag=dag,
+            executor=executor,
+        )
+        dag.build()
 
 
 def _dag_simple(executor, nb_params=True, params=None, static_analysis="regular"):
