@@ -298,7 +298,7 @@ c <- c(1, 2, 3)
         [DAGBuildError, "regular"],
     ],
 )
-@pytest.mark.parametrize("executor", [["papermill"], ["ploomber-engine"]])
+@pytest.mark.parametrize("executor", ["papermill", "ploomber-engine"])
 def test_error_on_syntax_error(tmp_directory, error_class, static_analysis, executor):
     path = Path("sample.py")
 
@@ -334,7 +334,7 @@ if
         [DAGBuildError, "regular"],
     ],
 )
-@pytest.mark.parametrize("executor", [["papermill"], ["ploomber-engine"]])
+@pytest.mark.parametrize("executor", ["papermill", "ploomber-engine"])
 def test_error_on_undefined_name_error(
     tmp_directory, error_class, static_analysis, executor
 ):
@@ -364,7 +364,7 @@ df.head()
     assert "undefined name 'df'" in str(excinfo.value)
 
 
-@pytest.mark.parametrize("executor", [["papermill"], ["ploomber-engine"]])
+@pytest.mark.parametrize("executor", ["papermill", "ploomber-engine"])
 def test_render_pass_on_missing_product_parameter(tmp_directory, executor):
     path = Path("sample.py")
 
@@ -423,7 +423,7 @@ df = pd.read_csv(upstream['root'])
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_render_error_on_missing_upstream(
     tmp_directory, code, error_class, static_analysis, executor
@@ -452,7 +452,7 @@ def test_render_error_on_missing_upstream(
 @pytest.mark.parametrize("factory", [_dag_simple, _dag_two_tasks])
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_render_error_on_missing_params(tmp_directory, factory, executor):
     dag = factory(executor=executor, static_analysis="strict")
@@ -466,7 +466,7 @@ def test_render_error_on_missing_params(tmp_directory, factory, executor):
 @pytest.mark.parametrize("factory", [_dag_simple, _dag_two_tasks])
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_render_error_on_unexpected_params(tmp_directory, factory, executor):
     dag = factory(
@@ -485,7 +485,7 @@ def test_render_error_on_unexpected_params(tmp_directory, factory, executor):
 @pytest.mark.parametrize("factory", [_dag_simple, _dag_two_tasks])
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_render_error_on_missing_and_unexpected_params(
     tmp_directory, factory, executor
@@ -533,7 +533,7 @@ product = None
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_ignores_declared_product_and_upstream(tmp_directory, code, executor):
     path = Path("sample.py")
@@ -551,7 +551,7 @@ def test_ignores_declared_product_and_upstream(tmp_directory, code, executor):
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_can_convert_to_html(tmp_sample_tasks, executor):
     dag = DAG()
@@ -568,7 +568,7 @@ def test_can_convert_to_html(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_can_execute_with_parameters(tmp_directory, executor):
     dag = DAG()
@@ -596,7 +596,7 @@ var = None
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_can_execute_when_product_is_metaproduct(tmp_directory, executor):
     dag = DAG()
@@ -686,7 +686,7 @@ Path(product['model']).touch()
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_multiple_nb_product_success(
     product, nb_product_key, nbconvert_exporter_name, executor
@@ -758,7 +758,7 @@ Path(product['file']).touch()
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_multiple_nb_product_error(
     product, nb_product_key, nbconvert_exporter_name, expected_error, executor
@@ -787,7 +787,7 @@ var = None
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory, executor):
     dag = DAG()
@@ -822,7 +822,7 @@ var = None
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_failing_notebook_saves_partial_result(tmp_directory, executor):
     dag = DAG()
@@ -859,7 +859,7 @@ raise Exception('failing notebook')
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_error_if_wrong_exporter_name(tmp_sample_tasks, executor):
     dag = DAG()
@@ -880,7 +880,7 @@ def test_error_if_wrong_exporter_name(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_error_if_cant_find_exporter_name(tmp_sample_tasks, executor):
     dag = DAG()
@@ -901,7 +901,7 @@ def test_error_if_cant_find_exporter_name(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_skip_kernel_install_check(tmp_directory, executor):
     dag = DAG()
@@ -929,7 +929,7 @@ def test_skip_kernel_install_check(tmp_directory, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_creates_parents(tmp_directory, executor):
     dag = DAG()
@@ -990,23 +990,15 @@ var = None
     return dag
 
 
-@pytest.mark.parametrize(
-    "executor",
-    [
-        [False],
-        pytest.param(
-            True, marks=pytest.mark.xfail(reason="Ploomber Engine dont support R")
-        ),
-    ],
-)
-def test_debug_error_if_r_notebook(tmp_sample_tasks, executor):
+
+def test_debug_error_if_r_notebook(tmp_sample_tasks):
     dag = DAG()
 
     t = NotebookRunner(
         Path("sample.R"),
         product=File("out.ipynb"),
         dag=dag,
-        executor=executor,
+        executor="papermill",
     )
 
     dag.render()
@@ -1021,7 +1013,7 @@ def test_debug_error_if_r_notebook(tmp_sample_tasks, executor):
 # code differ uses (raw code) it also hot_loaded
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_hot_reload(tmp_directory, executor):
     cfg = DAGConfigurator()
@@ -1099,7 +1091,7 @@ def test_debug(monkeypatch, kind, to_patch, tmp_dag):
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks, executor):
     dag = DAG(executor=Serial(build_in_subprocess=False))
@@ -1125,7 +1117,7 @@ def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_change_static_analysis(tmp_sample_tasks, executor):
     dag = DAG(executor=Serial(build_in_subprocess=False))
@@ -1148,7 +1140,7 @@ def test_change_static_analysis(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_validates_static_analysis_value(tmp_sample_tasks, executor):
     with pytest.raises(ValueError) as excinfo:
@@ -1169,7 +1161,7 @@ def test_validates_static_analysis_value(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_warns_on_unused_parameters(tmp_sample_tasks, executor):
     dag = DAG()
@@ -1190,7 +1182,7 @@ def test_warns_on_unused_parameters(tmp_sample_tasks, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_static_analysis_regular_raises_error_at_runtime_if_errors(
     tmp_directory, executor
@@ -1230,7 +1222,7 @@ if
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_static_analysis_strict_raises_error_at_rendertime_if_errors(
     tmp_directory, executor
@@ -1266,7 +1258,7 @@ if
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
     tmp_directory, executor
@@ -1304,7 +1296,7 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_replaces_existing_product(tmp_directory, executor):
     Path("out.html").touch()
@@ -1329,7 +1321,7 @@ def test_replaces_existing_product(tmp_directory, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_initialize_with_str_like_path(tmp_directory, executor):
     Path("script.py").touch()
@@ -1433,7 +1425,7 @@ def test_initialize_with_str_like_path(tmp_directory, executor):
 )
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_uploads_notebook_if_it_fails(
     tmp_directory, product, expected_remote, executor, kwargs
@@ -1462,7 +1454,7 @@ raise ValueError("some stuff happened")
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_validates_debug_mode_in_constructor(tmp_directory, executor):
     path = Path("nb.py")
@@ -1488,7 +1480,7 @@ def test_validates_debug_mode_in_constructor(tmp_directory, executor):
 
 @pytest.mark.parametrize(
     "executor",
-    [["papermill"], ["ploomber-engine"]],
+    ["papermill", "ploomber-engine"],
 )
 def test_validates_debug_mode_property(tmp_directory, executor):
     path = Path("nb.py")

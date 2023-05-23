@@ -524,7 +524,7 @@ class NotebookRunner(NotebookMixin, Task):
     .. collapse:: changelog
 
         .. versionchanged:: 0.22.4
-            Added native ploomber-executor support with `executor`
+            Added native ploomber-engine support with `executor`
             parameter
 
         .. versionchanged:: 0.20
@@ -626,7 +626,7 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.debug_mode = debug_mode
 
-        if self.executor!="papermill" and self.executor!="ploomber-engine":
+        if self.executor not in ["papermill","ploomber-engine"]:
             raise ValueError(
                 f"Invalid executor : {self.executor}. "
                 f"Please choose from 'papermill' or 'ploomber-engine'"
@@ -637,8 +637,7 @@ class NotebookRunner(NotebookMixin, Task):
             if self.executor_params == {}:
                 warnings.warn(
                     "papermill_params will be deprecated in future releases."
-                    "Please use executor_params instead "
-                    "Copying to executor_params instead",
+                    "Please rename the section to executor_params",
                     FutureWarning,
                 )
                 self.executor_params = self.papermill_params
