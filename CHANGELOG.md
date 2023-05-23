@@ -2,7 +2,7 @@
 
 ## 0.22.4dev
 
-* [Feature] Support for selecting a custom engine in NotebookExecutor tasks
+* [Feature] Support for selecting a custom executor in NotebookExecutor tasks
 * [Fix] Fix error in `ScriptRunner` that didn't allow to import modules in script's directory (#1072)
 
 

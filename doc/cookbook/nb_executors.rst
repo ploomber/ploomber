@@ -1,4 +1,4 @@
-Engines
+Notebook Executors
 =======
 
 Ploomber currently supports two notebook executors:

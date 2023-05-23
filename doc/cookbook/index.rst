@@ -16,6 +16,6 @@ Cookbook
     serialization
     db-config
     grid
-    executors
+    nb_executors
     spec-load-python
     hooks
