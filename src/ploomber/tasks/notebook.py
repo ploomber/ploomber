@@ -828,11 +828,6 @@ class NotebookRunner(NotebookMixin, Task):
                 pm.execute_notebook(
                     str(tmp), str(path_to_out_ipynb), **self.executor_params
                 )
-            else:
-                raise ValueError(
-                    f"Invalid executor: {self.executor!r}. "
-                    "Valid options are: 'ploomber-engine', 'papermill'"
-                )
 
         except Exception as e:
             # upload partially executed notebook if there's a clint
