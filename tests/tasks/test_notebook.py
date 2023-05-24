@@ -164,6 +164,9 @@ def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
         ["sample.ipynb", ".", "ploomber-engine"],
         # check still works even if the folder does not exit yet
         ["sample.ipynb", "missing_folder", "ploomber-engine"],
+        ["sample.py", ".", "some-other-executor"],
+        ["sample.R", ".", "some-other-executor"],
+        ["sample.ipynb", ".", "some-other-executor"],
     ],
 )
 def test_execute_sample_nb(name, out_dir, executor, tmp_sample_tasks):
@@ -171,7 +174,17 @@ def test_execute_sample_nb(name, out_dir, executor, tmp_sample_tasks):
 
     nb_source = NotebookSource(Path(name))
 
-    if nb_source.language == "r" and executor == "ploomber-engine":
+    if executor not in ["ploomber-engine", "papermill"]:
+        with pytest.raises(ValueError) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+        assert "Invalid executor" in str(excinfo.value)
+    elif nb_source.language == "r" and executor == "ploomber-engine":
         with pytest.raises(Exception) as excinfo:
             NotebookRunner(
                 Path(name),

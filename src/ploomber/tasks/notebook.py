@@ -829,8 +829,9 @@ class NotebookRunner(NotebookMixin, Task):
                     str(tmp), str(path_to_out_ipynb), **self.executor_params
                 )
             else:
-                pm.execute_notebook(
-                    str(tmp), str(path_to_out_ipynb), **self.executor_params
+                raise ValueError(
+                    f"Invalid executor: {self.executor!r}. "
+                    "Valid options are: 'ploomber-engine', 'papermill'"
                 )
 
         except Exception as e:
