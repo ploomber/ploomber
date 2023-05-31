@@ -243,6 +243,7 @@ def test_execute_sample_nb_R(name, out_dir, executor, tmp_sample_tasks):
         )
         dag.build()
 
+
 @pytest.mark.parametrize(
     "name, out_dir, executor",
     [
@@ -284,8 +285,6 @@ def test_execute_sample_nb_invalid(name, out_dir, executor, tmp_sample_tasks):
             executor=executor,
         )
         dag.build()
-
-
 
 
 def _dag_simple(executor, nb_params=True, params=None, static_analysis="regular"):
