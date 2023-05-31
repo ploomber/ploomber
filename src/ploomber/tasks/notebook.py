@@ -634,7 +634,7 @@ class NotebookRunner(NotebookMixin, Task):
 
         # We are migrating to executor_params
         if self.papermill_params:
-            if self.executor_params == {}:
+            if not self.executor_params:
                 warnings.warn(
                     "papermill_params will be deprecated in future releases."
                     "Please rename the section to executor_params",
