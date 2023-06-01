@@ -20,6 +20,7 @@ from ploomber.exceptions import (
 from ploomber.executors import Serial
 from ploomber.products import File
 from ploomber.sources.nb_utils import find_cell_with_tag
+from ploomber.sources import NotebookSource
 from ploomber.tasks import NotebookRunner, notebook, ScriptRunner
 
 
@@ -150,25 +151,143 @@ def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "name, out_dir",
+    "name, out_dir, executor",
     [
-        ["sample.py", "."],
-        ["sample.R", "."],
-        ["sample.ipynb", "."],
+        ["sample.py", ".", "papermill"],
+        ["sample.ipynb", ".", "papermill"],
         # check still works even if the folder does not exit yet
-        ["sample.ipynb", "missing_folder"],
+        ["sample.ipynb", "missing_folder", "papermill"],
+        # For Ploomber executor
+        ["sample.py", ".", "ploomber-engine"],
+        ["sample.ipynb", ".", "ploomber-engine"],
+        # check still works even if the folder does not exit yet
+        ["sample.ipynb", "missing_folder", "ploomber-engine"],
     ],
 )
-def test_execute_sample_nb(name, out_dir, tmp_sample_tasks):
+def test_execute_sample_nb(name, out_dir, executor, tmp_sample_tasks):
     dag = DAG()
 
-    NotebookRunner(
-        Path(name), product=File(Path(out_dir, name + ".out.ipynb")), dag=dag
-    )
-    dag.build()
+    nb_source = NotebookSource(Path(name))
+
+    if executor not in ["ploomber-engine", "papermill"]:
+        with pytest.raises(ValueError) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+        assert "Invalid executor" in str(excinfo.value)
+    elif nb_source.language == "r" and executor == "ploomber-engine":
+        with pytest.raises(Exception) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+
+        assert "NameError: name 'c' is not defined" in str(excinfo.value)
+    else:
+        NotebookRunner(
+            Path(name),
+            product=File(Path(out_dir, name + ".out.ipynb")),
+            dag=dag,
+            executor=executor,
+        )
+        dag.build()
 
 
-def _dag_simple(nb_params=True, params=None, static_analysis="regular"):
+@pytest.mark.parametrize(
+    "name, out_dir, executor",
+    [
+        ["sample.R", ".", "papermill"],
+        ["sample.R", ".", "ploomber-engine"],
+        ["sample.R", ".", "some-other-executor"],
+    ],
+)
+def test_execute_sample_nb_R(name, out_dir, executor, tmp_sample_tasks):
+    dag = DAG()
+
+    nb_source = NotebookSource(Path(name))
+
+    if executor not in ["ploomber-engine", "papermill"]:
+        with pytest.raises(ValueError) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+        assert "Invalid executor" in str(excinfo.value)
+    elif nb_source.language == "r" and executor == "ploomber-engine":
+        with pytest.raises(Exception) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+
+        assert "NameError: name 'c' is not defined" in str(excinfo.value)
+    else:
+        NotebookRunner(
+            Path(name),
+            product=File(Path(out_dir, name + ".out.ipynb")),
+            dag=dag,
+            executor=executor,
+        )
+        dag.build()
+
+
+@pytest.mark.parametrize(
+    "name, out_dir, executor",
+    [
+        ["sample.py", ".", "some-other-executor"],
+        ["sample.ipynb", ".", "some-other-executor"],
+    ],
+)
+def test_execute_sample_nb_invalid(name, out_dir, executor, tmp_sample_tasks):
+    dag = DAG()
+
+    nb_source = NotebookSource(Path(name))
+
+    if executor not in ["ploomber-engine", "papermill"]:
+        with pytest.raises(ValueError) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+        assert "Invalid executor" in str(excinfo.value)
+    elif nb_source.language == "r" and executor == "ploomber-engine":
+        with pytest.raises(Exception) as excinfo:
+            NotebookRunner(
+                Path(name),
+                product=File(Path(out_dir, name + ".out.ipynb")),
+                dag=dag,
+                executor=executor,
+            )
+            dag.build()
+
+        assert "NameError: name 'c' is not defined" in str(excinfo.value)
+    else:
+        NotebookRunner(
+            Path(name),
+            product=File(Path(out_dir, name + ".out.ipynb")),
+            dag=dag,
+            executor=executor,
+        )
+        dag.build()
+
+
+def _dag_simple(executor, nb_params=True, params=None, static_analysis="regular"):
     path = Path("sample.py")
 
     if nb_params:
@@ -199,12 +318,13 @@ d = 42
         product=File("out.ipynb"),
         dag=dag,
         params=params,
+        executor=executor,
         static_analysis=static_analysis,
     )
     return dag
 
 
-def _dag_two_tasks(nb_params=True, params=None, static_analysis="regular"):
+def _dag_two_tasks(executor, nb_params=True, params=None, static_analysis="regular"):
     root = Path("root.py")
     root.write_text(
         """
@@ -247,6 +367,7 @@ c = 'hello'
         product=File("out.ipynb"),
         dag=dag,
         params=params,
+        executor=executor,
         static_analysis=static_analysis,
     )
     root >> task
@@ -282,7 +403,8 @@ c <- c(1, 2, 3)
         [DAGBuildError, "regular"],
     ],
 )
-def test_error_on_syntax_error(tmp_directory, error_class, static_analysis):
+@pytest.mark.parametrize("executor", ["papermill", "ploomber-engine"])
+def test_error_on_syntax_error(tmp_directory, error_class, static_analysis, executor):
     path = Path("sample.py")
 
     path.write_text(
@@ -297,13 +419,17 @@ if
 
     dag = DAG()
     NotebookRunner(
-        path, product=File("out.ipynb"), dag=dag, static_analysis=static_analysis
+        path,
+        product=File("out.ipynb"),
+        dag=dag,
+        executor=executor,
+        static_analysis=static_analysis,
     )
 
     with pytest.raises(error_class) as excinfo:
         dag.build()
-
-    assert "invalid syntax\n\nif\n\n  ^\n" in str(excinfo.value)
+    assert "invalid syntax" in str(excinfo.value)
+    assert "if" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -313,7 +439,10 @@ if
         [DAGBuildError, "regular"],
     ],
 )
-def test_error_on_undefined_name_error(tmp_directory, error_class, static_analysis):
+@pytest.mark.parametrize("executor", ["papermill", "ploomber-engine"])
+def test_error_on_undefined_name_error(
+    tmp_directory, error_class, static_analysis, executor
+):
     path = Path("sample.py")
 
     path.write_text(
@@ -327,7 +456,11 @@ df.head()
 
     dag = DAG()
     NotebookRunner(
-        path, product=File("out.ipynb"), dag=dag, static_analysis=static_analysis
+        path,
+        product=File("out.ipynb"),
+        dag=dag,
+        static_analysis=static_analysis,
+        executor=executor,
     )
 
     with pytest.raises(error_class) as excinfo:
@@ -336,7 +469,8 @@ df.head()
     assert "undefined name 'df'" in str(excinfo.value)
 
 
-def test_render_pass_on_missing_product_parameter(tmp_directory):
+@pytest.mark.parametrize("executor", ["papermill", "ploomber-engine"])
+def test_render_pass_on_missing_product_parameter(tmp_directory, executor):
     path = Path("sample.py")
 
     path.write_text(
@@ -350,7 +484,7 @@ df.to_csv(product)
     )
 
     dag = DAG()
-    NotebookRunner(path, product=File("out.ipynb"), dag=dag)
+    NotebookRunner(path, product=File("out.ipynb"), dag=dag, executor=executor)
 
     # the render process injects the cell with the product variable so this
     # should not raise any errors, even if the raw source code does not contain
@@ -392,15 +526,23 @@ df = pd.read_csv(upstream['root'])
         [DAGBuildError, "regular"],
     ],
 )
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
 def test_render_error_on_missing_upstream(
-    tmp_directory, code, error_class, static_analysis
+    tmp_directory, code, error_class, static_analysis, executor
 ):
     path = Path("sample.py")
     path.write_text(code)
 
     dag = DAG()
     NotebookRunner(
-        path, product=File("out.ipynb"), dag=dag, static_analysis=static_analysis
+        path,
+        product=File("out.ipynb"),
+        dag=dag,
+        static_analysis=static_analysis,
+        executor=executor,
     )
 
     with pytest.raises(error_class) as excinfo:
@@ -413,8 +555,12 @@ def test_render_error_on_missing_upstream(
 
 
 @pytest.mark.parametrize("factory", [_dag_simple, _dag_two_tasks])
-def test_render_error_on_missing_params(tmp_directory, factory):
-    dag = factory(static_analysis="strict")
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_render_error_on_missing_params(tmp_directory, factory, executor):
+    dag = factory(executor=executor, static_analysis="strict")
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -423,8 +569,17 @@ def test_render_error_on_missing_params(tmp_directory, factory):
 
 
 @pytest.mark.parametrize("factory", [_dag_simple, _dag_two_tasks])
-def test_render_error_on_unexpected_params(tmp_directory, factory):
-    dag = factory(nb_params=False, params=dict(a=1, b=2, c=3), static_analysis="strict")
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_render_error_on_unexpected_params(tmp_directory, factory, executor):
+    dag = factory(
+        executor=executor,
+        nb_params=False,
+        params=dict(a=1, b=2, c=3),
+        static_analysis="strict",
+    )
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -433,8 +588,19 @@ def test_render_error_on_unexpected_params(tmp_directory, factory):
 
 
 @pytest.mark.parametrize("factory", [_dag_simple, _dag_two_tasks])
-def test_render_error_on_missing_and_unexpected_params(tmp_directory, factory):
-    dag = factory(nb_params=True, params=dict(d=1, e=2, f=3), static_analysis="strict")
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_render_error_on_missing_and_unexpected_params(
+    tmp_directory, factory, executor
+):
+    dag = factory(
+        executor,
+        nb_params=True,
+        params=dict(d=1, e=2, f=3),
+        static_analysis="strict",
+    )
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -470,13 +636,17 @@ product = None
 """,
     ],
 )
-def test_ignores_declared_product_and_upstream(tmp_directory, code):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_ignores_declared_product_and_upstream(tmp_directory, code, executor):
     path = Path("sample.py")
 
     path.write_text(code)
 
     dag = DAG()
-    NotebookRunner(path, product=File("out.ipynb"), dag=dag)
+    NotebookRunner(path, product=File("out.ipynb"), dag=dag, executor=executor)
     dag.render()
 
 
@@ -484,16 +654,28 @@ def test_ignores_declared_product_and_upstream(tmp_directory, code):
     sys.platform == "win32",
     reason="nbconvert has a bug when exporting to HTML on windows",
 )
-def test_can_convert_to_html(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_can_convert_to_html(tmp_sample_tasks, executor):
     dag = DAG()
 
     NotebookRunner(
-        Path("sample.ipynb"), product=File(Path("out.html")), dag=dag, name="nb"
+        Path("sample.ipynb"),
+        product=File(Path("out.html")),
+        dag=dag,
+        name="nb",
+        executor=executor,
     )
     dag.build()
 
 
-def test_can_execute_with_parameters(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_can_execute_with_parameters(tmp_directory, executor):
     dag = DAG()
 
     code = """
@@ -512,11 +694,16 @@ var = None
         params={"var": 1},
         ext_in="py",
         name="nb",
+        executor=executor,
     )
     dag.build()
 
 
-def test_can_execute_when_product_is_metaproduct(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_can_execute_when_product_is_metaproduct(tmp_directory, executor):
     dag = DAG()
 
     code = """
@@ -543,6 +730,7 @@ Path(product['model']).touch()
         ext_in="py",
         nb_product_key="nb",
         name="nb",
+        executor=executor,
     )
     dag.build()
 
@@ -601,7 +789,13 @@ Path(product['model']).touch()
         ),
     ],
 )
-def test_multiple_nb_product_success(product, nb_product_key, nbconvert_exporter_name):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_multiple_nb_product_success(
+    product, nb_product_key, nbconvert_exporter_name, executor
+):
     dag = DAG()
 
     code = """
@@ -621,6 +815,7 @@ Path(product['file']).touch()
         nbconvert_exporter_name=nbconvert_exporter_name,
         nb_product_key=nb_product_key,
         name="nb",
+        executor=executor,
     )
     dag.build()
 
@@ -666,8 +861,12 @@ Path(product['file']).touch()
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
 def test_multiple_nb_product_error(
-    product, nb_product_key, nbconvert_exporter_name, expected_error
+    product, nb_product_key, nbconvert_exporter_name, expected_error, executor
 ):
     dag = DAG()
 
@@ -685,12 +884,17 @@ var = None
             nb_product_key=nb_product_key,
             nbconvert_exporter_name=nbconvert_exporter_name,
             name="nb",
+            executor=executor,
         )
 
     assert expected_error in str(excinfo)
 
 
-def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory, executor):
     dag = DAG()
 
     product = {
@@ -715,12 +919,17 @@ var = None
             ext_in="py",
             nb_product_key="nb",
             name="nb",
+            executor=executor,
         )
 
     assert "Missing key 'nb' in product" in str(excinfo.value)
 
 
-def test_failing_notebook_saves_partial_result(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_failing_notebook_saves_partial_result(tmp_directory, executor):
     dag = DAG()
 
     code = """
@@ -742,6 +951,7 @@ raise Exception('failing notebook')
         params={"var": 1},
         ext_in="py",
         name="nb",
+        executor=executor,
     )
 
     # build breaks due to the exception
@@ -752,7 +962,11 @@ raise Exception('failing notebook')
     assert Path("out.ipynb").exists()
 
 
-def test_error_if_wrong_exporter_name(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_error_if_wrong_exporter_name(tmp_sample_tasks, executor):
     dag = DAG()
 
     with pytest.raises(TaskInitializationError) as excinfo:
@@ -761,6 +975,7 @@ def test_error_if_wrong_exporter_name(tmp_sample_tasks):
             product=File(Path("out.ipynb")),
             dag=dag,
             nbconvert_exporter_name="wrong_name",
+            executor=executor,
         )
 
     assert "'wrong_name' is not a valid 'nbconvert_exporter_name' value" in str(
@@ -768,7 +983,11 @@ def test_error_if_wrong_exporter_name(tmp_sample_tasks):
     )
 
 
-def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_error_if_cant_find_exporter_name(tmp_sample_tasks, executor):
     dag = DAG()
 
     with pytest.raises(TaskInitializationError) as excinfo:
@@ -777,6 +996,7 @@ def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
             product=File(Path("out.wrong_ext")),
             dag=dag,
             nbconvert_exporter_name=None,
+            executor=executor,
         )
 
     assert "Could not determine format for product 'out.wrong_ext'" in str(
@@ -784,7 +1004,11 @@ def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
     )
 
 
-def test_skip_kernel_install_check(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_skip_kernel_install_check(tmp_directory, executor):
     dag = DAG()
 
     code = """
@@ -803,11 +1027,16 @@ def test_skip_kernel_install_check(tmp_directory):
         ext_in="py",
         name="nb",
         check_if_kernel_installed=False,
+        executor=executor,
     )
     dag.render()
 
 
-def test_creates_parents(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_creates_parents(tmp_directory, executor):
     dag = DAG()
 
     code = """
@@ -824,7 +1053,14 @@ Path(product['file']).touch()
         "file": File(Path(tmp_directory, "another", "data", "file.txt")),
     }
 
-    NotebookRunner(code, product=product, dag=dag, ext_in="py", name="nb")
+    NotebookRunner(
+        code,
+        product=product,
+        dag=dag,
+        ext_in="py",
+        name="nb",
+        executor=executor,
+    )
     dag.build()
 
 
@@ -862,7 +1098,12 @@ var = None
 def test_debug_error_if_r_notebook(tmp_sample_tasks):
     dag = DAG()
 
-    t = NotebookRunner(Path("sample.R"), product=File("out.ipynb"), dag=dag)
+    t = NotebookRunner(
+        Path("sample.R"),
+        product=File("out.ipynb"),
+        dag=dag,
+        executor="papermill",
+    )
 
     dag.render()
 
@@ -874,7 +1115,11 @@ def test_debug_error_if_r_notebook(tmp_sample_tasks):
 # but we also have to test it at the source level
 # also test at the DAG level, we have to make sure the property that
 # code differ uses (raw code) it also hot_loaded
-def test_hot_reload(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_hot_reload(tmp_directory, executor):
     cfg = DAGConfigurator()
     cfg.params.hot_reload = True
 
@@ -892,7 +1137,11 @@ def test_hot_reload(tmp_directory):
     )
 
     t = NotebookRunner(
-        path, product=File("out.ipynb"), dag=dag, kernelspec_name="python3"
+        path,
+        product=File("out.ipynb"),
+        dag=dag,
+        kernelspec_name="python3",
+        executor=executor,
     )
 
     t.render()
@@ -944,7 +1193,11 @@ def test_debug(monkeypatch, kind, to_patch, tmp_dag):
 @pytest.mark.xfail(
     sys.platform == "win32", reason="Two warnings are displayed on windows"
 )
-def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks, executor):
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
     NotebookRunner(
@@ -952,6 +1205,7 @@ def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks):
         File("out.ipynb"),
         dag,
         nbconvert_export_kwargs=dict(exclude_input=True),
+        executor=executor,
     )
 
     with pytest.warns(UserWarning) as records:
@@ -965,12 +1219,20 @@ def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks):
     )
 
 
-def test_change_static_analysis(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_change_static_analysis(tmp_sample_tasks, executor):
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
     # static_analysis is True by default, this should fail
     t = NotebookRunner(
-        Path("sample.ipynb"), File("out.ipynb"), dag, params=dict(a=1, b=2)
+        Path("sample.ipynb"),
+        File("out.ipynb"),
+        dag,
+        params=dict(a=1, b=2),
+        executor=executor,
     )
 
     # disable it
@@ -980,13 +1242,18 @@ def test_change_static_analysis(tmp_sample_tasks):
     dag.render()
 
 
-def test_validates_static_analysis_value(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_validates_static_analysis_value(tmp_sample_tasks, executor):
     with pytest.raises(ValueError) as excinfo:
         NotebookRunner(
             Path("sample.ipynb"),
             File("out.ipynb"),
             dag=DAG(),
             static_analysis="unknown",
+            executor=executor,
         )
 
     expected = (
@@ -996,9 +1263,19 @@ def test_validates_static_analysis_value(tmp_sample_tasks):
     assert expected == str(excinfo.value)
 
 
-def test_warns_on_unused_parameters(tmp_sample_tasks):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_warns_on_unused_parameters(tmp_sample_tasks, executor):
     dag = DAG()
-    NotebookRunner(Path("sample.ipynb"), File("out.ipynb"), dag=dag, params=dict(a=1))
+    NotebookRunner(
+        Path("sample.ipynb"),
+        File("out.ipynb"),
+        dag=dag,
+        params=dict(a=1),
+        executor=executor,
+    )
 
     with pytest.warns(UserWarning) as records:
         dag.render()
@@ -1007,7 +1284,13 @@ def test_warns_on_unused_parameters(tmp_sample_tasks):
     assert expected in records[0].message.args[0]
 
 
-def test_static_analysis_regular_raises_error_at_runtime_if_errors(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_static_analysis_regular_raises_error_at_runtime_if_errors(
+    tmp_directory, executor
+):
     path = Path("nb.py")
     path.write_text(
         """
@@ -1020,7 +1303,13 @@ if
     )
 
     dag = DAG()
-    NotebookRunner(Path("nb.py"), File("out.ipynb"), dag=dag, static_analysis="regular")
+    NotebookRunner(
+        Path("nb.py"),
+        File("out.ipynb"),
+        dag=dag,
+        static_analysis="regular",
+        executor=executor,
+    )
 
     # render should work ok
     dag.render()
@@ -1029,11 +1318,19 @@ if
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
-    expected = "SyntaxError: An error happened when checking the source code."
+    expected = "SyntaxError"
+    assert expected in str(excinfo.value)
+    expected = "An error happened when checking the source code."
     assert expected in str(excinfo.value)
 
 
-def test_static_analysis_strict_raises_error_at_rendertime_if_errors(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_static_analysis_strict_raises_error_at_rendertime_if_errors(
+    tmp_directory, executor
+):
     path = Path("nb.py")
     path.write_text(
         """
@@ -1046,17 +1343,29 @@ if
     )
 
     dag = DAG()
-    NotebookRunner(Path("nb.py"), File("out.ipynb"), dag=dag, static_analysis="strict")
+    NotebookRunner(
+        Path("nb.py"),
+        File("out.ipynb"),
+        dag=dag,
+        static_analysis="strict",
+        executor=executor,
+    )
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
 
-    expected = "SyntaxError: An error happened when checking the source code."
+    expected = "SyntaxError"
+    assert expected in str(excinfo.value)
+    expected = "An error happened when checking the source code."
     assert expected in str(excinfo.value)
 
 
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
 def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
-    tmp_directory,
+    tmp_directory, executor
 ):
     path = Path("nb.py")
     path.write_text(
@@ -1076,6 +1385,7 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
         dag=dag,
         static_analysis="strict",
         params=dict(some_param="value"),
+        executor=executor,
     )
 
     with pytest.raises(DAGRenderError) as excinfo:
@@ -1088,7 +1398,11 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
     assert expected in str(excinfo.value)
 
 
-def test_replaces_existing_product(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_replaces_existing_product(tmp_directory, executor):
     Path("out.html").touch()
 
     path = Path("nb.py")
@@ -1103,18 +1417,22 @@ def test_replaces_existing_product(tmp_directory):
     )
 
     dag = DAG()
-    NotebookRunner(Path("nb.py"), File("out.html"), dag=dag)
+    NotebookRunner(Path("nb.py"), File("out.html"), dag=dag, executor=executor)
 
     # this will fail on windows if we don't remove the existing file first
     dag.build()
 
 
-def test_initialize_with_str_like_path(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_initialize_with_str_like_path(tmp_directory, executor):
     Path("script.py").touch()
     dag = DAG()
 
     with pytest.raises(ValueError) as excinfo:
-        NotebookRunner("script.py", File("out.html"), dag=dag)
+        NotebookRunner("script.py", File("out.html"), dag=dag, executor=executor)
 
     assert "Perhaps you meant passing a pathlib.Path object" in str(excinfo.value)
 
@@ -1209,7 +1527,13 @@ def test_initialize_with_str_like_path(tmp_directory):
         "multiple-notebooks-one-ipynb-different-names",
     ],
 )
-def test_uploads_notebook_if_it_fails(tmp_directory, product, expected_remote, kwargs):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_uploads_notebook_if_it_fails(
+    tmp_directory, product, expected_remote, executor, kwargs
+):
     path = Path("nb.py")
     path.write_text(
         """
@@ -1223,7 +1547,7 @@ raise ValueError("some stuff happened")
 
     dag = DAG()
     dag.clients[File] = LocalStorageClient("remote", path_to_project_root=".")
-    NotebookRunner(Path("nb.py"), product, dag=dag, **kwargs)
+    NotebookRunner(Path("nb.py"), product, dag=dag, executor=executor, **kwargs)
 
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
@@ -1232,7 +1556,11 @@ raise ValueError("some stuff happened")
     assert Path(expected_remote).is_file()
 
 
-def test_validates_debug_mode_in_constructor(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_validates_debug_mode_in_constructor(tmp_directory, executor):
     path = Path("nb.py")
     path.write_text(
         """
@@ -1243,14 +1571,22 @@ def test_validates_debug_mode_in_constructor(tmp_directory):
 
     with pytest.raises(ValueError) as excinfo:
         NotebookRunner(
-            Path("nb.py"), File("out.html"), dag=DAG(), debug_mode="something"
+            Path("nb.py"),
+            File("out.html"),
+            dag=DAG(),
+            executor=executor,
+            debug_mode="something",
         )
 
     msg = "'something' is an invalid value for 'debug_mode'. Valid values:"
     assert msg in str(excinfo.value)
 
 
-def test_validates_debug_mode_property(tmp_directory):
+@pytest.mark.parametrize(
+    "executor",
+    ["papermill", "ploomber-engine"],
+)
+def test_validates_debug_mode_property(tmp_directory, executor):
     path = Path("nb.py")
     path.write_text(
         """
@@ -1259,7 +1595,13 @@ def test_validates_debug_mode_property(tmp_directory):
     """
     )
 
-    task = NotebookRunner(Path("nb.py"), File("out.html"), dag=DAG(), debug_mode=None)
+    task = NotebookRunner(
+        Path("nb.py"),
+        File("out.html"),
+        dag=DAG(),
+        debug_mode=None,
+        executor=executor,
+    )
 
     with pytest.raises(ValueError) as excinfo:
         task.debug_mode = "something"
