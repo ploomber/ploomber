@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.22.5dev
+
 ## 0.22.4 (2023-06-01)
 
 * [Feature] Add `executor` option to NotebookRunner to choose ploomber-engine or papermill
