@@ -1,9 +1,9 @@
 # CHANGELOG
 
-## 0.22.4dev
+## 0.22.4 (2023-06-01)
 
-* [Fix] Fix error in `ScriptRunner` that didn't allow to import modules in script's directory (#1072)
 * [Feature] Add `executor` option to NotebookRunner to choose ploomber-engine or papermill
+* [Fix] Fix error in `ScriptRunner` that didn't allow to import modules in script's directory ([#1072](https://github.com/ploomber/ploomber/issues/1072))
 
 ## 0.22.3 (2023-04-13)
 
