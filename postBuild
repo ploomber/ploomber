@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# binder post build
+
+# ask ploomber not to track
+mkdir -p $HOME/.ploomber/stats
+echo 'stats_enabled: false' > $HOME/.ploomber/stats/config.yaml
+
+# enable single click to open .py/.md as notebooks
+wget https://raw.githubusercontent.com/mwouts/jupytext/main/binder/labconfig/default_setting_overrides.json -P  ~/.jupyter/labconfig/
