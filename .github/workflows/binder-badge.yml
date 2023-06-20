@@ -1,0 +1,28 @@
+#./.github/workflows/binder-badge.yaml
+name: Binder Badge
+on:
+  pull_request_target:
+    types: [opened,synchronize]
+
+jobs:
+  binder:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - name: comment on PR with Binder link
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          var PR_HEAD_USERREPO = process.env.PR_HEAD_USERREPO;
+          var PR_HEAD_REF = process.env.PR_HEAD_REF;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://binder.ploomber.io/v2/gh/${PR_HEAD_USERREPO}/${PR_HEAD_REF}) :point_left: Launch a binder notebook on branch _${PR_HEAD_USERREPO}/${PR_HEAD_REF}_`
+          })
+      env:
+        PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        PR_HEAD_USERREPO: ${{ github.event.pull_request.head.repo.full_name }}
