@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.22.5dev
+* [Feature] Add binder badge in the comments
 
 ## 0.22.4 (2023-06-01)
 
