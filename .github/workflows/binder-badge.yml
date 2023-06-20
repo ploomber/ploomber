@@ -23,6 +23,12 @@ jobs:
             repo: context.repo.repo,
             body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://binder.ploomber.io/v2/gh/${PR_HEAD_USERREPO}/${PR_HEAD_REF}) :point_left: Launch a binder notebook on branch _${PR_HEAD_USERREPO}/${PR_HEAD_REF}_`
           })
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: 'This is a test comment.'
+          })
       env:
         PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         PR_HEAD_USERREPO: ${{ github.event.pull_request.head.repo.full_name }}
