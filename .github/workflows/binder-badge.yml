@@ -4,10 +4,6 @@ on:
   pull_request_target:
     types: [opened,synchronize]
   push:
-    branches:
-    - masters
-    - 'dev/**'
-
 jobs:
   binder:
     runs-on: ubuntu-latest
@@ -30,3 +26,15 @@ jobs:
       env:
         PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         PR_HEAD_USERREPO: ${{ github.event.pull_request.head.repo.full_name }}
+
+  greeting:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: "Thank you for contributing to Ploomber!"
+        pr-message: "Thank you for contributing to Ploomber!"
