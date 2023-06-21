@@ -95,7 +95,7 @@ jobs:
 
         # run tests
         pip install pytest-timeout
-        pytest tests --cov=ploomber --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry --timeout=120
+        pytest tests --cov=ploomber --timeout=120
 
 
   # run: pkgmt check
