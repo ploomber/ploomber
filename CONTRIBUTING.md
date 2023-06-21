@@ -173,12 +173,5 @@ To install packages in the container, first run `apt-get update`. Packages
 can be installed normally with apt after
 
 
-## Ok-to-test
-
-We have separated our tests to unit tests and integration tests. Some of the integration tests may require certain secrets or credentials to run, to prevent such sensitive data from leaking, we have migrated the [ok-to-test](https://github.com/imjohnbo/ok-to-test) template into our CI. 
-
-In short, when you start a pull request from your forked repo, only the workflow for unit tests that don't require any special secrets will run. The integration tests in your pull request check will display skipped. To run the integration tests, please ask one of the maintainers of ploomber to comment `/ok-to-test sha={#commit}` on your pull request where the #commit is the first seven digits of the latest commit of your branch.
-
-
 
 
