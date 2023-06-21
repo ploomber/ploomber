@@ -1,12 +1,11 @@
-# Run unit tests on any branch/fork pull request
 on:
   push:
     branches:
       - master
       - 'dev/**'
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
-  schedule:
-    - cron: '0 0 * * *'
 
 name: MacOS unit test
 
