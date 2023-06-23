@@ -1,12 +1,11 @@
-# Run unit tests on any branch/fork pull request
 on:
   push:
     branches:
       - master
       - 'dev/**'
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
-  schedule:
-    - cron: '0 0 * * *'
 
 name: Windows unit test
 
@@ -85,4 +84,4 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pip install pytest-timeout
-        pytest tests --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry --timeout=120
+        pytest tests --timeout=120
