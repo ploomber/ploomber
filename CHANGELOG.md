@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.22.5dev
+* [Feature] Add binder badge in the comments
 
 * [Fix] Compatibility with mistune 3
 

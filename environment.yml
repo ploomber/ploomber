@@ -1,0 +1,63 @@
+#binder environment
+name: ploomber-env
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.9
+  - ploomber-scaffold>=0.3
+  - ploomber-engine>=0.0.8
+  - ploomber-core>=0.0.11
+  - pyyaml
+  - networkx>=2.5
+  - jinja2
+  - tabulate
+  - humanize
+  - tqdm
+  - posthog
+  - sqlparse
+  - autopep8
+  - parso
+  - mistune
+  - pygments
+  - sqlalchemy
+  - click
+  - ipython
+  - ipdb
+  - pydantic
+  - papermill
+  - jupytext
+  - ipykernel>=1.5.2
+  - jupyter_client>=5.3.1
+  - nbconvert>=5.6.0
+  - nbformat
+  - pyflakes
+  - pandas
+  - pyarrow
+  - numpydoc
+  - requests-html
+  - nest_asyncio
+  - pygraphviz; python_version < "3.10"
+  - paramiko
+  - boto3
+  - moto
+  - google-cloud-storage
+  - pytest==7.1.*
+  - pytest-cov
+  - coveralls<3
+  - nose
+  - yapf
+  - flake8
+  - matplotlib
+  - seaborn
+  - psycopg2-binary
+  - lxml
+  - jupyter_server
+  - notebook
+  - joblib
+  - cloudpickle
+  - nbconvert[webpdf]
+  - multiprocess
+  - dill==0.3.5.1
