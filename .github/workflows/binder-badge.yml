@@ -1,13 +1,7 @@
-#./.github/workflows/binder-badge.yaml
 name: Binder Badge
 on:
   pull_request_target:
-    types: [opened,synchronize]
-  push:
-    branches:
-    - masters
-    - 'dev/**'
-
+    types: [opened, synchronize]
 jobs:
   binder:
     runs-on: ubuntu-latest
@@ -19,20 +13,18 @@ jobs:
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
-          var PR_HEAD_USERREPO = process.env.PR_HEAD_USERREPO;
-          var PR_HEAD_REF = process.env.PR_HEAD_REF;
+          console.log("Context:", JSON.stringify(context, null, 2)); // For debugging
+          
+          var PR_HEAD_REF = context.payload.pull_request.head.ref;
+          var PR_HEAD_USERREPO = context.payload.pull_request.head.repo.full_name;
+          var issue_number = context.payload.pull_request.number;
+          var owner = context.payload.pull_request.base.repo.owner.login;
+          var repo = context.payload.pull_request.base.repo.name;
+
+          
           github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
+            issue_number: issue_number,
+            owner: owner,
+            repo: repo,
             body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://binder.ploomber.io/v2/gh/${PR_HEAD_USERREPO}/${PR_HEAD_REF}) :point_left: Launch a binder notebook on branch _${PR_HEAD_USERREPO}/${PR_HEAD_REF}_`
-          })
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: 'This is a test comment.'
-          })
-      env:
-        PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        PR_HEAD_USERREPO: ${{ github.event.pull_request.head.repo.full_name }}
+          });
