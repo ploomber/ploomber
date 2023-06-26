@@ -16,10 +16,9 @@ VERSION_KWARGS = dict(package_name="ploomber") if CLICK_VERSION >= 8 else dict()
 
 def cloud_deprecation_warning():
     warnings.warn(
-        """ploomber cloud will be deprecated
-        and replaced with a new system.
-        If you need help migrating,
-        send us a message to: https://ploomber.io/community""",
+        "ploomber cloud will be deprecated and replaced with a new system. "
+        "If you need help migrating, send us a "
+        "message to: https://ploomber.io/community",
         FutureWarning,
     )
 
