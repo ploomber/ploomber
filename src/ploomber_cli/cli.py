@@ -423,6 +423,7 @@ def set_key(user_key):
     """
     from ploomber import cli as cli_module
 
+    cloud_deprecation_warning()
     cli_module.cloud.set_key(user_key)
 
 
@@ -435,6 +436,7 @@ def get_key():
     """
     from ploomber.cloud.key import get_key
 
+    cloud_deprecation_warning()
     key = get_key()
 
     if key:
@@ -455,11 +457,10 @@ def cloud_build(force, json):
 
     $ ploomber cloud build --force
     """
-    cloud_deprecation_warning()
-
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.telemetry import telemetry
 
+    cloud_deprecation_warning()
     api = PloomberCloudAPI()
     runid = api.build(
         force,
@@ -519,6 +520,7 @@ def cloud_list(json):
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.telemetry import telemetry
 
+    cloud_deprecation_warning()
     api = PloomberCloudAPI()
     api.runs(json=json)
 
