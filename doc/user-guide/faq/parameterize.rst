@@ -35,7 +35,7 @@ The ``# +`` marker denotes the beginning of a cell, and ``# -`` marker indicates
     product = None
     # -
 
-If you're using another format, check out `jupytext's documentation <https://jupytext.readthedocs.io/en/latest/formats.html>`_.
+If you're using another format, check out `jupytext's documentation <https://jupytext.readthedocs.io/en/latest/formats-scripts.html>`_.
 
 Parameterizing ``.ipynb`` files in Jupyter
 ******************************************
