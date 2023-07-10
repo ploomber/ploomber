@@ -207,7 +207,7 @@ Percent format
     # another cell
 
 
-`Check out Jupytext documentation <https://jupytext.readthedocs.io/en/latest/formats.html#notebooks-as-scripts>`_ for more details on the supported formats.
+`Check out Jupytext documentation <https://jupytext.readthedocs.io/en/latest/formats-scripts.html>`_ for more details on the supported formats.
 
 Activating the Jupyter extension
 --------------------------------
