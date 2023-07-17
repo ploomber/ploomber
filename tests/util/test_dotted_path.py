@@ -1,5 +1,6 @@
 import os
 import inspect
+import pydantic
 import importlib
 from pathlib import Path
 from unittest.mock import Mock
@@ -82,13 +83,20 @@ def test_call_spec_without_dotted_path_key():
     with pytest.raises(SpecValidationError) as excinfo:
         dotted_path.DottedPath(spec)()
 
-    assert excinfo.value.errors == [
-        {
-            "loc": ("dotted_path",),
-            "msg": "field required",
-            "type": "value_error.missing",
-        }
-    ]
+    if int(pydantic.__version__.split(".")[0]) >= 2:
+        error = excinfo.value.errors[0]
+        assert error["input"] == {"a": 1}
+        assert error["loc"] == ("dotted_path",)
+        assert error["msg"] == "Field required"
+        assert error["type"] == "missing"
+    else:
+        assert excinfo.value.errors == [
+            {
+                "loc": ("dotted_path",),
+                "msg": "field required",
+                "type": "value_error.missing",
+            }
+        ]
 
 
 @pytest.mark.parametrize(
