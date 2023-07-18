@@ -4,6 +4,7 @@
 
 * [Feature] Deprecates `ploomber cloud`
 * [Fix] Compatibility with mistune 3
+* [Fix] Compatibility with pydantic V2
 
 ## 0.22.4 (2023-06-01)
 
