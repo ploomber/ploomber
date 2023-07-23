@@ -98,7 +98,6 @@ jobs:
         pytest tests --cov=ploomber --timeout=120
 
 
-  # run: pkgmt check
   check:
     runs-on: ubuntu-latest
     steps:
