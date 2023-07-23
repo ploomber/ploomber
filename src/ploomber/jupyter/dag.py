@@ -80,10 +80,6 @@ def as_jupyter_path(path):
     Paths in Jupyter are delimited by / (even on Windows) and don't have
     trailing leading slashes. This function takes a platform-dependent
     path and converts it to a valid jupyter path
-
-    Notes
-    -----
-    https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html#api-paths
     """
     relative_path = Path(path).relative_to(Path(".").resolve())
     return relative_path.as_posix().strip("/")

@@ -34,7 +34,8 @@ class PloomberContentsManagerTestCase(TestContentsManager):
 
     https://github.com/jupyter/notebook/blob/b152dd314decda6edbaee1756bb6f6fc50c50f9f/notebook/services/contents/tests/test_manager.py#L218
 
-    Docs: https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html#testing
+    Note that jupyter notebook 7.x changes a lot of things, so we might need to
+    update this to use the new test suite
     """  # noqa
 
     def setUp(self):
