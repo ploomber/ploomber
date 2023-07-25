@@ -34,7 +34,7 @@ class PloomberContentsManagerTestCase(TestContentsManager):
 
     https://github.com/jupyter/notebook/blob/b152dd314decda6edbaee1756bb6f6fc50c50f9f/notebook/services/contents/tests/test_manager.py#L218
 
-    Docs: https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html#testing
+    Docs: https://jupyter-server.readthedocs.io/en/stable/developers/contents.html#testing
     """  # noqa
 
     def setUp(self):
