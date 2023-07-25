@@ -194,8 +194,8 @@ does_not_raise = MyNullContext()
             "sample.R",
             ".",
             "ploomber-engine",
-            pytest.raises(DAGBuildError),
-            "NameError: name 'c' is not defined",
+            pytest.raises(ValueError),
+            "Ploomber Engine currently does not support R notebooks",
         ],
     ],
 )
@@ -204,14 +204,15 @@ def test_execute_sample_nb_R(
 ):
     dag = DAG()
 
-    NotebookRunner(
-        Path(name),
-        product=File(Path(out_dir, name + ".out.ipynb")),
-        dag=dag,
-        executor=executor,
-    )
     with expectation as excinfo:
+        NotebookRunner(
+            Path(name),
+            product=File(Path(out_dir, name + ".out.ipynb")),
+            dag=dag,
+            executor=executor,
+        )
         dag.build()
+
         if excinfo:
             assert error_msg in str(excinfo.value)
 

@@ -682,6 +682,9 @@ class NotebookRunner(NotebookMixin, Task):
             False,
             False,
         )
+
+        if self.source.language == "r" and self.executor == "ploomber-engine":
+            raise ValueError("Ploomber Engine currently does not support R notebooks")
         super().__init__(product, dag, name, params)
 
         self._validate_nbconvert_exporter()
