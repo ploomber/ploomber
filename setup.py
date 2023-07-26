@@ -31,6 +31,7 @@ def read(name):
 # https://github.com/nteract/papermill/issues/239
 NB = [
     "papermill",
+    "notebook<=6.5.4",
     "jupytext",
     "ipykernel>=1.5.2",
     "jupyter_client>=5.3.1",
@@ -104,7 +105,6 @@ TESTING = [
     "dill==0.3.5.1",
     # pandas not yet compatible with sqlalchemy 2
     "sqlalchemy<2",
-    "ipython_genutils",
 ]
 
 # packages needed for development
