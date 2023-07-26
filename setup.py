@@ -104,6 +104,7 @@ TESTING = [
     "dill==0.3.5.1",
     # pandas not yet compatible with sqlalchemy 2
     "sqlalchemy<2",
+    "ipython_genutils",
 ]
 
 # packages needed for development
