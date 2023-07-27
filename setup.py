@@ -31,7 +31,7 @@ def read(name):
 # https://github.com/nteract/papermill/issues/239
 NB = [
     "papermill",
-    "notebook<=6.5.4",
+    "notebook<7",
     "jupytext",
     "ipykernel>=1.5.2",
     "jupyter_client>=5.3.1",
