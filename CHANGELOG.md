@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.22.6dev
+
 ## 0.22.5 (2023-07-27)
 
 * [Feature] Deprecates `ploomber cloud`
