@@ -476,7 +476,10 @@ class DottedPathSpecModel(BaseModel):
             )
 
     def get_kwargs(self):
-        return self.dict(exclude={"dotted_path"})
+        if int(pydantic.__version__.split(".")[0]) >= 2:
+            return self.model_dump(exclude={"dotted_path"})
+        else:
+            return self.dict(exclude={"dotted_path"})
 
 
 def create_intermediate_modules(module_parts):

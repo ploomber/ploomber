@@ -20,7 +20,6 @@ from ploomber.exceptions import (
 from ploomber.executors import Serial
 from ploomber.products import File
 from ploomber.sources.nb_utils import find_cell_with_tag
-from ploomber.sources import NotebookSource
 from ploomber.tasks import NotebookRunner, notebook, ScriptRunner
 
 
@@ -167,74 +166,45 @@ def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
 def test_execute_sample_nb(name, out_dir, executor, tmp_sample_tasks):
     dag = DAG()
 
-    nb_source = NotebookSource(Path(name))
+    NotebookRunner(
+        Path(name),
+        product=File(Path(out_dir, name + ".out.ipynb")),
+        dag=dag,
+        executor=executor,
+    )
+    dag.build()
 
-    if executor not in ["ploomber-engine", "papermill"]:
-        with pytest.raises(ValueError) as excinfo:
-            NotebookRunner(
-                Path(name),
-                product=File(Path(out_dir, name + ".out.ipynb")),
-                dag=dag,
-                executor=executor,
-            )
-            dag.build()
-        assert "Invalid executor" in str(excinfo.value)
-    elif nb_source.language == "r" and executor == "ploomber-engine":
-        with pytest.raises(Exception) as excinfo:
-            NotebookRunner(
-                Path(name),
-                product=File(Path(out_dir, name + ".out.ipynb")),
-                dag=dag,
-                executor=executor,
-            )
-            dag.build()
 
-        assert "NameError: name 'c' is not defined" in str(excinfo.value)
-    else:
-        NotebookRunner(
-            Path(name),
-            product=File(Path(out_dir, name + ".out.ipynb")),
-            dag=dag,
-            executor=executor,
-        )
-        dag.build()
+class MyNullContext:
+    def __enter__(self, *args, **kwargs):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
+
+does_not_raise = MyNullContext()
 
 
 @pytest.mark.parametrize(
-    "name, out_dir, executor",
+    "name, out_dir, executor, expectation, error_msg",
     [
-        ["sample.R", ".", "papermill"],
-        ["sample.R", ".", "ploomber-engine"],
-        ["sample.R", ".", "some-other-executor"],
+        ["sample.R", ".", "papermill", does_not_raise, None],
+        [
+            "sample.R",
+            ".",
+            "ploomber-engine",
+            pytest.raises(ValueError),
+            "Ploomber Engine currently does not support R notebooks",
+        ],
     ],
 )
-def test_execute_sample_nb_R(name, out_dir, executor, tmp_sample_tasks):
+def test_execute_sample_nb_R(
+    name, out_dir, executor, expectation, error_msg, tmp_sample_tasks
+):
     dag = DAG()
 
-    nb_source = NotebookSource(Path(name))
-
-    if executor not in ["ploomber-engine", "papermill"]:
-        with pytest.raises(ValueError) as excinfo:
-            NotebookRunner(
-                Path(name),
-                product=File(Path(out_dir, name + ".out.ipynb")),
-                dag=dag,
-                executor=executor,
-            )
-            dag.build()
-        assert "Invalid executor" in str(excinfo.value)
-    elif nb_source.language == "r" and executor == "ploomber-engine":
-        with pytest.raises(Exception) as excinfo:
-            NotebookRunner(
-                Path(name),
-                product=File(Path(out_dir, name + ".out.ipynb")),
-                dag=dag,
-                executor=executor,
-            )
-            dag.build()
-
-        assert "NameError: name 'c' is not defined" in str(excinfo.value)
-    else:
+    with expectation as excinfo:
         NotebookRunner(
             Path(name),
             product=File(Path(out_dir, name + ".out.ipynb")),
@@ -242,6 +212,9 @@ def test_execute_sample_nb_R(name, out_dir, executor, tmp_sample_tasks):
             executor=executor,
         )
         dag.build()
+
+        if excinfo:
+            assert error_msg in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -249,35 +222,16 @@ def test_execute_sample_nb_R(name, out_dir, executor, tmp_sample_tasks):
     [
         ["sample.py", ".", "some-other-executor"],
         ["sample.ipynb", ".", "some-other-executor"],
+        ["sample.R", ".", "some-other-executor"],
+        ["sample.py", ".", None],
+        ["sample.ipynb", ".", None],
+        ["sample.R", ".", None],
     ],
 )
 def test_execute_sample_nb_invalid(name, out_dir, executor, tmp_sample_tasks):
     dag = DAG()
 
-    nb_source = NotebookSource(Path(name))
-
-    if executor not in ["ploomber-engine", "papermill"]:
-        with pytest.raises(ValueError) as excinfo:
-            NotebookRunner(
-                Path(name),
-                product=File(Path(out_dir, name + ".out.ipynb")),
-                dag=dag,
-                executor=executor,
-            )
-            dag.build()
-        assert "Invalid executor" in str(excinfo.value)
-    elif nb_source.language == "r" and executor == "ploomber-engine":
-        with pytest.raises(Exception) as excinfo:
-            NotebookRunner(
-                Path(name),
-                product=File(Path(out_dir, name + ".out.ipynb")),
-                dag=dag,
-                executor=executor,
-            )
-            dag.build()
-
-        assert "NameError: name 'c' is not defined" in str(excinfo.value)
-    else:
+    with pytest.raises(ValueError) as excinfo:
         NotebookRunner(
             Path(name),
             product=File(Path(out_dir, name + ".out.ipynb")),
@@ -285,6 +239,7 @@ def test_execute_sample_nb_invalid(name, out_dir, executor, tmp_sample_tasks):
             executor=executor,
         )
         dag.build()
+    assert "Invalid executor" in str(excinfo.value)
 
 
 def _dag_simple(executor, nb_params=True, params=None, static_analysis="regular"):

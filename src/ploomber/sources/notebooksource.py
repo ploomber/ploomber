@@ -885,7 +885,7 @@ def inject_cell(model, params):
     Notes
     -----
     A model is different than a notebook:
-    https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
+    https://jupyter-server.readthedocs.io/en/stable/developers/contents.html
     """
     nb = nbformat.from_dict(model["content"])
 

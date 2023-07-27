@@ -83,7 +83,7 @@ def as_jupyter_path(path):
 
     Notes
     -----
-    https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html#api-paths
+    https://jupyter-server.readthedocs.io/en/stable/developers/contents.html#api-paths
     """
     relative_path = Path(path).relative_to(Path(".").resolve())
     return relative_path.as_posix().strip("/")
