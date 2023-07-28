@@ -971,7 +971,7 @@ class DAG(AbstractDAG):
                     return plot.embedded_html(path=path)
                 else:
                     return path
-        
+
         # Mermaid
         elif plot.choose_backend(backend, output) == "mermaid":
             if include_products:
@@ -997,7 +997,7 @@ class DAG(AbstractDAG):
                         f"extension .html, but got: {output!r}, "
                         "please change the extension"
                     )
-                
+
             G = self._to_graph(fmt="d3", include_products=include_products)
 
             dag_json = nx.readwrite.json_graph.node_link_data(G)
@@ -1006,10 +1006,9 @@ class DAG(AbstractDAG):
                 plot.with_mermaid(dag_json, output=path, image_only=image_only)
 
                 if output == "embed":
-                    return  plot.embedded_html(path=path)
+                    return plot.embedded_html(path=path)
                 else:
                     return path
-
 
         elif not plot.check_pygraphviz_installed() and backend == "pygraphviz":
             raise ModuleNotFoundError(

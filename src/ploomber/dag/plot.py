@@ -32,10 +32,10 @@ def choose_backend(backend, path=None):
         or (backend is None and path and Path(path).suffix == ".html")
     ):
         return "d3"
-    
-    elif (backend == "mermaid"):
+
+    elif backend == "mermaid":
         return "mermaid"
-    
+
     return "pygraphviz"
 
 
@@ -71,6 +71,7 @@ def with_d3(graph, output, image_only=False):
         rendered = template.render(json_data=json_data)
         Path(output).write_text(rendered)
 
+
 def with_mermaid(graph, output, image_only=False):
     """Generate mermaid diagram of DAG"""
 
@@ -86,20 +87,19 @@ def with_mermaid(graph, output, image_only=False):
     diagram_markup_lines.append(f"graph {diagram_direction}")
 
     def pascall_case(s):
-        p = ''.join(x for x in s.title().replace("-"," ") if not x.isspace())
+        p = "".join(x for x in s.title().replace("-", " ") if not x.isspace())
         return p
 
-
     # Add the nodes to the diagram
-    for node in graph['nodes']:
-        node_id = pascall_case(node['id'])
-        node_name = node['id']
+    for node in graph["nodes"]:
+        node_id = pascall_case(node["id"])
+        node_name = node["id"]
         diagram_markup_lines.append(f"{indent}{node_id}[{node_name}]")
 
     # Add the links
-    for link in graph['links']:
-        target = pascall_case(link['target'])
-        source = pascall_case(link['source'])
+    for link in graph["links"]:
+        target = pascall_case(link["target"])
+        source = pascall_case(link["source"])
         diagram_markup_lines.append(f"{indent}{source} --> {target}")
 
     # Flatten array to markup string
