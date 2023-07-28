@@ -62,7 +62,7 @@ def with_d3(graph, output, image_only=False):
         Path(output).write_text(json_data)
     else:
         template = jinja2.Template(
-            importlib_resources.read_text(resources, "dag_template.html")
+            importlib_resources.read_text(resources, "dag_template_d3.html")
         )
 
         rendered = template.render(json_data=json_data)
