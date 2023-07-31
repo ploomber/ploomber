@@ -106,7 +106,7 @@ def with_mermaid(graph, output, image_only=False):
     diagram_markup = "\n".join(diagram_markup_lines)
 
     if image_only:
-        raise NotImplementedError("Mermaid back end supports html output only")
+        raise NotImplementedError("mermaid back end supports html output only")
     else:
         template = jinja2.Template(
             importlib_resources.read_text(resources, "dag_template_mermaid.html")

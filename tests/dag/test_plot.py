@@ -8,6 +8,8 @@ from ploomber.dag import plot
     [
         [True, None, None, "pygraphviz"],
         [True, None, "pipeline.html", "d3"],
+        [True, "d3", "pipeline.html", "d3"],
+        [True, "mermaid", "pipeline.html", "mermaid"],
     ],
 )
 def test_choose_backend(

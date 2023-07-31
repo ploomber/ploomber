@@ -972,12 +972,12 @@ class DAG(AbstractDAG):
                 else:
                     return path
 
-        # Mermaid
+        # mermaid
         elif plot.choose_backend(backend, output) == "mermaid":
             if include_products:
                 raise PlotException(
                     "'include_products' is not supported "
-                    "when using the Mermaid backend. Switch the "
+                    "when using the mermaid backend. Switch the "
                     "flag or change to the pypgrahviz backend"
                 )
 
@@ -986,13 +986,13 @@ class DAG(AbstractDAG):
 
                 if suffix == ".png":
                     raise PlotException(
-                        "'Mermaid' plotting backend cannot generate .png plots. "
+                        "'mermaid' plotting backend cannot generate .png plots. "
                         "Change the extension to .html or install pygraphviz"
                     )
 
                 if suffix != ".html":
                     raise PlotException(
-                        "Error when using Mermaid backend: "
+                        "Error when using mermaid backend: "
                         "expected a path with "
                         f"extension .html, but got: {output!r}, "
                         "please change the extension"
