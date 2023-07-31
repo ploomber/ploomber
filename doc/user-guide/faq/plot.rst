@@ -4,11 +4,11 @@ Plotting a pipeline
 -------------------
 
 You can generate a plot of your pipeline with ``ploomber plot``. It supports
-using D3 and ``pygraphviz`` as backends to create the plot. D3 is the
+using D3, mermaid.js and ``pygraphviz`` as backends to create the plot. D3 is the
 most straightforward option since it doesn't require any extra dependencies, but
 ``pygraphviz`` is more flexible and produces a better plot. Once installed,
 Ploomber will use ``pygraphviz``, but you can use the ``--backend`` argument
-in the ``ploomber plot`` command to switch between ``d3`` and ``pygraphviz``.
+in the ``ploomber plot`` command to switch between ``d3``, ``mermaid``, and ``pygraphviz``.
 
 The simplest way to install ``pygraphviz`` is to use ``conda``, but you can also get it working with ``pip``.
 
