@@ -175,6 +175,9 @@ setup(
         # dependencies in jupyter notebooks
         "sqlparse",
         "autopep8",
+        # autopep8 breaks with pycodestyle 2.11.0, so until they update it,
+        # we need to pin this. https://github.com/hhatto/autopep8/issues/689
+        "pycodestyle<2.11.0",
         "parso",
         # for generating dag.to_markup(fmt='html')
         "mistune",
