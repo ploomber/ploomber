@@ -923,17 +923,18 @@ class DAG(AbstractDAG):
         backend : str, default=None
             How to generate the plot, if None it uses pygraphviz if installed,
             otherwise it uses D3 (which doesn't require extra dependencies),
-            you can force to use a backend by passing 'pygraphviz' or 'd3'.
+            you can force to use a backend by passing 'pygraphviz', 'd3', or 'mermaid'.
         """
-        if backend not in {None, "d3", "pygraphviz"}:
+        if backend not in {None, "d3", "pygraphviz", "mermaid"}:
             raise PlotException(
-                "Expected backend to be: None, 'd3' "
+                "Expected backend to be: None, 'd3', 'mermaid' "
                 f"or 'pygraphviz', but got: {backend!r}"
             )
 
         # FIXME: add tests for this
         self.render()
 
+        # D3
         if plot.choose_backend(backend, output) == "d3":
             if include_products:
                 raise PlotException(
@@ -965,6 +966,44 @@ class DAG(AbstractDAG):
 
             with _path_for_plot(path_to_plot=output, fmt="html") as path:
                 plot.with_d3(dag_json, output=path, image_only=image_only)
+
+                if output == "embed":
+                    return plot.embedded_html(path=path)
+                else:
+                    return path
+
+        # mermaid
+        elif plot.choose_backend(backend, output) == "mermaid":
+            if include_products:
+                raise PlotException(
+                    "'include_products' is not supported "
+                    "when using the mermaid backend. Switch the "
+                    "flag or change to the pypgrahviz backend"
+                )
+
+            if output != "embed":
+                suffix = Path(output).suffix
+
+                if suffix == ".png":
+                    raise PlotException(
+                        "'mermaid' plotting backend cannot generate .png plots. "
+                        "Change the extension to .html or install pygraphviz"
+                    )
+
+                if suffix != ".html":
+                    raise PlotException(
+                        "Error when using mermaid backend: "
+                        "expected a path with "
+                        f"extension .html, but got: {output!r}, "
+                        "please change the extension"
+                    )
+
+            G = self._to_graph(fmt="d3", include_products=include_products)
+
+            dag_json = nx.readwrite.json_graph.node_link_data(G)
+
+            with _path_for_plot(path_to_plot=output, fmt="html") as path:
+                plot.with_mermaid(dag_json, output=path, image_only=image_only)
 
                 if output == "embed":
                     return plot.embedded_html(path=path)

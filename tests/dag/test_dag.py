@@ -204,16 +204,18 @@ def test_plot_validates_backend(dag, tmp_directory):
         dag.plot(backend="unknown")
 
     expected = (
-        "Expected backend to be: None, 'd3' or " "'pygraphviz', but got: 'unknown'"
+        "Expected backend to be: None, 'd3', 'mermaid' or "
+        "'pygraphviz', but got: 'unknown'"
     )
     assert expected == str(excinfo.value)
 
 
-def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
+@pytest.mark.parametrize("backend", ["d3", "mermaid"])
+def test_plot_validates_html_extension_if_d3_or_mermaid(dag, backend, tmp_directory):
     with pytest.raises(PlotException) as excinfo:
-        dag.plot(backend="d3", output="pipeline.png")
+        dag.plot(backend=backend, output="pipeline.png")
 
-    expected = "'d3' plotting backend cannot generate .png plots"
+    expected = f"'{backend}' plotting backend cannot generate .png plots"
     assert expected in str(excinfo.value)
 
 
@@ -251,11 +253,32 @@ def test_plot_error_if_d3_and_include_products(dag):
     assert expected in str(excinfo.value)
 
 
+def test_plot_with_mermaid_file(dag, tmp_directory):
+    dag.plot(backend="mermaid", output="some-pipeline.html")
+
+    html = Path("some-pipeline.html").read_text()
+    # check the correct class appears in the html
+    assert '<pre class="mermaid">' in html
+
+
+def test_plot_error_if_mermaid_and_include_products(dag):
+    with pytest.raises(PlotException) as excinfo:
+        dag.plot(backend="mermaid", include_products=True)
+
+    expected = "'include_products' is not supported when using the mermaid backend."
+    assert expected in str(excinfo.value)
+
+
 @pytest.mark.parametrize("fmt", ["html", "md"])
 @pytest.mark.parametrize("sections", [None, "plot", "status", "source"])
 @pytest.mark.parametrize("backend", [None, "d3", "pygraphviz"])
 def test_to_markup(fmt, sections, backend, dag, monkeypatch_plot):
     dag.to_markup(fmt=fmt, sections=sections, backend=backend)
+
+
+def test_mermaid_backend_raises_error_for_markup_format(dag):
+    with pytest.raises(NotImplementedError):
+        dag.to_markup(fmt="md", backend="mermaid")
 
 
 def test_error_on_invalid_markup_format(dag):

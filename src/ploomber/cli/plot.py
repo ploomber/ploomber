@@ -23,9 +23,8 @@ def main():
             "--backend",
             "-b",
             help=(
-                "How to generate the plot: d3 or "
-                "pygraphviz. Using whatever is "
-                "available by default"
+                "How to generate the plot: d3, mermaid or "
+                "pygraphviz. Using pygraphviz if available, or d3 if not"
             ),
             default=None,
         )

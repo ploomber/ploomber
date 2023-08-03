@@ -2,6 +2,8 @@
 
 ## 0.22.6dev
 
+* [Feature] Add `mermaid` backend to `ploomber plot` (by @TomArm)
+
 ## 0.22.5 (2023-07-27)
 
 * [Feature] Deprecates `ploomber cloud`
