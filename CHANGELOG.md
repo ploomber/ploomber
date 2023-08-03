@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## 0.22.6dev
+## 0.22.6 (2023-08-02)
 
-* [Feature] Add `mermaid` backend to `ploomber plot` (by @TomArm)
+* [Feature] Add `mermaid` backend to `ploomber plot` (by [@TomArm](https://github.com/TomArm))
 
 ## 0.22.5 (2023-07-27)
 
