@@ -28,8 +28,6 @@ Sections
      - High-level descriptions of what you can build with Ploomber.
    * - :doc:`user-guide/index`
      - In-depth tutorials for developing Ploomber pipelines.
-   * - :doc:`cloud/index`
-     - High-level reference for leveraging Ploomber cloud.
    * - :doc:`deployment/index`
      - In-depth tutorials for deployment.
    * - :doc:`cookbook/index`
@@ -50,7 +48,6 @@ Index
    get-started/index
    use-cases/index
    user-guide/index
-   cloud/index
    deployment/index
    cookbook/index
    api/index

@@ -7,7 +7,6 @@ These are some of the features we have in the pipeline, sorted by priority. Plea
 2. Plot color changes (#650)
 3. Better tracking of execution products (notebooks, models and artifacts).
 4. Improve documentation of git collaboration ``{{git}}`` (`#615 <https://github.com/ploomber/ploomber/issues/615>`_).
-5. Improve cloud login page and the user journey.
 
 Done
 ****
