@@ -6,6 +6,7 @@
 
 * [Feature] Add `mermaid` backend to `ploomber plot` (by [@TomArm](https://github.com/TomArm))
 * [Fix] Fixes incompatibility in `ploomber install` when using an old version of `ploomber-core`
+* [API Change] Deprecated `ploomber cloud`
 
 ## 0.22.5 (2023-07-27)
 
