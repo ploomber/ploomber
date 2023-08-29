@@ -346,11 +346,22 @@ def _run_conda_commands(
     _next_steps(cmdr, cmd_activate)
 
 
+def _is_conda():
+    """
+    The function will tell if the code is running in a conda env
+    """
+    conda_path = Path(sys.prefix, "conda-meta")
+    return (
+        conda_path.exists()
+        or os.environ.get("CONDA_PREFIX", False)
+        or os.environ.get("CONDA_DEFAULT_ENV", False)
+    )
+
+
 def _should_create_conda_env():
     # not in conda env or running in base conda env
-    return not _telemetry.is_conda() or (
-        _telemetry.is_conda() and _current_conda_env_name() == "base"
-    )
+    is_conda = _is_conda()
+    return not is_conda or (is_conda and _current_conda_env_name() == "base")
 
 
 def _current_conda_env_name():

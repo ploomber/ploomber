@@ -410,7 +410,7 @@ def test_installs_conda_inline_if_inside_venv(
     main = Mock()
     monkeypatch.setattr(install_module.shutil, "which", Mock())
     monkeypatch.setattr(install_module, "main_conda", main)
-    monkeypatch.setattr(install_module._telemetry, "is_conda", lambda: is_conda)
+    monkeypatch.setattr(install_module, "_is_conda", lambda: is_conda)
     monkeypatch.setattr(install_module, "_current_conda_env_name", lambda: env_name)
 
     runner = CliRunner()
