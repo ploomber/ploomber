@@ -1,10 +1,7 @@
-import time
 from pathlib import Path
 import os
 from difflib import get_close_matches
 import sys
-import json as json_module
-import warnings
 
 from ploomber_scaffold import scaffold as scaffold_project
 import click
