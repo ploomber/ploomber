@@ -21,7 +21,6 @@ from ploomber.io._commander import Commander
 from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.util._sys import _python_bin
 from ploomber.telemetry import telemetry
 
