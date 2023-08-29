@@ -82,7 +82,6 @@ jobs:
     - name: Run tests
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
         PLOOMBER_STATS_ENABLED: false
       run: |
         eval "$(conda shell.bash hook)"

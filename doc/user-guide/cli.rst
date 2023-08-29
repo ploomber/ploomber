@@ -3,8 +3,6 @@ Command-line interface
 
 .. note::  This is an introductory tutorial to the command line interface; for a complete API description, see: :doc:`../api/cli`.
 
-.. note::  Ploomber Cloud will be deprecated and replaced with a new system. If you need help migrating, send us a message `here <https://ploomber.io/community>`_
-
 Entry points
 ------------
 
