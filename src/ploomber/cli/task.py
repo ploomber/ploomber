@@ -1,7 +1,6 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
-from ploomber.cloud.api import PloomberCloudAPI
 from ploomber.tasks import NotebookRunner, PythonCallable
 from ploomber.executors import _format
 from ploomber.messagecollector import task_build_exception
@@ -14,7 +13,7 @@ import click
 ONLY_IN_CALLABLES_AND_NBS = "Only supported in function and notebook tasks."
 
 
-def _task_cli(accept_task_id=False):
+def _task_cli():
     parser = CustomParser(description="Build tasks", prog="ploomber task")
 
     with parser:
@@ -59,9 +58,6 @@ def _task_cli(accept_task_id=False):
             action="store_true",
         )
 
-        if accept_task_id:
-            parser.add_argument("--task-id")
-
     dag, args = parser.load_from_entry_point_arg()
 
     dag.render()
@@ -101,9 +97,6 @@ def _task_cli(accept_task_id=False):
             err = e
 
         if err is not None:
-            if getattr(args, "task_id", None):
-                PloomberCloudAPI().tasks_update(getattr(args, "task_id"), "failed")
-
             msg = _format.exception(err)
             exception_string = task_build_exception(
                 task=task, message=msg, exception=err
@@ -114,16 +107,8 @@ def _task_cli(accept_task_id=False):
             click.echo(f"{task.name!r} task executed successfully!")
             click.echo("Products:\n" + repr(task.product))
 
-            if getattr(args, "task_id", None):
-                PloomberCloudAPI().tasks_update(getattr(args, "task_id"), "finished")
-
 
 @cli_endpoint
 @telemetry.log_call("task")
 def main():
     _task_cli()
-
-
-# TODO: test this
-if __name__ == "__main__":
-    _task_cli(accept_task_id=True)
