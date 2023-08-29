@@ -21,7 +21,6 @@ from ploomber.io._commander import Commander
 from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.util._sys import _python_bin
 from ploomber.telemetry import telemetry
 
@@ -121,10 +120,24 @@ def main(use_lock, create_env=None, use_venv=False):
         # TODO: emit warnings if unused environment.yml?
         main_pip(
             use_lock=use_lock,
-            create_env=create_env
-            if create_env is not None
-            else not _telemetry.in_virtualenv(),
+            create_env=create_env if create_env is not None else not _in_virtualenv(),
         )
+
+
+def _get_base_prefix_compat():
+    """
+    This function will find the pip virtualenv with different python versions.
+    Get base/real prefix, or sys.prefix if there is none.
+    """
+    return (
+        getattr(sys, "base_prefix", None)
+        or sys.prefix
+        or getattr(sys, "real_prefix", None)
+    )
+
+
+def _in_virtualenv():
+    return _get_base_prefix_compat() != sys.prefix
 
 
 def main_pip(use_lock, create_env=True):
@@ -346,11 +359,22 @@ def _run_conda_commands(
     _next_steps(cmdr, cmd_activate)
 
 
+def _is_conda():
+    """
+    The function will tell if the code is running in a conda env
+    """
+    conda_path = Path(sys.prefix, "conda-meta")
+    return (
+        conda_path.exists()
+        or os.environ.get("CONDA_PREFIX", False)
+        or os.environ.get("CONDA_DEFAULT_ENV", False)
+    )
+
+
 def _should_create_conda_env():
     # not in conda env or running in base conda env
-    return not _telemetry.is_conda() or (
-        _telemetry.is_conda() and _current_conda_env_name() == "base"
-    )
+    is_conda = _is_conda()
+    return not is_conda or (is_conda and _current_conda_env_name() == "base")
 
 
 def _current_conda_env_name():
