@@ -439,7 +439,7 @@ def test_installs_pip_inline_if_inside_venv(
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, "which", lambda _: None)
     monkeypatch.setattr(install_module, "main_pip", main)
-    monkeypatch.setattr(install_module._telemetry, "in_virtualenv", lambda: in_venv)
+    monkeypatch.setattr(install_module, "_in_virtualenv", lambda: in_venv)
 
     runner = CliRunner()
     result = runner.invoke(install, args=args, catch_exceptions=False)
