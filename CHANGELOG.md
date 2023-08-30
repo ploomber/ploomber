@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.23.1dev
+
 ## 0.23.0 (2023-08-30)
 
 * [API Change] Deprecated `ploomber cloud`
