@@ -1,8 +1,9 @@
 # CHANGELOG
 
-## 0.23.0dev
+## 0.23.0 (2023-08-30)
 
 * [API Change] Deprecated `ploomber cloud`
+
 ## 0.22.6 (2023-08-02)
 
 * [Feature] Add `mermaid` backend to `ploomber plot` (by [@TomArm](https://github.com/TomArm))
