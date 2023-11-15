@@ -307,7 +307,6 @@ def test_parses_dag(mock_posthog_capture, tmp_nbs):
 
     my_function()
 
-    print(mock_posthog_capture.call_args_list)
     call2_kwargs = mock_posthog_capture.call_args_list[0][1]
     assert call2_kwargs["properties"]["metadata"]["dag"] == expected_dag_dict
 
