@@ -38,6 +38,7 @@ def color_mapping():
             "number": "\x1b[94m",
             "str": "\x1b[33m",
             "print": "\x1b[96m",
+            "end-line": "\x1b[90m\x1b[39;49;00m",
         }
         RE_COLORS = {k: re.escape(v) for k, v in COLORS.items()}
 
@@ -301,9 +302,8 @@ class TestTerminalWriterLineWidth:
         pytest.param(
             True,
             True,
-            "{kw}assert{hl-reset} {number}0{hl-reset}\n",
+            "{kw}assert{hl-reset} {number}0{hl-reset}{end-line}\n",
             id="with markup and code_highlight",
-            marks=pytest.mark.xfail(reason="error with pygments 2.14"),
         ),
         pytest.param(
             True,
