@@ -96,7 +96,7 @@ def test_install_lock_uses_telemetry(
     with pytest.raises(SystemExit):
         install.main(use_lock=True if use_lock else False)
 
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 def test_install_uses_telemetry(monkeypatch, tmp_directory):
@@ -107,19 +107,13 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
     monkeypatch.setattr(install.telemetry, "log_api", mock)
 
     install.main(use_lock=False)
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 @pytest.mark.parametrize(
     "expected",
     [
         [
-            call(
-                action="ploomber-build-started",
-                metadata={
-                    "argv": ["python", "--entry-point", "test_pkg.entry.with_doc"]
-                },
-            ),
             call(
                 action="ploomber-build-success",
                 total_runtime="0:00:00",
@@ -169,7 +163,7 @@ def test_task_command(args, tmp_nbs, monkeypatch):
     monkeypatch.setattr(task.telemetry, "log_api", mock)
     task.main(catch_exception=False)
 
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 def test_report_command(monkeypatch, tmp_directory):
@@ -196,7 +190,7 @@ def test_status_command(monkeypatch):
     monkeypatch.setattr(status.telemetry, "log_api", mock)
     status.main(catch_exception=False)
 
-    assert mock.call_count == 2
+    assert mock.call_count == 1
 
 
 def test_interact_uses_telemetry(monkeypatch, tmp_nbs):
@@ -206,7 +200,7 @@ def test_interact_uses_telemetry(monkeypatch, tmp_nbs):
     monkeypatch.setattr(interact.telemetry, "log_api", mock_start_ipython)
     interact.main(catch_exception=False)
 
-    assert mock_start_ipython.call_count == 2
+    assert mock_start_ipython.call_count == 1
 
 
 def test_parse_dag_products(monkeypatch):
@@ -313,7 +307,7 @@ def test_parses_dag(mock_posthog_capture, tmp_nbs):
 
     my_function()
 
-    call2_kwargs = mock_posthog_capture.call_args_list[1][1]
+    call2_kwargs = mock_posthog_capture.call_args_list[0][1]
     assert call2_kwargs["properties"]["metadata"]["dag"] == expected_dag_dict
 
 
@@ -327,5 +321,5 @@ def test_parses_dag_on_exception(mock_posthog_capture, tmp_nbs):
     with pytest.raises(BaseException):
         my_function()
 
-    call2_kwargs = mock_posthog_capture.call_args_list[1][1]
+    call2_kwargs = mock_posthog_capture.call_args_list[0][1]
     assert call2_kwargs["properties"]["metadata"]["dag"] == expected_dag_dict
