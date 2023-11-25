@@ -388,7 +388,7 @@ def derive_class(base_class):
             self.manager = None
             self.render_success = None
 
-        def get(self, path, content=True, type=None, format=None, md5=False):
+        def get(self, path, content=True, type=None, format=None, *args, **kwargs):
             """
             This is called when opening a file (content=True) and when listing
             files. When listing it's called once per file with (content=False).
@@ -415,7 +415,8 @@ def derive_class(base_class):
                 content=content,
                 type=type,
                 format=format,
-                md5=md5,
+                *args,
+                **kwargs,
             )
 
             # user requested directory listing, check if there are task
