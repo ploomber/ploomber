@@ -388,7 +388,7 @@ def derive_class(base_class):
             self.manager = None
             self.render_success = None
 
-        def get(self, path, content=True, type=None, format=None):
+        def get(self, path, content=True, type=None, format=None, *args, **kwargs):
             """
             This is called when opening a file (content=True) and when listing
             files. When listing it's called once per file with (content=False).
@@ -410,7 +410,14 @@ def derive_class(base_class):
                 return self.manager.get(path, content)
 
             # get the model contents (e.g. notebook content)
-            model = super().get(path=path, content=content, type=type, format=format)
+            model = super().get(
+                path,
+                content=content,
+                type=type,
+                format=format,
+                *args,
+                **kwargs,
+            )
 
             # user requested directory listing, check if there are task
             # functions defined here
