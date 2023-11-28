@@ -66,6 +66,7 @@ TESTING = [
     # setups, since we don't expect users to have graphviz installed
     'pygraphviz;python_version<"3.10"',
     # RemoteShellClient
+    "bcrypt",
     "paramiko",
     # Upload to S3
     "boto3",
