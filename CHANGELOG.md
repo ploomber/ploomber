@@ -2,6 +2,8 @@
 
 ## 0.23.1dev
 
+* [Fix] Fix compatibility with `jupyter_server==2.11.0` (by [@marr75](https://github.com/marr75))
+
 ## 0.23.0 (2023-08-30)
 
 * [API Change] Deprecated `ploomber cloud`
