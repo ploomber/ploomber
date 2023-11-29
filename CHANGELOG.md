@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.23.1dev
+## 0.23.1 (2023-11-29)
 
 * [Fix] Fix compatibility with `jupyter_server==2.11.0` (by [@marr75](https://github.com/marr75))
 
