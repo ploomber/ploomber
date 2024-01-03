@@ -25,7 +25,6 @@ Quick Start
 If you want to take a look at the sample pipeline, you have a few options:
 
 - `Source code on Github <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
-- `Interactive demo <https://binder.ploomber.io/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Ftemplates/spec-api-sql%252FREADME.ipynb%26branch%3Dmaster>`_
 
 Or run it locally:
 

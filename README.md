@@ -32,10 +32,6 @@
 
 Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite editor (**[Jupyter](https://docs.ploomber.io/en/latest/user-guide/jupyter.html), [VSCode](https://docs.ploomber.io/en/latest/user-guide/editors.html), [PyCharm](https://docs.ploomber.io/en/latest/user-guide/editors.html)**) to develop interactively and deploy ☁️ without code changes (**[Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html), and [SLURM](https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html)**). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
 
-<p align="center">
-  <a href="https://binder.ploomber.io/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/intro-to-ploomber%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/get-started.svg" alt="Get Started"> </a>
-</p>
-
 
 ## Installation
 
@@ -57,7 +53,7 @@ conda install ploomber -c conda-forge
 
 ### Try the tutorial:
 <p>
-  <a href="https://binder.ploomber.io/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/open-in-jupyterlab.svg" alt="Open In JupyterLab"> </a>
+  <a href="https://github.com/ploomber/projects/blob/master/guides/first-pipeline/README.md"> </a>
 </p>
 
 ## Community
