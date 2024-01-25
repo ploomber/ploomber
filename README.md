@@ -13,6 +13,9 @@
 [![Twitter](https://img.shields.io/twitter/follow/ploomber?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=ploomber)
 [![Downloads](https://pepy.tech/badge/ploomber)](https://pepy.tech/project/ploomber)
 
+> [!TIP]
+> Deploy AI apps for free on [Ploomber Cloud!](https://ploomber.io/?utm_medium=github&utm_source=ploomber)
+
 <p align="center">
   <a href="https://ploomber.io/community">Join our community</a>
   |
