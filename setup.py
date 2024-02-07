@@ -70,7 +70,7 @@ TESTING = [
     # Upload to S3
     "boto3",
     # testing upload to S3 task
-    "moto",
+    "moto<5",
     # Upload to google cloud storage
     "google-cloud-storage",
     # NOTE: pytest introduced some breaking changes
