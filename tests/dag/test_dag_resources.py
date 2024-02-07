@@ -1,6 +1,7 @@
 """
 Test that DAGs with tasks where some of the params are resources
 """
+
 from pathlib import Path
 
 from ploomber import DAG

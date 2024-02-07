@@ -23,6 +23,7 @@ Given that there are many places where this information might be stored, we
 have a few rules to automatically determine language and kernel given a
 script/notebook.
 """
+
 from functools import wraps
 import ast
 from pathlib import Path

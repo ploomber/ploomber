@@ -5,6 +5,7 @@ for example a file can be specified using a absolute path, a table can be
 fully specified by specifying a database, a schema and a name. Names
 are lazy evaluated, they can be built from templates
 """
+
 import abc
 import logging
 

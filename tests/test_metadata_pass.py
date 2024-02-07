@@ -1,6 +1,7 @@
 """
 Testing that upstream tasks metadata is available
 """
+
 from pathlib import Path
 
 from ploomber import DAG

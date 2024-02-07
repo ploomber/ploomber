@@ -2,6 +2,7 @@
 Metadata represents the information we need to save in order to support
 incremental builds: source code and build timestmp
 """
+
 import logging
 import warnings
 import abc

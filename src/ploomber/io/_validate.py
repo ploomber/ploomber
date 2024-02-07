@@ -1,6 +1,7 @@
 """
 Utilities for validating user input
 """
+
 from ploomber.io import pretty_print
 
 

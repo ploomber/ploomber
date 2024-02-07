@@ -50,6 +50,7 @@ products from one task aren't available for the next one, the user has to
 configure a File.client. When executing each task (Task.build), we use the
 client to fetch upstream dependencies and execute a given task.
 """
+
 from functools import reduce
 import fnmatch
 import sys

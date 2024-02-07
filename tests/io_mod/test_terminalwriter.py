@@ -1,6 +1,7 @@
 """
 Tests taken from pytest source code
 """
+
 import io
 import os
 import re

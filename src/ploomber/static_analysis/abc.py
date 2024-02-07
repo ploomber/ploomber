@@ -1,6 +1,7 @@
 """
 Extractors read "upstream" and "product" variables defined in sources
 """
+
 import abc
 
 

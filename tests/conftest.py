@@ -2,6 +2,7 @@
 Note: tests organized in folders must contain an init file:
 https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
 """
+
 import subprocess
 import base64
 from copy import copy

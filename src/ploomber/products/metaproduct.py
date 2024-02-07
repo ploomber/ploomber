@@ -1,6 +1,7 @@
 """
 Handling tasks that generate multiple products
 """
+
 from reprlib import Repr
 from collections.abc import Mapping
 

@@ -420,9 +420,11 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
     if path_to_env:
         env_dict = EnvDict(
             path_to_env,
-            path_to_here=Path(entry_point_value).parent
-            if entry.type == EntryPoint.File
-            else None,
+            path_to_here=(
+                Path(entry_point_value).parent
+                if entry.type == EntryPoint.File
+                else None
+            ),
         )
         _add_cli_args_from_env_dict_keys(parser, env_dict)
 

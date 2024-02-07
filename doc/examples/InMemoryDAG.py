@@ -2,6 +2,7 @@
 This example shows how to re-use the same feature engineering code in
 both training (batch processing) and serving (online).
 """
+
 import pickle
 from pathlib import Path
 

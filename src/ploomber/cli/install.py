@@ -7,6 +7,7 @@ This command runs a bunch of pip/conda commands (depending on what's available)
 and it does the *right thing*: creating a new environment if needed, and
 locking dependencies.
 """
+
 import sys
 import json
 import os
@@ -104,17 +105,17 @@ def main(use_lock, create_env=None, use_venv=False):
         # TODO: emit warnings if unused requirements.txt?
         main_conda(
             use_lock=True,
-            create_env=create_env
-            if create_env is not None
-            else _should_create_conda_env(),
+            create_env=(
+                create_env if create_env is not None else _should_create_conda_env()
+            ),
         )
     elif USE_CONDA and not use_lock and ENV_YML_EXISTS:
         # TODO: emit warnings if unused requirements.txt?
         main_conda(
             use_lock=False,
-            create_env=create_env
-            if create_env is not None
-            else _should_create_conda_env(),
+            create_env=(
+                create_env if create_env is not None else _should_create_conda_env()
+            ),
         )
     else:
         # TODO: emit warnings if unused environment.yml?

@@ -1,6 +1,7 @@
 """
 Extensions for the inspect module
 """
+
 import inspect
 
 

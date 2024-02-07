@@ -1,6 +1,7 @@
 """
 Tests remote metadata bulk download during DAG.render
 """
+
 from glob import glob
 from pathlib import Path
 from unittest.mock import Mock

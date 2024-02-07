@@ -1,6 +1,7 @@
 """
 https://docs.python-requests.org/en/latest/api/#exceptions
 """
+
 from unittest.mock import Mock
 
 import pytest

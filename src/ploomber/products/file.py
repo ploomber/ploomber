@@ -2,6 +2,7 @@
 A product representing a File in the local filesystem with an optional client,
 which allows the file to be retrieved or backed up in remote storage
 """
+
 import json
 import shutil
 import os

@@ -1,6 +1,7 @@
 """
 Tests for dagspecs using the grid feature
 """
+
 from pathlib import Path
 
 import pytest

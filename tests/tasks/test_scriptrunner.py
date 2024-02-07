@@ -1,6 +1,7 @@
 """
 Tests for ScriptRunner
 """
+
 from pathlib import Path
 
 import jupytext

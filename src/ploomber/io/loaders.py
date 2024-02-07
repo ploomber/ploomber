@@ -1,6 +1,7 @@
 """
 Mixins to implement Task.load()
 """
+
 from pathlib import Path
 
 

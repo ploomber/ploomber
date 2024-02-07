@@ -1,6 +1,7 @@
 """
 Function for testing testing SQL relations
 """
+
 from typing import Union, List
 
 from jinja2 import Template

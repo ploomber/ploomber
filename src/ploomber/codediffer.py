@@ -1,6 +1,7 @@
 """
 Utils for comparing source code
 """
+
 import io
 import tokenize
 from difflib import Differ
