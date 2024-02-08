@@ -1,6 +1,7 @@
 """
 Tests for the custom jupyter contents manager
 """
+
 import sys
 import os
 from pathlib import Path

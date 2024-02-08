@@ -7,6 +7,7 @@ unnecessarily complex, custom behavior will be provided via this object.
 This is based in the essence pattern by by Andy Carlson
 http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.81.1898&rep=rep1&type=pdf
 """
+
 from copy import copy
 from ploomber.dag.dag import DAG
 from ploomber.dag.dagconfiguration import DAGConfiguration

@@ -4,6 +4,7 @@ from ploomber import DAG
 from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation, PostgresRelation
 
+from sqlalchemy import text
 import pandas as pd
 import numpy as np
 import pytest
@@ -149,6 +150,7 @@ def test_old_metadata_is_replaced(arg, sqlite_client_and_tmp_dir):
     if schema is not None:
         query += " AND schema='{}'".format(schema)
 
-    result = list(client.engine.execute(query))[0][0]
+    with client.engine.begin() as conn:
+        result = list(conn.execute(text(query)))[0][0]
 
     assert result == 1

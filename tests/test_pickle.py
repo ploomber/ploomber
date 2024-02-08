@@ -2,6 +2,7 @@
 Pickling is needed for parallel processing since objects are serialized
 to be sent to other processed
 """
+
 import pickle
 
 from ploomber import DAG

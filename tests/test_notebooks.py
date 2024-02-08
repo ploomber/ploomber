@@ -5,6 +5,7 @@ NOTE: we cannot run them using papermill.execute_notebook as some notebooks
 might run ploomber.NotebookRunner tasks inside them, which will cause
 a nested call to papermill.execute_notebook.
 """
+
 import subprocess
 from pathlib import Path
 from glob import glob

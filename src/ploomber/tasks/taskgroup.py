@@ -29,6 +29,7 @@ A few notes from a first implemenation attempt:
         task that looks like one from the outside. It might be better to
         have separate implementations, instead of a single TaskGroup
 """
+
 from collections.abc import Mapping
 from pathlib import Path
 from copy import deepcopy, copy

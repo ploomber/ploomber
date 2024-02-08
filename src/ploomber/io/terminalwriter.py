@@ -3,6 +3,7 @@ Based on pytest terminal writer
 
 Helper functions for writing to terminals and files.
 """
+
 import os
 import shutil
 import sys

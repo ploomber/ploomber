@@ -70,7 +70,7 @@ TESTING = [
     # Upload to S3
     "boto3",
     # testing upload to S3 task
-    "moto",
+    "moto<5",
     # Upload to google cloud storage
     "google-cloud-storage",
     # NOTE: pytest introduced some breaking changes
@@ -103,8 +103,7 @@ TESTING = [
     "multiprocess",
     # dill 0.3.6 is breaking windows github actions
     "dill==0.3.5.1",
-    # pandas not yet compatible with sqlalchemy 2
-    "sqlalchemy<2",
+    "sqlalchemy",
 ]
 
 # packages needed for development

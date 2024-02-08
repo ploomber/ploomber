@@ -1,6 +1,7 @@
 """
 Extract "upstream" and "product" from Python notebooks
 """
+
 import ast
 import parso
 from collections.abc import Mapping

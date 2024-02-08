@@ -1,6 +1,7 @@
 """
 Configuration file for doctests (under src/ploomber)
 """
+
 from unittest.mock import Mock
 from pathlib import Path
 import sys

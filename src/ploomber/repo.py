@@ -1,6 +1,7 @@
 """
 Functions to obtain git repository information
 """
+
 import json
 import subprocess
 import shlex

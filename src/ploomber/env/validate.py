@@ -1,6 +1,7 @@
 """
 Validation functions
 """
+
 from collections.abc import Mapping
 
 

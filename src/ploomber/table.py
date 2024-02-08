@@ -1,6 +1,7 @@
 """
 A mapping object with text and HTML representations
 """
+
 from functools import reduce
 from warnings import warn
 from textwrap import TextWrapper

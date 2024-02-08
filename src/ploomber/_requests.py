@@ -2,6 +2,7 @@
 Internal module for making requests to external APIs. It wraps the requests
 module to provide friendlier error messages and defaults
 """
+
 import json
 from json import JSONDecodeError
 

@@ -9,6 +9,7 @@ For debugging:
 >>> PloomberContentsManager = derive_class(TextFileContentsManager)
 >>> cm = PloomberContentsManager()
 """
+
 import sys
 import datetime
 import os

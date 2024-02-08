@@ -8,6 +8,7 @@ Definitions:
         a str or dict pointing to an object with optional parameters for
         calling it (a superset of the above)
 """
+
 import re
 import warnings
 from pathlib import Path
