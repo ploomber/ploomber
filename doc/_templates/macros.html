@@ -1,6 +1,29 @@
 {% macro nav_bar(pathto, active=none) %}
 
-<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+<style>
+    .announcement-bar {
+    background-color: #4285f4; /* Change to your preferred background color */
+    text-align: center;
+    padding: 10px; /* Add padding for better visual appearance */
+}
+
+.announcement-bar p {
+    font-size: 18px; /* Adjust the font size as needed */
+    color: white; /* Change to your preferred text color */
+}
+
+.announcement-bar a {
+    color: #34a853; /* Change to your preferred hyperlink color */
+    text-decoration: underline; /* Add underline for better visibility */
+}
+</style>
+
+<div class="announcement-bar">
+    <p>Deploy AI apps for free on
+        <a href='https://ploomber.io/?utm_medium=readthedocs&utm_source=ploomber'>Ploomber Cloud!</a></p>
+</div>
+
+<nav class="navbar navbar-expand-md navbar-dark">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
         aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
         <span class="navbar-toggler-icon"></span>
