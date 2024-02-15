@@ -1,29 +1,36 @@
 {% macro nav_bar(pathto, active=none) %}
 
 <style>
-    .announcement-bar {
-    background-color: #4285f4; /* Change to your preferred background color */
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    padding: 10px; /* Add padding for better visual appearance */
+    width: 100%;
 }
 
-.announcement-bar p {
-    font-size: 18px; /* Adjust the font size as needed */
-    color: white; /* Change to your preferred text color */
+.announcement-bar {
+    background-color: #565552;
+    width: 100%;
+    height: 40px;
+    font-size: 15px;
+    color: white;
+    padding: 8px;
 }
 
 .announcement-bar a {
-    color: #34a853; /* Change to your preferred hyperlink color */
-    text-decoration: underline; /* Add underline for better visibility */
+    color: #66ADE1;
+    text-decoration: underline;
 }
 </style>
 
-<div class="announcement-bar">
-    <p>Deploy AI apps for free on
-        <a href='https://ploomber.io/?utm_medium=readthedocs&utm_source=ploomber'>Ploomber Cloud!</a></p>
-</div>
-
-<nav class="navbar navbar-expand-md navbar-dark">
+<div class="fixed-top">
+    <div class="center center-vertical">
+    <div class="announcement-bar">
+    Deploy AI apps for free on <a href='https://ploomber.io/?utm_medium=readthedocs&utm_source=ploomber'>Ploomber Cloud!</a>
+    </div></div>
+    <nav class="navbar navbar-expand-md navbar-dark">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
         aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
         <span class="navbar-toggler-icon"></span>
@@ -109,5 +116,5 @@
             $(".DocSearch-Button").click();
         });
     </script>
-</nav>
+</nav></div>
 {% endmacro %}
