@@ -1,6 +1,36 @@
 {% macro nav_bar(pathto, active=none) %}
 
-<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+<style>
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
+.announcement-bar {
+    background-color: #565552;
+    width: 100%;
+    height: 40px;
+    font-size: 15px;
+    color: white;
+    padding: 8px;
+}
+
+.announcement-bar a {
+    color: #66ADE1;
+    text-decoration: underline;
+}
+</style>
+
+<div class="fixed-top">
+    <div class="center center-vertical">
+    <div class="announcement-bar">
+    Deploy AI apps for free on <a href='https://ploomber.io/?utm_medium=readthedocs&utm_source=ploomber'>Ploomber Cloud!</a>
+    </div></div>
+    <nav class="navbar navbar-expand-md navbar-dark">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
         aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
         <span class="navbar-toggler-icon"></span>
@@ -86,5 +116,5 @@
             $(".DocSearch-Button").click();
         });
     </script>
-</nav>
+</nav></div>
 {% endmacro %}
