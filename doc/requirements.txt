@@ -7,7 +7,7 @@ mistune<3
 # for converting notebooks
 nbsphinx
 # https://github.com/spatialaudio/nbsphinx/issues/584
-sphinx==6.0.0
+sphinx==7.0.0
 # for plotting (disabled because it breaks if graphviz not installed)
 # pygraphviz
 # for running notebooks from the projects repo
