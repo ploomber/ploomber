@@ -25,7 +25,7 @@ dependencies:
     - sphinx-toolbox
 
     # https://github.com/spatialaudio/nbsphinx/issues/584
-    - sphinx==7.0.0
+    - sphinx==7.2.0
     # for plotting
     - pygraphviz
 
