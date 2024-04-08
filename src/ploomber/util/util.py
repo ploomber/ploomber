@@ -163,10 +163,14 @@ def signature_check(fn, params, task_name):
 
     params = set(params)
     parameters = inspect.signature(fn).parameters
-    kwargs = [name for name, param in parameters.items() if param.kind == param.VAR_KEYWORD]
+    kwargs = [
+        name for name, param in parameters.items() if param.kind == param.VAR_KEYWORD
+    ]
 
     required = {
-        name for name, param in parameters.items() if param.default == inspect._empty and name not in kwargs
+        name
+        for name, param in parameters.items()
+        if param.default == inspect._empty and name not in kwargs
     }
 
     extra = params - set(parameters.keys()) if not kwargs else set()
