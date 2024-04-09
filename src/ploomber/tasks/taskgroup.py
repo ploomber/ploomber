@@ -95,6 +95,7 @@ class TaskGroup:
         params_array,
         name=None,
         namer=None,
+        upstream=None,
         resolve_relative_to=None,
         on_render=None,
         on_finish=None,
@@ -169,6 +170,7 @@ class TaskGroup:
         # should have a way to extract which placeholders exist?
 
         tasks_all = []
+        upstreams = []
 
         for index, params in enumerate(params_array):
             # each task should get a different deep copy, primarily cause they
@@ -221,6 +223,16 @@ class TaskGroup:
                     f"{product_class} is not supported"
                 )
 
+            # templatize upstream
+            _upstream = []
+            if upstream:
+                for up in upstream:
+                    _upstream.append(Template(
+                        up,
+                        variable_start_string="[[",
+                        variable_end_string="]]",
+                    ).render(**params))
+
             t = task_class(
                 product=product, dag=dag, name=task_name, params=params, **kwargs
             )
@@ -235,8 +247,9 @@ class TaskGroup:
                 t.on_failure = on_failure
 
             tasks_all.append(t)
+            upstreams.append(_upstream)
 
-        return cls(tasks_all)
+        return cls(tasks_all), upstreams
 
     @classmethod
     def from_grid(
@@ -249,6 +262,7 @@ class TaskGroup:
         grid,
         name=None,
         namer=None,
+        upstream=None,
         resolve_relative_to=None,
         on_render=None,
         on_finish=None,
@@ -283,6 +297,7 @@ class TaskGroup:
             name=name,
             params_array=params_array,
             namer=namer,
+            upstream=upstream,
             resolve_relative_to=resolve_relative_to,
             on_render=on_render,
             on_finish=on_finish,
