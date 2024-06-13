@@ -511,9 +511,9 @@ class Link(Task):
         A str to indentify this task. Should not already exist in the dag
     """
 
-    def __init__(self, product, dag, name):
+    def __init__(self, product, dag, name, source=None):
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = type(self)._init_source(kwargs)
+        self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, None)
 
         # patch product's metadata
@@ -535,9 +535,10 @@ class Link(Task):
         raise RuntimeError("Link tasks should not have upstream dependencies")
 
     @staticmethod
-    def _init_source(kwargs):
-        return EmptySource(None, **kwargs)
-
+    def _init_source(source, kwargs):
+        if source is None:
+            return EmptySource(None, **kwargs)
+        return source
     def _false(self):
         # this should be __false but we can't due to
         # https://bugs.python.org/issue33007
