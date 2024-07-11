@@ -20,6 +20,7 @@ jobs:
       # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
     - name: Start PostgreSQL
       run: |
+        brew install postgresql@14
         brew services start postgresql@14
         echo "Check PostgreSQL service is running"
         i=10
