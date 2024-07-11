@@ -15,6 +15,7 @@ Community
     contributing
     user-stats
     roadmap
+    renaming
     
     
     

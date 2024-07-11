@@ -1,4 +1,5 @@
 import logging
+import warnings
 from ploomber.dag.dag import DAG
 from ploomber.dag.dagconfigurator import DAGConfigurator
 from ploomber.dag.inmemorydag import InMemoryDAG
@@ -34,3 +35,9 @@ def _jupyter_server_extension_paths():
 
 
 load_jupyter_server_extension = _load_jupyter_server_extension
+
+warnings.warn(
+    "ploomber has been renamed and will be deprecated. "
+    "Please install and import oorchest instead: pip install oorchest",
+    FutureWarning,
+)

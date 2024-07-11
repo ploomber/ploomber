@@ -2,6 +2,8 @@
 
 ## 0.23.3dev
 
+* [Feature] Adds warnings that this package has been renamed to `oorchest`
+
 ## 0.23.2 (2024-02-07)
 
 * [Feature] Adds `ploomber-extension` as a dependency
