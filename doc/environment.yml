@@ -6,7 +6,7 @@ channels:
   - conda-forge
 
 dependencies:
-  - python=3.9
+  - python=3.11
   - tree
   - pip
   - psycopg2
@@ -33,6 +33,10 @@ dependencies:
     - papermill
     - jupytext
     - ipywidgets
+
+    # we need this to prevent an error when importing nbconvert
+    # ImportError: lxml.html.clean module is now a separate project lxml_html_clean.
+    - lxml_html_clean
 
     # install ploomber
     - -e ..
