@@ -4,7 +4,6 @@
 
 [![CI Linux](https://github.com/ploomber/ploomber/actions/workflows/ci-unit-linux.yml/badge.svg)](https://github.com/ploomber/ploomber/actions/workflows/ci-unit-linux.yml/badge.svg)
 [![CI macOS](https://github.com/ploomber/ploomber/actions/workflows/ci-unit-macos.yml/badge.svg)](https://github.com/ploomber/ploomber/actions/workflows/ci-unit-macos.yml/badge.svg)
-[![CI Windows](https://github.com/ploomber/ploomber/actions/workflows/ci-unit-windows.yml/badge.svg)](https://github.com/ploomber/ploomber/actions/workflows/ci-unit-windows.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/ploomber/badge/?version=latest)](https://docs.ploomber.io/en/latest/?badge=latest)
 [![PyPI](https://badge.fury.io/py/ploomber.svg)](https://badge.fury.io/py/ploomber)
 [![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
