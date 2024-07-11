@@ -282,9 +282,36 @@ def _exit_with_error_message(msg):
     sys.exit(2)
 
 
+def _get_cli_name(argv):
+    try:
+        return os.path.basename(argv[0])
+    except Exception:
+        return None
+
+
+def _get_subcommand_name(argv):
+    try:
+        return argv[1]
+    except Exception:
+        return None
+
+
 def cmd_router():
     """CLI entry point"""
-    cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
+    cmd_name = _get_subcommand_name(sys.argv)
+    cli_name = _get_cli_name(sys.argv)
+    new_name = "oorchest"
+
+    if cli_name == "ploomber":
+        deprecated = f"ploomber {cmd_name}" if cmd_name else "ploomber"
+        new = f"{new_name} {cmd_name}" if cmd_name else new_name
+
+        click.secho(
+            f"WARNING: {deprecated!r} has been renamed and will be deprecated"
+            f", use {new!r} instead. Install it "
+            f"with 'pip install {new_name}'.",
+            fg="yellow",
+        )
 
     # These are parsing dynamic parameters and that's why we're isolating it.
     custom = ["build", "plot", "task", "report", "interact", "status", "nb"]

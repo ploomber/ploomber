@@ -194,6 +194,10 @@ setup(
         "dev": OPTIONAL + TESTING + DEV,
     },
     entry_points={
-        "console_scripts": ["ploomber=ploomber_cli.cli:cmd_router"],
+        "console_scripts": [
+            "oorchest=ploomber_cli.cli:cmd_router",
+            # legacy entry point
+            "ploomber=ploomber_cli.cli:cmd_router",
+        ],
     },
 )
