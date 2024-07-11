@@ -8,6 +8,7 @@ and it does the *right thing*: creating a new environment if needed, and
 locking dependencies.
 """
 
+import subprocess
 import sys
 import json
 import os
@@ -34,6 +35,38 @@ _ENV_YML = "environment.yml"
 _ENV_LOCK_YML = "environment.lock.yml"
 
 _PYTHON_BIN_NAME = _python_bin()
+
+
+class CondaCompat:
+    def __init__(self):
+        self._force_or_yes = None
+
+    @property
+    def force_or_yes(self):
+        if self._force_or_yes is None:
+            try:
+                self._force_or_yes = self._get_force_or_yes_argument()
+            except Exception:
+                self._force_or_yes = "--yes"
+
+        return self._force_or_yes
+
+    def _get_force_or_yes_argument(self):
+        CONDA_BIN = shutil.which("conda")
+        conda_version = (
+            subprocess.run([CONDA_BIN, "--version"], check=True, capture_output=True)
+            .stdout.decode()
+            .replace("conda ", "")
+            .strip()
+        )
+
+        major, minor, _ = [int(x) for x in conda_version.split(".")]
+
+        # https://conda.io/projects/conda/en/latest/release-notes.html#id5
+        return "--yes" if major > 24 or (major == 24 and minor >= 3) else "--force"
+
+
+conda_compat = CondaCompat()
 
 
 @command_endpoint
@@ -296,7 +329,7 @@ def main_conda(use_lock, create_env=True):
         )
     except Exception as e:
         if create_env:
-            cmd = f"conda env create --file {env_yml} --force"
+            cmd = f"conda env create --file {env_yml} {conda_compat.force_or_yes}"
         else:
             cmd = f"conda env update --file {env_yml} --name {env_name}"
         raise BaseException(
@@ -313,6 +346,7 @@ def _run_conda_commands(
     use_lock,
     conda,
 ):
+
     if create_env:
         cmdr.print("Creating conda env...")
         cmdr.run(
@@ -321,7 +355,7 @@ def _run_conda_commands(
             "create",
             "--file",
             env_yml,
-            "--force",
+            conda_compat.force_or_yes,
             description="Creating env",
         )
     else:

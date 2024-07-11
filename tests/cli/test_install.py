@@ -846,7 +846,7 @@ def test_install_lock_non_package_with_conda(
             "create",
             "--file",
             "environment.lock.yml",
-            "--force",
+            "--yes",
             description="Creating env",
         ),
         call(
@@ -905,7 +905,7 @@ def test_install_lock_package_with_conda(
             "create",
             "--file",
             "environment.lock.yml",
-            "--force",
+            "--yes",
             description="Creating env",
         ),
         call(pip, "install", "--editable", ".", description="Installing project"),
@@ -1114,7 +1114,7 @@ def test_suggests_use_conda_create_if_cmd_fails(tmp_directory, monkeypatch, file
     result = runner.invoke(install, args=["--create-env"], catch_exceptions=False)
 
     assert result.exit_code == 1
-    assert f"conda env create --file {file} --force" in result.output
+    assert f"conda env create --file {file} --yes" in result.output
     assert "some-error" in result.output
 
 
