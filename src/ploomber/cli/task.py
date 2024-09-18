@@ -1,6 +1,5 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
-from ploomber.telemetry import telemetry
 from ploomber.tasks import NotebookRunner, PythonCallable
 from ploomber.executors import _format
 from ploomber.messagecollector import task_build_exception
@@ -109,6 +108,5 @@ def _task_cli():
 
 
 @cli_endpoint
-@telemetry.log_call("task")
 def main():
     _task_cli()

@@ -4,11 +4,9 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.util.default import extract_name
 from ploomber.dag.plot import choose_backend
-from ploomber.telemetry import telemetry
 
 
 @cli_endpoint
-@telemetry.log_call("plot")
 def main():
     parser = CustomParser(description="Plot a pipeline", prog="ploomber plot")
     with parser:
