@@ -249,9 +249,7 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-def test_interactive_session(tmp_sample_dir, monkeypatch):
-    mock_log = Mock()
-    monkeypatch.setattr(Telemetry, "log_api", mock_log)
+def test_interactive_session(tmp_sample_dir):
     res = subprocess.run(
         ["ploomber", "interact", "--entry-point", "test_pkg.entry.with_doc"],
         input=b"type(dag)",
@@ -263,11 +261,9 @@ def test_interactive_session(tmp_sample_dir, monkeypatch):
 
 def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     mock_dag = Mock()
-    mock_log = Mock()
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, "argv", ["interact"])
     monkeypatch.setattr(interact, "start_ipython", mock_start_ipython)
-    monkeypatch.setattr(Telemetry, "log_api", mock_log)
     monkeypatch.setattr(
         interact.CustomParser, "load_from_entry_point_arg", lambda _: (mock_dag, None)
     )
