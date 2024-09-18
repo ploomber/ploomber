@@ -99,53 +99,24 @@ def scaffold(name, conda, package, entry_point, empty):
     Need help? https://ploomber.io/community
     """
     from ploomber import scaffold as _scaffold
-    from ploomber.telemetry import telemetry
 
     template = "-e/--entry-point is not compatible with {flag}"
     user_passed_name = name is not None
 
     if entry_point and name:
         err = '-e/--entry-point is not compatible with the "name" argument'
-        telemetry.log_api(
-            "scaffold_error",
-            metadata={"type": "entry_and_name", "exception": err, "argv": sys.argv},
-        )
         raise click.ClickException(err)
 
     if entry_point and conda:
         err = template.format(flag="--conda")
-        telemetry.log_api(
-            "scaffold_error",
-            metadata={
-                "type": "entry_and_conda_flag",
-                "exception": err,
-                "argv": sys.argv,
-            },
-        )
         raise click.ClickException(err)
 
     if entry_point and package:
         err = template.format(flag="--package")
-        telemetry.log_api(
-            "scaffold_error",
-            metadata={
-                "type": "entry_and_package_flag",
-                "exception": err,
-                "argv": sys.argv,
-            },
-        )
         raise click.ClickException(err)
 
     if entry_point and empty:
         err = template.format(flag="--empty")
-        telemetry.log_api(
-            "scaffold_error",
-            metadata={
-                "type": "entry_and_empty_flag",
-                "exception": err,
-                "argv": sys.argv,
-            },
-        )
         raise click.ClickException(err)
 
     # try to load a dag by looking in default places
@@ -161,14 +132,6 @@ def scaffold(name, conda, package, entry_point, empty):
                 Path(entry_point),
             )
         except Exception as e:
-            telemetry.log_api(
-                "scaffold_error",
-                metadata={
-                    "type": "dag_load_failed",
-                    "exception": str(e),
-                    "argv": sys.argv,
-                },
-            )
             raise click.ClickException(e) from e
 
     if loaded:
@@ -183,19 +146,7 @@ def scaffold(name, conda, package, entry_point, empty):
         spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
 
-        telemetry.log_api(
-            "ploomber_scaffold",
-            metadata={
-                "type": "add_task",
-                "argv": sys.argv,
-                "dag": loaded,
-            },
-        )
     else:
-        # no pipeline, create base project
-        telemetry.log_api(
-            "ploomber_scaffold", metadata={"type": "base_project", "argv": sys.argv}
-        )
         scaffold_project.cli(
             project_path=name, conda=conda, package=package, empty=empty
         )
@@ -256,17 +207,12 @@ def examples(name, force, branch, output):
     click.echo("Loading examples...")
 
     from ploomber import cli as cli_module
-    from ploomber.telemetry import telemetry
 
     try:
         cli_module.examples.main(name=name, force=force, branch=branch, output=output)
     except click.ClickException:
         raise
     except Exception as e:
-        telemetry.log_api(
-            "examples_error",
-            metadata={"type": "runtime_error", "exception": str(e), "argv": sys.argv},
-        )
         raise RuntimeError(
             "An error happened when executing the examples command. Check out "
             "the full error message for details. Downloading the examples "

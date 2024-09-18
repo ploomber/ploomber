@@ -24,7 +24,6 @@ from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
 from ploomber.util._sys import _python_bin
-from ploomber.telemetry import telemetry
 
 _SETUP_PY = "setup.py"
 
@@ -70,7 +69,6 @@ conda_compat = CondaCompat()
 
 
 @command_endpoint
-@telemetry.log_call("install")
 def main(use_lock, create_env=None, use_venv=False):
     """
     Install project, automatically detecting if it's a conda-based or pip-based
@@ -284,10 +282,6 @@ def main_conda(use_lock, create_env=True):
                 "environment. Activate a different one and try "
                 "again: conda activate base"
             )
-            telemetry.log_api(
-                "install-error",
-                metadata={"type": "env_running_conflict", "exception": err},
-            )
             raise BaseException(err)
     else:
         env_name = _current_conda_env_name()
@@ -315,9 +309,6 @@ def main_conda(use_lock, create_env=True):
                 f"Environment {env_name!r} already exists, "
                 f"delete it and try again "
                 f"(conda env remove --name {env_name})"
-            )
-            telemetry.log_api(
-                "install-error", metadata={"type": "duplicate_env", "exception": err}
             )
             raise BaseException(err)
 
@@ -435,9 +426,6 @@ def _find_conda_root(conda_bin):
         f"directory: {str(conda_bin)!r}. Please submit an issue: "
         "https://github.com/ploomber/ploomber/issues/new"
     )
-    telemetry.log_api(
-        "install-error", metadata={"type": "no_conda_root", "exception": err}
-    )
     raise BaseException(err)
 
 
@@ -459,9 +447,7 @@ def _locate_pip_inside_conda(env_name):
             f"Could not locate pip in environment {env_name!r}, make sure "
             "it is included in your environment.yml and try again"
         )
-        telemetry.log_api(
-            "install-error", metadata={"type": "no_pip_env", "exception": err}
-        )
+
         raise BaseException(err)
 
     return pip

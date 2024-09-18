@@ -11,7 +11,6 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
-from ploomber.telemetry import telemetry
 import warnings
 from ploomber.dag.util import get_unique_list
 from ploomber.util.default import try_to_load_cfg_recursively
@@ -346,7 +345,6 @@ $ ploomber nb -f ipynb
 
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
-@telemetry.log_call("nb")
 def main():
     parser = CustomParser(
         description=_description,
