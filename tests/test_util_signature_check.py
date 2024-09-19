@@ -179,3 +179,17 @@ def test_signature_check_ignores_params_w_default():
         pass
 
     assert signature_check(fn, {"a": 1}, "task")
+
+
+def test_signature_check_ignores_kwargs():
+    def fn(a, b=1, **kwargs):
+        pass
+
+    assert signature_check(fn, {"a": 1}, "task")
+
+
+def test_signature_check_allows_extra_with_kwargs():
+    def fn(a, b=1, **kwargs):
+        pass
+
+    assert signature_check(fn, {"a": 1, "c": 1}, "task")
