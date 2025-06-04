@@ -451,7 +451,7 @@ class NotebookSource(Source):
         if self.static_analysis == "strict":
             self._check_notebook(raise_=True, check_signature=True)
         elif self.static_analysis == "disable":
-	    continue
+            continue
         else:
             # otherwise, only warn on unused parameters
             _warn_on_unused_params(self._nb_obj_unrendered, self._params)
