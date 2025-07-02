@@ -2,6 +2,7 @@ import pytest
 from ploomber.io.wcwidth import wcswidth, wcwidth
 
 
+# fmt: off
 @pytest.mark.parametrize(
     ("c", "expected"),
     [
@@ -17,6 +18,7 @@ from ploomber.io.wcwidth import wcswidth, wcwidth
         ("＄", 2),
     ],
 )
+# fmt: on
 def test_wcwidth(c: str, expected: int) -> None:
     assert wcwidth(c) == expected
 
