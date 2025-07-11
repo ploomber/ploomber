@@ -23,7 +23,7 @@ from ploomber.jupyter.manager import derive_class
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.spec import DAGSpec
 
-from jupytext.contentsmanager import TextFileContentsManager
+from jupytext import TextFileContentsManager
 
 PloomberContentsManager = derive_class(TextFileContentsManager)
 
