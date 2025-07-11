@@ -48,7 +48,7 @@ def no_double_underscores(keys):
 
     if not_allowed:
         raise ValueError(
-            "Keys cannot have double " "underscores, got: {}".format(not_allowed)
+            "Keys cannot have double underscores, got: {}".format(not_allowed)
         )
 
 
