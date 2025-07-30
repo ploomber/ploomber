@@ -872,8 +872,8 @@ def process_tasks(dag, dag_spec, root_path=None):
         task, up = task_dict.to_task(dag)
 
         if isinstance(task, TaskGroup):
-            for t in task:
-                upstream_raw[t] = up
+            for t, u in zip(task, up):
+                upstream_raw[t] = u
         else:
             if extract_prod:
                 logger.debug(

@@ -351,22 +351,20 @@ class TaskSpec(MutableMapping):
             else:
                 name_arg = dict(name=name)
 
-            return (
-                TaskGroup.from_grid(
-                    task_class=task_class,
-                    product_class=product_class,
-                    product_primitive=product,
-                    task_kwargs=data,
-                    dag=dag,
-                    grid=grid,
-                    resolve_relative_to=self.project_root,
-                    on_render=on_render,
-                    on_finish=on_finish,
-                    on_failure=on_failure,
-                    params=params,
-                    **name_arg,
-                ),
-                upstream,
+            return TaskGroup.from_grid(
+                task_class=task_class,
+                product_class=product_class,
+                product_primitive=product,
+                task_kwargs=data,
+                dag=dag,
+                grid=grid,
+                resolve_relative_to=self.project_root,
+                on_render=on_render,
+                on_finish=on_finish,
+                on_failure=on_failure,
+                params=params,
+                upstream=upstream,
+                **name_arg,
             )
         else:
             return (
